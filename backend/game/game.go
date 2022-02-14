@@ -172,6 +172,9 @@ func RemovePlayer(game *Game, id string, reason string) {
 func StopGame(id string) {
 	game := GetGame(id)
 	game.Running = false
+	for id := range game.Players {
+		RemovePlayer(game, id, "Game ended")
+	}
 	log.Printf("Stopping game %s", id)
 }
 
