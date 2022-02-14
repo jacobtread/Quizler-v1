@@ -16,6 +16,10 @@ export interface CreateData {
     questions: QuestionData[];
 }
 
+export interface JoinGameData {
+    id: string;
+}
+
 export interface QuestionData {
     title: string;
     question: string;

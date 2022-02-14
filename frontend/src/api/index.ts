@@ -1,4 +1,4 @@
-import packets, { ErrorData, Game, Packet, QuestionData } from "./packets";
+import packets, { ErrorData, Game, JoinGameData, Packet, QuestionData } from "./packets";
 import { Ref, ref } from "vue";
 import mitt from "mitt";
 
@@ -28,7 +28,7 @@ interface PacketHandlers {
 
 type Events = {
     state: string;
-    game: Game;
+    game: string;
 }
 
 /**
@@ -47,6 +47,7 @@ class SocketApi {
     // Whether debug logging should be enabled
     private isDebug: boolean = true
 
+    private gameCode: string | null = null
     private game: Game | null = null
 
     // The interval timer handle used to cancel the update interval
@@ -155,6 +156,13 @@ class SocketApi {
      */
     onError(api: SocketApi, data: ErrorData) {
         console.error(`An error occurred ${data.cause}`)
+    }
+
+    onJoinGame(api: SocketApi, data: JoinGameData) {
+        if (this.isDebug) console.debug(`Joined game with id ${data}`)
+        this.gameCode = data.id
+        this.events.emit('game', this.gameCode)
+
     }
 
     /**
