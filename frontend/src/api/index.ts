@@ -1,42 +1,69 @@
-import { Callback, OutboundQueue } from "./queue";
+type Callback = (value: any) => void
 
-const APP_HOST = import.meta.env.VITE_HOST as string
+interface CallbackById {
+    [id: number]: Callback
+}
+
+export const APP_HOST = import.meta.env.VITE_HOST as string
 
 export class SocketApi {
 
-    private ws: WebSocket = this.connect();
-    private isOpen: boolean = false;
-    private queue: OutboundQueue = new OutboundQueue()
+    private ws: WebSocket = this.connect()
+    private isOpen: boolean = false
 
-    connect() {
+    private queue: Callback[] = []
+    private ids: number[] = []
+
+    private mapping: CallbackById = {}
+
+    private updateInterval: any = undefined
+
+    connect(): WebSocket {
         const ws = new WebSocket(APP_HOST)
-        ws.onopen = () => {
-            console.debug('Connected')
-            if (ws.readyState != WebSocket.OPEN) return
-            this.isOpen = true
-        this.command('Test', {}).then()
+        ws.onopen = () => this.onOpened()
+        ws.onmessage = (e) => this.onMessage(e)
+        ws.onclose = () => this.onClose()
+        ws.onerror = (e) => this.onError(e)
+        this.clearIds()
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval)
         }
-        ws.onmessage = (event: MessageEvent) => {
-            const data = event.data
-            const id = parseInt(data.id)
-            this.queue.resolve(id, data.data)
-        }
-        ws.onclose = () => {
-            console.debug('Disconnected')
-            this.isOpen = false
-        }
-        ws.onerror = (event: Event) => {
-            console.error(`Error occurred: ${event}`)
-        }
+        this.updateInterval = setInterval(() => this.update())
         return ws
     }
 
-    async command<V>(name: string, data: CommandData): Promise<V> {
+    clearIds() {
+        this.ids = [0, 1, 2, 3, 4, 5]
+    }
+
+    onOpened() {
+        console.log(this)
+    }
+
+    onMessage(event: MessageEvent) {
+        console.log(event)
+    }
+
+    onClose() {
+        console.info('Disconnected')
+    }
+
+    onError(event: Event) {
+        console.error(`An error occurred ${event}`)
+    }
+
+    update() {
+
+    }
+
+    async send<V>(name: string, data: any): Promise<V> {
         return new Promise((resolve, reject) => {
-            this.queue.add((id: number): Callback => {
-                this.ws.send(JSON.stringify({id, name, data}))
-                return resolve
-            })
+            if (this.ids.length > 0) {
+                const id = this.ids.shift()
+                const message = {id, name, data}
+
+            }
         })
     }
+
 }

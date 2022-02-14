@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
-import { SocketApi } from "./api"
 import App from './App.vue'
+import { SocketApi } from "./api";
 
 createApp(App).mount('#app')
 
