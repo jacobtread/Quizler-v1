@@ -2,6 +2,7 @@
 import "./assets/global.scss"
 import Header from "./components/Header.vue";
 import { useApi } from "./api";
+import Loader from "./components/Loader.vue";
 
 const {socket, open} = useApi()
 
@@ -9,13 +10,18 @@ const {socket, open} = useApi()
 </script>
 <template>
   <Header/>
-  <template v-if="false">
-    <h1>Open!</h1>
+  <template v-if="open">
+    <div>
+
+    </div>
   </template>
   <template v-else>
-
-    <h1>Connecting...</h1>
-    <p>Please wait</p>
+    <div>
+      <Loader/>
+    </div>
   </template>
 </template>
 
+<style lang="scss">
+
+</style>

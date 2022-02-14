@@ -1,4 +1,4 @@
-import packets, { ErrorData, Packet } from "./packets";
+import packets, { ErrorData, Game, Packet, QuestionData } from "./packets";
 import { Ref, ref } from "vue";
 import mitt from "mitt";
 
@@ -27,7 +27,8 @@ interface PacketHandlers {
 }
 
 type Events = {
-    state: string
+    state: string;
+    game: Game;
 }
 
 /**
@@ -45,6 +46,8 @@ class SocketApi {
     private isRunning: boolean = true
     // Whether debug logging should be enabled
     private isDebug: boolean = true
+
+    private game: Game | null = null
 
     // The interval timer handle used to cancel the update interval
     private updateInterval: any = undefined
@@ -100,7 +103,7 @@ class SocketApi {
      * Called when the web socket connection is closed
      */
     onClose() {
-        console.info('Disconnected')
+        console.log('Disconnected')
         this.isOpen = false
         this.disconnect()
         this.events.emit('state', 'closed')
@@ -140,7 +143,7 @@ class SocketApi {
      */
     onKeepAlive(api: SocketApi) {
         api.lastServerKeepAlive = performance.now()
-        console.debug('Server is alive')
+        if (this.isDebug) console.debug('Server is alive')
     }
 
     /**
@@ -191,6 +194,11 @@ class SocketApi {
     keepAlive() {
         this.lastSendKeepAlive = performance.now()
         this.send(packets.keepAlive())
+    }
+
+    createGame(title: string, questions: QuestionData[]) {
+        if (this.isDebug) console.debug(`Creating game ${title}`)
+        this.send(packets.createGame(title, questions))
     }
 
     /**

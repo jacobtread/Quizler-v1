@@ -21,7 +21,7 @@ type Player struct {
 	Id      uint8            `json:"id"`
 	Name    string           `json:"name"`
 	Score   uint16           `json:"score"`
-	Answers map[int16]string `json:"answers"`
+	Answers map[int16]string `json:"-"`
 }
 
 // QuestionData A structure representing a question in the game
@@ -33,7 +33,7 @@ type QuestionData struct {
 	Title    string   `json:"title"`
 	Question string   `json:"question"`
 	Answers  []string `json:"answers"`
-	Answer   int16    `json:"-"`
+	Answer   int16    `json:"answer"`
 }
 
 // UniqueIdLength The length in chars that should be used for generating unique game ids
