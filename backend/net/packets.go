@@ -13,6 +13,12 @@ const (
 	CreateGame           = 0x04
 	RequestJoin          = 0x05
 	JoinGame             = 0x06
+	PlayerData           = 0x07
+	GameState            = 0x08
+	Question             = 0x09
+	Answer               = 0x0A
+	Time                 = 0x0B
+	Winners              = 0x0C
 )
 
 // Packet Represents a structure for a packet each packet contains an
@@ -23,36 +29,16 @@ type Packet struct {
 	Data PacketData `json:"data,omitempty"`
 }
 
-// ErrorPacket Represents the structure for the packet data of error
-// packets contains a string for the cause of the error to better
-// report the error
-type ErrorPacket struct {
-	Cause string `json:"cause"`
-}
-
-// DisconnectPacket Represents the structure for the packet data of
+// DisconnectData Represents the structure for the packet data of
 // disconnect packets used by the client and server to describe the
 // Reason of the player leaving
-type DisconnectPacket struct {
+type DisconnectData struct {
 	Reason string `json:"reason"`
 }
 
-// DisconnectOtherPacket Represents the structure for the packet data of
-// disconnect packets for other players used to inform clients when
-// Another player is disconnected
-type DisconnectOtherPacket struct {
-	Id     uint16 `json:"id"`
-	Reason string `json:"reason"`
-}
-
-type CreateGamePacket struct {
+type CreateGameData struct {
 	Title     string `json:"title"`
 	Questions []game.QuestionData
-}
-
-type JoinGamePacket struct {
-	Id    string `json:"id"`
-	Title string `json:"title"`
 }
 
 func GetPacket(id PacketId, data interface{}) Packet {
@@ -60,11 +46,34 @@ func GetPacket(id PacketId, data interface{}) Packet {
 }
 
 func GetErrorPacket(cause string) Packet {
-	return Packet{Id: Error, Data: ErrorPacket{Cause: cause}}
+	return Packet{Id: Error, Data: struct {
+		Cause string `json:"cause"`
+	}{Cause: cause}}
 }
 
 func GetDisconnectPacket(reason string) Packet {
-	return Packet{Id: Disconnect, Data: DisconnectPacket{Reason: reason}}
+	return Packet{Id: Disconnect, Data: DisconnectData{Reason: reason}}
+}
+
+func GetDisconnectOtherPacket(id string, reason string) Packet {
+	return Packet{Id: Disconnect, Data: struct {
+		Id     string `json:"id"`
+		Reason string `json:"reason"`
+	}{Id: id, Reason: reason}}
+}
+
+func GetPlayerDataPacket(id string, name string) Packet {
+	return Packet{Id: PlayerData, Data: struct {
+		Id   string `json:"id"`
+		Name string `json:"name"`
+	}{}}
+}
+
+func GetJoinGamePacket(id string, title string) Packet {
+	return Packet{Id: JoinGame, Data: struct {
+		Id    string `json:"id"`
+		Title string `json:"title"`
+	}{Id: id, Title: title}}
 }
 
 func GetKeepAlive() Packet {

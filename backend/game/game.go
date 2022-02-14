@@ -1,13 +1,11 @@
 package game
 
 import (
+	"backend/net"
+	"github.com/gorilla/websocket"
 	"log"
 	"math/rand"
-)
-
-const (
-	StartState = iota
-	StopState
+	"time"
 )
 
 // Game A structure representing a game itself
@@ -15,11 +13,12 @@ const (
 // Questions The questions for this game
 // Players
 type Game struct {
-	Id        string         `json:"id"`
-	Title     string         `json:"title"`
-	Questions []QuestionData `json:"questions"`
-	Players   []Player       `json:"players"`
-	Running   bool           `json:"running"`
+	Id        string            `json:"id"`
+	Title     string            `json:"title"`
+	Questions []QuestionData    `json:"questions"`
+	Players   map[string]Player `json:"players"`
+	Running   bool              `json:"running"`
+	StartTime time.Duration     `json:"start_time"`
 }
 
 // Player A structure representing a player in the game
@@ -28,10 +27,12 @@ type Game struct {
 // Score The current score this player has obtained
 // Answers The answer the player gave to each question
 type Player struct {
-	Id      uint8            `json:"id"`
-	Name    string           `json:"name"`
-	Score   uint16           `json:"score"`
-	Answers map[int16]string `json:"-"`
+	Id        string           `json:"id"`
+	Name      string           `json:"name"`
+	Score     uint16           `json:"score"`
+	Answers   map[int16]string `json:"-"`
+	LastAlive time.Duration    `json:"last_alive"`
+	Connect   *websocket.Conn  `json:"-"`
 }
 
 // QuestionData A structure representing a question in the game
@@ -63,9 +64,20 @@ func CreateRandomId() string {
 	return string(id)
 }
 
-// CreateUniqueId Generates random ids with CreateRandomId until a unique id that is not
+// CreatePlayerId Generate a random id for a player
+func CreatePlayerId(game *Game) string {
+	for {
+		id := CreateRandomId()
+		_, contains := game.Players[id]
+		if !contains {
+			return id
+		}
+	}
+}
+
+// CreateGameId Generates random ids with CreateRandomId until a unique id that is not
 // present in the list of games is generated
-func CreateUniqueId() string {
+func CreateGameId() string {
 	for {
 		id := CreateRandomId()
 		_, contains := Games[id]
@@ -78,13 +90,14 @@ func CreateUniqueId() string {
 // CreateGame creates a new game with the provided title and questions,
 // assigns it a unique id, stores it and returns the id and the game
 func CreateGame(title string, questions []QuestionData) *Game {
-	id := CreateUniqueId()
+	id := CreateGameId()
 	game := Game{
 		Id:        id,
 		Title:     title,
 		Questions: questions,
-		Players:   []Player{},
+		Players:   map[string]Player{},
 		Running:   true,
+		StartTime: Time(),
 	}
 
 	go Loop(&game)
@@ -93,17 +106,73 @@ func CreateGame(title string, questions []QuestionData) *Game {
 	return &game
 }
 
+func Time() time.Duration {
+	return time.Duration(time.Now().UnixNano()) / time.Millisecond
+}
+
 func Loop(game *Game) {
 	log.Printf("Starting game loop for %s (%s)", game.Title, game.Id)
 	for game.Running {
+		t := Time()
+		duration := t - game.StartTime
 
-		log.Printf("Running game loop for %s (%s)", game.Title, game.Id)
+		log.Printf("Running game loop for %s (%s) been alive for %d", game.Title, game.Id, duration/time.Millisecond)
+
+		for id, player := range game.Players {
+			passTime := player.LastAlive - t
+			if passTime >= 10*time.Second {
+				RemovePlayer(game, id, "Player timed out")
+			}
+		}
 	}
+}
+
+func JoinGame(name string, conn *websocket.Conn, game *Game) {
+	id := CreatePlayerId(game)
+	player := Player{
+		Id:        id,
+		Name:      name,
+		Score:     0,
+		Answers:   map[int16]string{},
+		LastAlive: Time(),
+		Connect:   conn,
+	}
+	game.Players[id] = player
+	BroadcastPacketExcluding(id, game, net.GetDisconnectOtherPacket(id, name))
+}
+
+func SendPacket(player *Player, packet net.Packet) {
+	err := player.Connect.WriteJSON(packet)
+	if err != nil {
+		log.Printf("Failed to send packet to player '%s' (%s)", player.Name, player.Id)
+	}
+}
+
+func BroadcastPacket(game *Game, packet net.Packet) {
+	for _, player := range game.Players {
+		SendPacket(&player, packet)
+	}
+}
+
+func BroadcastPacketExcluding(exclude string, game *Game, packet net.Packet) {
+	for id, player := range game.Players {
+		if id != exclude {
+			SendPacket(&player, packet)
+		}
+	}
+}
+
+func RemovePlayer(game *Game, id string, reason string) {
+	player := game.Players[id]
+	player.Connect.Close()
+	delete(game.Players, id)
+	BroadcastPacketExcluding(id, game, net.GetDisconnectOtherPacket(id, reason))
 }
 
 func StopGame(id string) {
 	game := GetGame(id)
 	game.Running = false
+	log.Printf("Stopping game %s", id)
 }
 
 // GetGame retrieves the game with the matching id from the games

@@ -65,10 +65,10 @@ func SocketConnect(c *gin.Context) {
 			_ = ws.WriteJSON(GetDisconnectPacket("Client sent invalid data"))
 			break
 		}
-		
+
 		switch packet.Id {
 		case Disconnect:
-			var data = packet.Data.(DisconnectPacket)
+			var data = packet.Data.(DisconnectData)
 			log.Printf("Client disconnected reason '%s'", data)
 			// End the connection with the client
 			running = false
@@ -78,10 +78,10 @@ func SocketConnect(c *gin.Context) {
 			// Return a keep alive to the client
 			Send(GetKeepAlive())
 		case CreateGame:
-			var data = packet.Data.(CreateGamePacket)
+			var data = packet.Data.(CreateGameData)
 			g := game.CreateGame(data.Title, data.Questions)
 			log.Printf("Created new g with id '%s' and title '%s'", g.Id, g.Title)
-			Send(Packet{Id: JoinGame, Data: JoinGamePacket{Id: g.Id, Title: g.Title}})
+			Send(Packet{Id: JoinGame, Data: JoinGameData{Id: g.Id, Title: g.Title}})
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"backend/game"
 	"backend/net"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
@@ -19,8 +18,6 @@ func main() {
 
 	r.GET("/ws", net.SocketConnect)
 	r.Use(static.Serve("/", static.LocalFile("./public", true)))
-
-	game.CreateGame("Yes", []game.QuestionData{})
 
 	err := r.Run()
 	if err != nil {
