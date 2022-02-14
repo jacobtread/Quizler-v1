@@ -51,7 +51,8 @@ type CreateGamePacket struct {
 }
 
 type JoinGamePacket struct {
-	Id string `json:"id"`
+	Id    string `json:"id"`
+	Title string `json:"title"`
 }
 
 func GetPacket(id PacketId, data interface{}) Packet {
