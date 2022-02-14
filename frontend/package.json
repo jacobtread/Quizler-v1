@@ -1,0 +1,22 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vuetter/vite-plugin-vue-svg": "^0.1.2",
+    "pinia": "^2.0.11",
+    "sass": "^1.49.7",
+    "vue": "^3.2.25",
+    "vue-tsc": "^0.31.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^2.2.0",
+    "typescript": "^4.5.5",
+    "vite": "^2.8.0"
+  }
+}
