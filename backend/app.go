@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/net"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -15,7 +16,7 @@ func main() {
 		})
 	})
 
-	r.GET("/ws", SocketConnect)
+	r.GET("/ws", net.SocketConnect)
 	r.Use(static.Serve("/", static.LocalFile("./public", true)))
 
 	err := r.Run()

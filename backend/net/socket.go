@@ -1,6 +1,7 @@
-package main
+package net
 
 import (
+	"backend/game"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -79,6 +80,10 @@ func SocketConnect(c *gin.Context) {
 			lastKeepAlive = currentTime
 			// Return a keep alive to the client
 			Send(GetKeepAlive())
+		case CreateGame:
+			var data = packet.Data.(CreateGamePacket)
+			id, g := game.CreateGame(data.Title, data.Questions)
+			log.Printf("Created new g with id '%s' and title '%s'", id, g.Title)
 		}
 	}
 }

@@ -1,4 +1,6 @@
-package main
+package net
+
+import game "backend/game"
 
 type PacketId uint32
 type PacketData interface{}
@@ -8,6 +10,7 @@ const (
 	KeepAlive           = 0x01
 	Disconnect          = 0x02
 	Error               = 0x03
+	CreateGame          = 0x04
 )
 
 // Packet Represents a structure for a packet each packet contains an
@@ -32,12 +35,17 @@ type DisconnectPacket struct {
 	Reason string `json:"reason"`
 }
 
-// DisconnectOther Represents the structure for the packet data of
+// DisconnectOtherPacket Represents the structure for the packet data of
 // disconnect packets for other players used to inform clients when
 // Another player is disconnected
-type DisconnectOther struct {
+type DisconnectOtherPacket struct {
 	Id     uint16 `json:"id"`
 	Reason string `json:"reason"`
+}
+
+type CreateGamePacket struct {
+	Title     string `json:"title"`
+	Questions []game.QuestionData
 }
 
 func GetPacket(id PacketId, data interface{}) Packet {
