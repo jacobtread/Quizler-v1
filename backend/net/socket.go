@@ -2,7 +2,6 @@ package net
 
 import (
 	"backend/game"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -66,9 +65,7 @@ func SocketConnect(c *gin.Context) {
 			_ = ws.WriteJSON(GetDisconnectPacket("Client sent invalid data"))
 			break
 		}
-
-		fmt.Println(packet)
-
+		
 		switch packet.Id {
 		case Disconnect:
 			var data = packet.Data.(DisconnectPacket)

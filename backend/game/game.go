@@ -15,11 +15,11 @@ const (
 // Questions The questions for this game
 // Players
 type Game struct {
-	Id           string         `json:"id"`
-	Title        string         `json:"title"`
-	Questions    []QuestionData `json:"questions"`
-	Players      []Player       `json:"players"`
-	StateChannel chan int8
+	Id        string         `json:"id"`
+	Title     string         `json:"title"`
+	Questions []QuestionData `json:"questions"`
+	Players   []Player       `json:"players"`
+	Running   bool           `json:"running"`
 }
 
 // Player A structure representing a player in the game
@@ -80,11 +80,11 @@ func CreateUniqueId() string {
 func CreateGame(title string, questions []QuestionData) *Game {
 	id := CreateUniqueId()
 	game := Game{
-		Id:           id,
-		Title:        title,
-		Questions:    questions,
-		Players:      []Player{},
-		StateChannel: make(chan int8, 1),
+		Id:        id,
+		Title:     title,
+		Questions: questions,
+		Players:   []Player{},
+		Running:   true,
 	}
 
 	go Loop(&game)
@@ -94,20 +94,16 @@ func CreateGame(title string, questions []QuestionData) *Game {
 }
 
 func Loop(game *Game) {
-	var running = true
 	log.Printf("Starting game loop for %s (%s)", game.Title, game.Id)
-	for running {
-		if <-game.StateChannel == StopState {
-			log.Println("STOPPING")
-			running = false
-		}
+	for game.Running {
+
 		log.Printf("Running game loop for %s (%s)", game.Title, game.Id)
 	}
 }
 
 func StopGame(id string) {
 	game := GetGame(id)
-	game.StateChannel <- StopState
+	game.Running = false
 }
 
 // GetGame retrieves the game with the matching id from the games
