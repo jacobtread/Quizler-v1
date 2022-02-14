@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+type State = uint8
+
+const (
+	Waiting State = iota
+	Started
+	Stopped
+)
+
 // Game A structure representing a game itself
 // Title the title of this game room
 // Questions The questions for this game
@@ -19,6 +27,7 @@ type Game struct {
 	Players   map[string]Player `json:"players"`
 	Running   bool              `json:"running"`
 	StartTime time.Duration     `json:"start_time"`
+	State     State             `json:"state"`
 }
 
 // Player A structure representing a player in the game
@@ -33,6 +42,7 @@ type Player struct {
 	Answers   map[int16]string `json:"-"`
 	LastAlive time.Duration    `json:"last_alive"`
 	Connect   *websocket.Conn  `json:"-"`
+	Send      func(packet net.Packet)
 }
 
 // QuestionData A structure representing a question in the game
@@ -41,7 +51,7 @@ type Player struct {
 // Answers The list of possible answers for this question
 // Answer The correct answer for this question
 type QuestionData struct {
-	Title    string   `json:"title"`
+	Image    string   `json:"image"`
 	Question string   `json:"question"`
 	Answers  []string `json:"answers"`
 	Answer   int16    `json:"answer"`
@@ -98,6 +108,7 @@ func CreateGame(title string, questions []QuestionData) *Game {
 		Players:   map[string]Player{},
 		Running:   true,
 		StartTime: Time(),
+		State:     Waiting,
 	}
 
 	go Loop(&game)
@@ -114,20 +125,30 @@ func Loop(game *Game) {
 	log.Printf("Starting game loop for %s (%s)", game.Title, game.Id)
 	for game.Running {
 		t := Time()
-		duration := t - game.StartTime
+		// duration := t - game.StartTime
 
-		log.Printf("Running game loop for %s (%s) been alive for %d", game.Title, game.Id, duration/time.Millisecond)
+		if game.State == Started || game.State == Waiting {
 
-		for id, player := range game.Players {
-			passTime := player.LastAlive - t
-			if passTime >= 10*time.Second {
-				RemovePlayer(game, id, "Player timed out")
+			// Process players remove any players that have been inactive for 10 seconds
+			for id, player := range game.Players {
+				passTime := player.LastAlive - t
+				if passTime >= 10*time.Second {
+					RemovePlayer(game, id, "Player timed out")
+				}
 			}
+
+			if game.State == Started {
+
+			}
+
+		} else if game.State == Stopped {
+			StopGame(game)
 		}
+
 	}
 }
 
-func JoinGame(name string, conn *websocket.Conn, game *Game) {
+func JoinGame(name string, conn *websocket.Conn, game *Game) *Player {
 	id := CreatePlayerId(game)
 	player := Player{
 		Id:        id,
@@ -139,6 +160,23 @@ func JoinGame(name string, conn *websocket.Conn, game *Game) {
 	}
 	game.Players[id] = player
 	BroadcastPacketExcluding(id, game, net.GetDisconnectOtherPacket(id, name))
+
+	for otherId, otherPlayer := range game.Players {
+		if otherId != id {
+			SendPacket(&player, net.GetPlayerDataPacket(otherId, otherPlayer.Name))
+		}
+	}
+
+	return &player
+}
+
+func HandlePacket(game *Game, player *Player, id net.PacketId, data net.PacketData) {
+	if game.State == Started {
+		switch id {
+		case net.Answer:
+
+		}
+	}
 }
 
 func SendPacket(player *Player, packet net.Packet) {
@@ -169,13 +207,12 @@ func RemovePlayer(game *Game, id string, reason string) {
 	BroadcastPacketExcluding(id, game, net.GetDisconnectOtherPacket(id, reason))
 }
 
-func StopGame(id string) {
-	game := GetGame(id)
+func StopGame(game *Game) {
 	game.Running = false
 	for id := range game.Players {
 		RemovePlayer(game, id, "Game ended")
 	}
-	log.Printf("Stopping game %s", id)
+	log.Printf("Stopping game %s", game.Id)
 }
 
 // GetGame retrieves the game with the matching id from the games

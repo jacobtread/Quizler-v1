@@ -1,6 +1,8 @@
 package net
 
-import game "backend/game"
+import (
+	game "backend/game"
+)
 
 type PacketId uint32
 type PacketData interface{}
@@ -39,6 +41,11 @@ type DisconnectData struct {
 type CreateGameData struct {
 	Title     string `json:"title"`
 	Questions []game.QuestionData
+}
+
+type RequestJoinData struct {
+	Name string `json:"name"`
+	Game string `json:"game"`
 }
 
 func GetPacket(id PacketId, data interface{}) Packet {

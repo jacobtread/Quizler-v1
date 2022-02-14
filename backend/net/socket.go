@@ -66,9 +66,12 @@ func SocketConnect(c *gin.Context) {
 			break
 		}
 
+		var g *game.Game = nil
+		var player *game.Player = nil
+
 		switch packet.Id {
 		case Disconnect:
-			var data = packet.Data.(DisconnectData)
+			data := packet.Data.(DisconnectData)
 			log.Printf("Client disconnected reason '%s'", data)
 			// End the connection with the client
 			running = false
@@ -78,10 +81,27 @@ func SocketConnect(c *gin.Context) {
 			// Return a keep alive to the client
 			Send(GetKeepAlive())
 		case CreateGame:
-			var data = packet.Data.(CreateGameData)
-			g := game.CreateGame(data.Title, data.Questions)
+			data := packet.Data.(CreateGameData)
+			g = game.CreateGame(data.Title, data.Questions)
 			log.Printf("Created new g with id '%s' and title '%s'", g.Id, g.Title)
-			Send(Packet{Id: JoinGame, Data: JoinGameData{Id: g.Id, Title: g.Title}})
+			Send(GetJoinGamePacket(g.Id, g.Title))
+		case RequestJoin:
+			data := packet.Data.(RequestJoinData)
+			g = game.GetGame(data.Game)
+			if g == nil {
+				Send(GetErrorPacket("That game code doesn't exist"))
+			} else {
+				if g.State != game.Waiting {
+					Send(GetErrorPacket("That game is already started"))
+				} else {
+					player = game.JoinGame(data.Name, ws, g)
+					Send(GetJoinGamePacket(g.Id, g.Title))
+				}
+			}
+		default:
+			if g != nil && player != nil {
+				game.HandlePacket(g, player, packet.Id, packet.Data)
+			}
 		}
 	}
 }
