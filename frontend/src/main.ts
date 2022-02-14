@@ -1,7 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import { SocketApi } from "./api";
+import { createPinia } from "pinia";
 
-createApp(App).mount('#app')
+createApp(App).use(createPinia()).mount('#app')
 
-const socket = new SocketApi();

@@ -1,4 +1,6 @@
 import packets, { ErrorData, Packet } from "./packets";
+import { Ref, ref } from "vue";
+import mitt from "mitt";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -24,11 +26,15 @@ interface PacketHandlers {
     [id: number]: (api: SocketApi, data: any) => void
 }
 
+type Events = {
+    state: string
+}
+
 /**
  * Stores all logic for communicating between the client and server over the
  * websocket connection.
  */
-export class SocketApi {
+class SocketApi {
 
     // The websocket connection instance
     private ws: WebSocket = this.connect()
@@ -47,6 +53,8 @@ export class SocketApi {
     private lastServerKeepAlive: number = -1
     // The last time that this client sent a keep alive at
     private lastSendKeepAlive: number = -1
+
+    events = mitt<Events>()
 
     /**
      * A mapping to convert the packet ids into handler functions so that
@@ -72,7 +80,7 @@ export class SocketApi {
             console.error(e)
         }
         if (this.updateInterval) clearInterval(this.updateInterval)
-        this.updateInterval = setInterval(() => this.update(), 0)
+        this.updateInterval = setInterval(() => this.update(), 10)
         return ws
     }
 
@@ -85,6 +93,7 @@ export class SocketApi {
         console.log('Connected')
         if (this.ws.readyState != WebSocket.OPEN) return
         this.isOpen = true
+        this.events.emit('state', 'open')
     }
 
     /**
@@ -94,6 +103,7 @@ export class SocketApi {
         console.info('Disconnected')
         this.isOpen = false
         this.disconnect()
+        this.events.emit('state', 'closed')
     }
 
     /**
@@ -223,4 +233,29 @@ export class SocketApi {
 
     }
 
+}
+
+
+let socket: SocketApi | null = null
+
+interface UseApi {
+    socket: SocketApi
+    open: Ref<boolean>
+}
+
+/**
+ * "Composable" function to use the SocketApi within vue js
+ * through the composition API this will create a socket
+ * instance if it doesn't already exist and will bind the
+ * open state event to an open ref
+ */
+export function useApi(): UseApi {
+    const open = ref(false)
+    if (socket == null) {
+        socket = new SocketApi()
+    }
+    socket.events.on('state', (state: string) => {
+        open.value = state === 'open';
+    })
+    return {socket, open}
 }
