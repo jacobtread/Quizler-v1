@@ -1,11 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"time"
 )
 
 // upgrader Used to upgrade HTTP requests to the WS protocol
@@ -15,18 +15,8 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func Test() {
-	bytes, err := json.Marshal(GetKeepAlive())
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	println(string(bytes))
-}
-
 //SocketConnect Creates a socket connection and upgrades the HTTP request to WS
 func SocketConnect(c *gin.Context) {
-	Test()
 	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Fatal("Failed to upgrade connection", err)
@@ -40,34 +30,49 @@ func SocketConnect(c *gin.Context) {
 
 	running := true
 
-loop:
+	lastKeepAlive := time.Millisecond
+
 	// Infinitely loop until the connection is closed
 	for running {
+
+		// sends the provided packet over the websocket
+		// and stops the connection if an error occurs
+		Send := func(packet Packet) {
+			if running {
+				err := ws.WriteJSON(packet)
+				if err != nil {
+					running = false
+					return
+				}
+			}
+		}
+
+		currentTime := time.Millisecond
+		elapsed := currentTime - lastKeepAlive
+		
+		if elapsed > 5000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
+			// Then we disconnect the client for "Connection timed out"
+			Send(GetDisconnectPacket("Connection timed out"))
+		}
 
 		// Read the incoming command into the Command struct
 		err = ws.ReadJSON(&command)
 		if err != nil {
-			// If the JSON parsing failed response to the client with an error
-			_ = ws.WriteJSON(GetErrorPacket("Invalid data received"))
-			// And disconnect the client
-			_ = ws.WriteJSON(getDisconnectPacket("Client sent invalid data"))
+			// Disconnect the client for sending invalid data
+			_ = ws.WriteJSON(GetDisconnectPacket("Client sent invalid data"))
 			break
-		}
-
-		Send := func(packet Packet) {
-			err := ws.WriteJSON(packet)
-			if err != nil {
-				running = false
-				return
-			}
 		}
 
 		switch command.Id {
 		case Disconnect:
 			var data = command.Data.(DisconnectPacket)
 			log.Printf("Client disconnected reason '%s'", data)
-			break loop
+			// End the connection with the client
+			running = false
 		case KeepAlive:
+			// Update last time the client was kept alive
+			lastKeepAlive = currentTime
+			// Return a keep alive to the client
 			Send(GetKeepAlive())
 		}
 	}

@@ -48,7 +48,7 @@ func GetErrorPacket(cause string) Packet {
 	return Packet{Id: Error, Data: ErrorPacket{Cause: cause}}
 }
 
-func getDisconnectPacket(reason string) Packet {
+func GetDisconnectPacket(reason string) Packet {
 	return Packet{Id: Disconnect, Data: DisconnectPacket{Reason: reason}}
 }
 
