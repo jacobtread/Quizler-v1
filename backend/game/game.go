@@ -1,15 +1,25 @@
 package game
 
-import "math/rand"
+import (
+	"log"
+	"math/rand"
+)
+
+const (
+	StartState = iota
+	StopState
+)
 
 // Game A structure representing a game itself
 // Title the title of this game room
 // Questions The questions for this game
 // Players
 type Game struct {
-	Title     string         `json:"title"`
-	Questions []QuestionData `json:"questions"`
-	Players   []Player       `json:"players"`
+	Id           string         `json:"id"`
+	Title        string         `json:"title"`
+	Questions    []QuestionData `json:"questions"`
+	Players      []Player       `json:"players"`
+	StateChannel chan int8
 }
 
 // Player A structure representing a player in the game
@@ -67,11 +77,37 @@ func CreateUniqueId() string {
 
 // CreateGame creates a new game with the provided title and questions,
 // assigns it a unique id, stores it and returns the id and the game
-func CreateGame(title string, questions []QuestionData) (string, *Game) {
+func CreateGame(title string, questions []QuestionData) *Game {
 	id := CreateUniqueId()
-	game := Game{Title: title, Questions: questions, Players: []Player{}}
+	game := Game{
+		Id:           id,
+		Title:        title,
+		Questions:    questions,
+		Players:      []Player{},
+		StateChannel: make(chan int8, 1),
+	}
+
+	go Loop(&game)
+
 	Games[id] = game
-	return id, &game
+	return &game
+}
+
+func Loop(game *Game) {
+	var running = true
+	log.Printf("Starting game loop for %s (%s)", game.Title, game.Id)
+	for running {
+		if <-game.StateChannel == StopState {
+			log.Println("STOPPING")
+			running = false
+		}
+		log.Printf("Running game loop for %s (%s)", game.Title, game.Id)
+	}
+}
+
+func StopGame(id string) {
+	game := GetGame(id)
+	game.StateChannel <- StopState
 }
 
 // GetGame retrieves the game with the matching id from the games

@@ -82,9 +82,9 @@ func SocketConnect(c *gin.Context) {
 			Send(GetKeepAlive())
 		case CreateGame:
 			var data = packet.Data.(CreateGamePacket)
-			id, g := game.CreateGame(data.Title, data.Questions)
-			log.Printf("Created new g with id '%s' and title '%s'", id, g.Title)
-			Send(Packet{Id: JoinGame, Data: JoinGamePacket{Id: id, Title: g.Title}})
+			g := game.CreateGame(data.Title, data.Questions)
+			log.Printf("Created new g with id '%s' and title '%s'", g.Id, g.Title)
+			Send(Packet{Id: JoinGame, Data: JoinGamePacket{Id: g.Id, Title: g.Title}})
 		}
 	}
 }
