@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -21,15 +22,17 @@ func SocketConnect(c *gin.Context) {
 	if err != nil {
 		log.Fatal("Failed to upgrade connection", err)
 	}
-	// Deferred closing of the socket when we are done
-	defer func(ws *websocket.Conn) {
-		_ = ws.Close()
-	}(ws)
+	// Deferred closing of the socket when we are done this will result
+	// in ws.Close being called after this function is finished executing
+	defer func(ws *websocket.Conn) { _ = ws.Close() }(ws)
 
-	command := Packet{Id: Unknown}
+	// The struct to store decoded packets in (Unknown by default)
+	packet := Packet{Id: Unknown}
 
+	// Whether the client should continue running in a loop and accepting packets
 	running := true
 
+	// The last time in milliseconds when a keep alive was received
 	lastKeepAlive := time.Millisecond
 
 	// Infinitely loop until the connection is closed
@@ -49,23 +52,25 @@ func SocketConnect(c *gin.Context) {
 
 		currentTime := time.Millisecond
 		elapsed := currentTime - lastKeepAlive
-		
+
 		if elapsed > 5000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
 			// Then we disconnect the client for "Connection timed out"
 			Send(GetDisconnectPacket("Connection timed out"))
 		}
 
-		// Read the incoming command into the Command struct
-		err = ws.ReadJSON(&command)
+		// Read the incoming packet into the Command struct
+		err = ws.ReadJSON(&packet)
 		if err != nil {
 			// Disconnect the client for sending invalid data
 			_ = ws.WriteJSON(GetDisconnectPacket("Client sent invalid data"))
 			break
 		}
 
-		switch command.Id {
+		fmt.Println(packet)
+
+		switch packet.Id {
 		case Disconnect:
-			var data = command.Data.(DisconnectPacket)
+			var data = packet.Data.(DisconnectPacket)
 			log.Printf("Client disconnected reason '%s'", data)
 			// End the connection with the client
 			running = false
