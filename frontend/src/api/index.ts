@@ -5,6 +5,13 @@ export const APP_HOST: string = import.meta.env.VITE_HOST
 const IGNORE = () => {
 }
 
+/**
+ * Converts the provided value to a hex string representation
+ * that must fit the length provided in padding
+ *
+ * @param value
+ * @param padding
+ */
 function toHex(value: number, padding: number = 2) {
     let hexString = value.toString(16)
     while (hexString.length < padding) {
@@ -17,12 +24,20 @@ interface PacketHandlers {
     [id: number]: (api: SocketApi, data: any) => void
 }
 
+/**
+ * Stores all logic for communicating between the client and server over the
+ * websocket connection.
+ */
 export class SocketApi {
 
+    // The websocket connection instance
     private ws: WebSocket = this.connect()
 
+    // Whether the web socket connection is open
     private isOpen: boolean = false
+    // Whether the main update loop is running
     private isRunning: boolean = true
+    // Whether debug logging should be enabled
     private isDebug: boolean = true
 
     // The interval timer handle used to cancel the update interval
@@ -33,13 +48,20 @@ export class SocketApi {
     // The last time that this client sent a keep alive at
     private lastSendKeepAlive: number = -1
 
-
+    /**
+     * A mapping to convert the packet ids into handler functions so that
+     * they can be handled separately instead of a large switch statement
+     */
     private handlers: PacketHandlers = {
         0x00: IGNORE,
         0x01: this.onKeepAlive,
         0x03: this.onError
     }
 
+    /**
+     * Creates a connection to the websocket at APP_HOST and returns the websocket
+     * all the listeners are added to the websocket and the update interval is set
+     */
     connect(): WebSocket {
         const ws = new WebSocket(APP_HOST)
         ws.onopen = () => this.onOpened()
@@ -49,27 +71,47 @@ export class SocketApi {
             this.disconnect()
             console.error(e)
         }
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval)
-        }
-        this.updateInterval = setInterval(() => this.update())
+        if (this.updateInterval) clearInterval(this.updateInterval)
+        this.updateInterval = setInterval(() => this.update(), 0)
         return ws
     }
 
+    /**
+     * Called when the websocket connection is created and open
+     * if the ready state of the web socket is OPEN then isOpen
+     * will be set to true allowing the update loop to start
+     */
     onOpened() {
         console.log('Connected')
         if (this.ws.readyState != WebSocket.OPEN) return
         this.isOpen = true
     }
 
+    /**
+     * Called when the web socket connection is closed
+     */
+    onClose() {
+        console.info('Disconnected')
+        this.isOpen = false
+        this.disconnect()
+    }
+
+    /**
+     * Called when a websocket message is received this function handles the
+     * mapping of packets to packet handlers as well as parsing and error checking
+     *
+     * @param event The message event
+     */
     onMessage(event: MessageEvent) {
         try {
             const packet = JSON.parse(event.data) as Packet<any>
             const id: number = packet.id
             const data: any = packet.data
+            // Check to make sure we have a handler for this packet id
             if (id in this.handlers) {
                 this.debugPacket('IN', packet)
                 const handler = this.handlers[id]
+                // Call the packet handler with this and the packet data
                 handler(this, data)
             } else {
                 console.warn(`Don't know how to handle packet with id (${id.toString(16)})`)
@@ -79,10 +121,6 @@ export class SocketApi {
         }
     }
 
-
-    onClose() {
-        console.info('Disconnected')
-    }
 
     /**
      * Packet handler for the KeepAlive packet (0x01) handles updating the
@@ -145,6 +183,11 @@ export class SocketApi {
         this.send(packets.keepAlive())
     }
 
+    /**
+     * Called when the client should disconnect from the server. Clears the
+     * update interval along with stopping the running loop and if the ws
+     * connection is open according to isOpen then it will be closed as well
+     */
     disconnect() {
         console.log('Client Disconnect')
         this.isRunning = false
@@ -160,6 +203,11 @@ export class SocketApi {
         }
     }
 
+    /**
+     * An update loop. This runs constantly as long as disconnect is not
+     * called. Currently, this just handles keeping the connection alive
+     * and checking if the connection has timed out
+     */
     update() {
         if (this.isRunning && this.isOpen) {
             const time = performance.now()
