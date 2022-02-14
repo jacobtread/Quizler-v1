@@ -4,10 +4,10 @@ type PacketId uint32
 type PacketData interface{}
 
 const (
-	Unknown PacketId = iota
-	KeepAlive
-	Error
-	Disconnect
+	Unknown    PacketId = 0x00
+	KeepAlive           = 0x01
+	Disconnect          = 0x02
+	Error               = 0x03
 )
 
 // Packet Represents a structure for a packet each packet contains an
