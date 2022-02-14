@@ -1,6 +1,6 @@
-import packets, { ErrorData, Game, JoinGameData, Packet, QuestionData } from "./packets";
-import { Ref, ref } from "vue";
+import packets, { ErrorData, JoinGameData, Packet, PlayerData, QuestionData } from "./packets";
 import mitt from "mitt";
+import { $ref } from "vue/macros";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -29,6 +29,7 @@ interface PacketHandlers {
 type Events = {
     state: string;
     game: string;
+    player: PlayerData;
 }
 
 /**
@@ -48,7 +49,7 @@ class SocketApi {
     private isDebug: boolean = true
 
     private gameCode: string | null = null
-    private game: Game | null = null
+    players: PlayerData[] = []
 
     // The interval timer handle used to cancel the update interval
     private updateInterval: any = undefined
@@ -67,7 +68,8 @@ class SocketApi {
     private handlers: PacketHandlers = {
         0x00: IGNORE,
         0x01: this.onKeepAlive,
-        0x03: this.onError
+        0x03: this.onError,
+        0x07: this.onPlayerData
     }
 
     /**
@@ -135,6 +137,18 @@ class SocketApi {
         }
     }
 
+
+    /**
+     * Packet handler for PlayerData packet (0x07) handles data about other
+     * players in the game such as username and id's
+     *
+     * @param api
+     * @param data
+     */
+    onPlayerData(api: SocketApi, data: PlayerData) {
+        api.players.push(data)
+        api.events.emit('player', data)
+    }
 
     /**
      * Packet handler for the KeepAlive packet (0x01) handles updating the
@@ -255,8 +269,9 @@ class SocketApi {
 let socket: SocketApi | null = null
 
 interface UseApi {
-    socket: SocketApi
-    open: Ref<boolean>
+    socket: SocketApi;
+    open: boolean;
+    players: PlayerData[];
 }
 
 /**
@@ -266,12 +281,16 @@ interface UseApi {
  * open state event to an open ref
  */
 export function useApi(): UseApi {
-    const open = ref(false)
+    let open = $ref(false)
     if (socket == null) {
         socket = new SocketApi()
     }
     socket.events.on('state', (state: string) => {
-        open.value = state === 'open';
+        open = state === 'open';
     })
-    return {socket, open}
+    let players = $ref<PlayerData[]>([])
+    socket.events.on('player', (player: PlayerData) => {
+        players = socket!.players
+    })
+    return {socket, players, open}
 }

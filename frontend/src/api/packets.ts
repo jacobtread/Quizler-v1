@@ -18,6 +18,12 @@ export interface CreateData {
 
 export interface JoinGameData {
     id: string;
+    title: string;
+}
+
+export interface PlayerData {
+    id: string;
+    name: string;
 }
 
 export interface QuestionData {
@@ -36,7 +42,7 @@ export interface Player {
 export interface Game {
     title: string;
     questions: QuestionData[];
-    players: Player[];
+    players: PlayerData[];
 }
 
 export type UnknownPacket = Packet<any>;
