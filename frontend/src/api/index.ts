@@ -66,24 +66,11 @@ export class SocketApi {
         try {
             const packet = JSON.parse(event.data) as Packet<any>
             const id: number = packet.id
-            if (id in packets.names) {
-                const name: string = packets.names[id]
-                const data: any = packet.data
-
-                if (this.isDebug) {
-                    if (data !== undefined) {
-                        console.debug(`[IN] ${name} (${toHex(id, 2)}) {${data}}`)
-                    } else {
-                        console.debug(`[IN] ${name} (${toHex(id, 2)})`)
-                    }
-                }
-
-                if (id in this.handlers) {
-                    const handler = this.handlers[id]
-                    handler(this, data)
-                } else {
-                    console.warn(`Don't know how to handle packet with id (${id.toString(16)})`)
-                }
+            const data: any = packet.data
+            if (id in this.handlers) {
+                this.debugPacket('IN', packet)
+                const handler = this.handlers[id]
+                handler(this, data)
             } else {
                 console.warn(`Don't know how to handle packet with id (${id.toString(16)})`)
             }
@@ -119,15 +106,33 @@ export class SocketApi {
         console.error(`An error occurred ${data.cause}`)
     }
 
-    send(packet: Packet<any>) {
-        if (this.isDebug) {
-            const name = packets.names[packet.id]
+    /**
+     * Debug logs information about the provided packet
+     *
+     * @param dir The direction the packet is going IN for inbound OUT for outbound
+     * @param packet The packet to print debug info about
+     */
+    debugPacket(dir: string, packet: Packet<any>) {
+        if (this.isDebug) { // Ensure that this only happens in debug mode
+            const id = packet.id
+            let name = packets.names[id] // Retrieve debug friendly packet name
+            if (!name) name = 'Unknown Name'
             if (packet.data !== undefined) {
-                console.debug(`[IN] ${name} (${toHex(packet.id, 2)}) {${packet.data}}`)
+                console.debug(`[${dir}] ${name} (${toHex(id, 2)}) {${packet.data}}`)
             } else {
-                console.debug(`[OUT] ${name} (${toHex(packet.id, 2)})`)
+                console.debug(`[${dir}] ${name} (${toHex(id, 2)})`)
             }
         }
+    }
+
+    /**
+     * Serializes the packet to json and sends it to the ws server.
+     * Logs the packet to debug if isDebug is enabled
+     *
+     * @param packet The packet to send
+     */
+    send(packet: Packet<any>) {
+        this.debugPacket('OUT', packet)
         this.ws.send(JSON.stringify(packet))
     }
 
