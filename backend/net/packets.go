@@ -6,11 +6,13 @@ type PacketId uint32
 type PacketData interface{}
 
 const (
-	Unknown    PacketId = 0x00
-	KeepAlive           = 0x01
-	Disconnect          = 0x02
-	Error               = 0x03
-	CreateGame          = 0x04
+	Unknown     PacketId = 0x00
+	KeepAlive            = 0x01
+	Disconnect           = 0x02
+	Error                = 0x03
+	CreateGame           = 0x04
+	RequestJoin          = 0x05
+	JoinGame             = 0x06
 )
 
 // Packet Represents a structure for a packet each packet contains an
@@ -46,6 +48,10 @@ type DisconnectOtherPacket struct {
 type CreateGamePacket struct {
 	Title     string `json:"title"`
 	Questions []game.QuestionData
+}
+
+type JoinGamePacket struct {
+	Id string `json:"id"`
 }
 
 func GetPacket(id PacketId, data interface{}) Packet {
