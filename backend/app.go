@@ -38,6 +38,7 @@ type Player struct {
 }
 
 type Command struct {
+	Id   int16       `json:"id"`
 	Name string      `json:"name"`
 	Data interface{} `json:"data"`
 }
