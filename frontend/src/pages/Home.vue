@@ -109,7 +109,6 @@ import Logo from "../assets/logo.svg?inline";</script>
 
     .button__icon {
       background-color: $primary;
-      box-shadow: 0 0 5px rgb(0, 0, 0);
     }
 
     &::before {

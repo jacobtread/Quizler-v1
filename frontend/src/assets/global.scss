@@ -27,3 +27,21 @@ html, body {
   padding: 0;
   box-sizing: border-box;
 }
+
+.back-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  padding: 0.5rem;
+  background: #222;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  border-radius: 0.5rem;
+  transition: background-color 0.25s ease;
+
+  &:hover {
+    background: $primary;
+  }
+}
