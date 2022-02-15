@@ -28,6 +28,7 @@ export interface PlayerData {
 
 export interface QuestionData {
     title: string;
+    image?: string;
     question: string;
     answers: string[];
     answer: number

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 
+import Image from "../assets/image.svg?inline"
 import Back from "../assets/back.svg?inline"
 import Add from "../assets/add.svg?inline"
 import Cross from "../assets/cross.svg?inline"
 import { useCreateStore } from "../store/create";
 import { storeToRefs } from "pinia";
-import { reactive } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { QuestionData } from "../api/packets";
 import { useRouter } from "vue-router"
 
@@ -34,6 +35,25 @@ function removeAnswer(index: number) {
 }
 
 const router = useRouter()
+const fileInput = ref<HTMLInputElement>()
+
+function onFileChange() {
+  const input: HTMLInputElement = fileInput.value!
+  if (input.files && input.files[0]) {
+    const reader = new FileReader()
+    reader.onload = function (e) {
+      question.image = e.target!.result as string
+    }
+    reader.readAsDataURL(input.files[0])
+  } else {
+    question.image = undefined
+  }
+}
+
+onMounted(() => {
+  const input: HTMLInputElement = fileInput.value!
+  console.log(input.files)
+})
 
 function addQuestion() {
   questions.value.push({
@@ -43,6 +63,10 @@ function addQuestion() {
     title: question.title
   })
   router.push({name: 'Create'})
+}
+
+function removeImage() {
+  question.image = undefined
 }
 
 </script>
@@ -63,7 +87,23 @@ function addQuestion() {
         <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
       </label>
 
-      <label>Answers</label>
+      <template v-if="question.image">
+        <div class="image"
+             @click="removeImage"
+             :style="{backgroundImage:`url(${question.image})`}"
+        >
+          <span class="image__text">Click to remove</span>
+        </div>
+      </template>
+      <template v-else>
+        <label class="input input--file">
+          <Image class="input__image"/>
+          <span>Click to add image</span>
+          <input ref="fileInput" class="input__file" type="file" accept="image/*" @change="onFileChange">
+        </label>
+      </template>
+
+      <h2 class="answers__title">Answers</h2>
       <div>
         <transition-group name="slide-fade" appear class="answers" tag="ul">
           <li v-for="(answer, index) of question.answers"
@@ -102,6 +142,28 @@ function addQuestion() {
   opacity: 0;
 }
 
+.image {
+  margin: 1rem 0;
+  position: relative;
+  display: block;
+  width: 100%;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  height: 300px;
+
+  &__text {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    color: $primary;
+    font-weight: bold;
+    background: #222;
+    padding: 0.5rem;
+    text-shadow: 1px 1px 1px #000;
+  }
+}
 
 .input {
   display: flex;
@@ -114,9 +176,22 @@ function addQuestion() {
     color: #999;
   }
 
+  &__file {
+    display: none;
+  }
+
   &__value {
     background-color: transparent;
     font-size: 1.2rem;
+    border: 5px solid #333;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    color: #CCC;
+    outline: none;
+
+    &:focus {
+      border-bottom-color: $primary;
+    }
   }
 }
 
@@ -185,6 +260,11 @@ function addQuestion() {
 .answers {
   list-style: none;
   width: 100%;
+
+  &__title {
+    margin: 1rem 0;
+    color: #CCC;
+  }
 }
 
 .answer {
@@ -233,11 +313,12 @@ function addQuestion() {
     font-size: 1.2rem;
     padding: 0.5rem;
     flex: auto;
-    border: 5px solid #333;
-    border-bottom: 5px solid white;
-    color: white;
+    border: none;
+    border-bottom: 5px solid #333;
+    color: #CCC;
     border-radius: 0.5rem;
     background-color: #222;
+    outline: none;
 
     &--active, &:focus {
       border-bottom-color: $primary;
@@ -245,7 +326,7 @@ function addQuestion() {
   }
 
   &--selected {
-    background-color: $primary;
+    background-color: #8b4425;
 
     .answer__select {
 
@@ -257,12 +338,12 @@ function addQuestion() {
     }
 
     .answer__value {
-      color: #111;
-      background-color: $primary;
-      border-bottom-color: white;
+      background-color: #8b4425;
+      border-bottom: 5px solid #222;
 
       &--active, &:focus {
-        border-bottom-color: $primary;
+        border-bottom-color: white;
+
       }
     }
   }
