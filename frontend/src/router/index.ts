@@ -1,12 +1,22 @@
-import { createRouter, createWebHashHistory } from "vue-router"
+import { createRouter, createWebHistory } from "vue-router"
 
 import Home from "../pages/Home.vue"
+import Join from "../pages/Join.vue"
 
 const routes = [
-    {path: '/', component: Home},
+    {
+        name: 'Home',
+        path: '/',
+        component: Home
+    },
+    {
+        name: 'Join',
+        path: '/join',
+        component: Join
+    }
 ]
 
 export const router = createRouter({
-    history: createWebHashHistory(),
+    history: createWebHistory(),
     routes,
 })

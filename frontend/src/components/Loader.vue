@@ -29,7 +29,7 @@ import Logo from "../assets/logo.svg?inline"</script>
     width: 170px;
     height: 170px;
     border-radius: 100%;
-    border: 5px solid $secondary;
+    border: 5px solid $primary;
     animation: rotate 2s ease-in-out infinite;
     z-index: -1;
 
@@ -39,17 +39,17 @@ import Logo from "../assets/logo.svg?inline"</script>
       left: 50%;
       transform: translateX(-50%);
       top: 0;
-      color: $secondary;
+      color: $primary;
     }
   }
 
   &__logo {
     width: 120px;
-    fill: $secondary;
+    fill: $primary;
   }
 
   &__text {
-    color: $secondary;
+    color: $primary;
   }
 }
 

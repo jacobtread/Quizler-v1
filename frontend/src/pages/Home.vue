@@ -1,30 +1,52 @@
 <script setup lang="ts">
-import Play from "../assets/play.svg?inline";</script>
+import Play from "../assets/play.svg?inline";
+import Logo from "../assets/logo.svg?inline";</script>
 
 <template>
-  <div class="button-grid">
-    <button class="button">
-      <Play class="button__icon"/>
-      <span class="button__wrap">
-          Join a game
+  <div class="content">
+    <Logo class="logo"/>
+    <div class="button-grid">
+      <router-link :to="{name: 'Join'}" class="button">
+        <Play class="button__icon"/>
+        <span class="button__wrap">
+          Join a quiz
           <span class="button__subtext">Enter a game code and hop right in</span>
       </span>
-    </button>
-    <button class="button">
-      <Play class="button__icon"/>
-      <span class="button__wrap">
+      </router-link>
+      <button class="button">
+        <Play class="button__icon"/>
+        <span class="button__wrap">
         Create a quiz
         <span class="button__subtext">Create your own quiz</span>
       </span>
-    </button>
+      </button>
+    </div>
   </div>
 </template>
 
 <style scoped lang="scss">
+@import "../assets/variables";
+
+.content {
+  flex: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logo {
+  max-width: 250px;
+  color: white;
+}
+
 .button-grid {
 
   display: flex;
   justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+
 
   margin-top: 1rem;
 
@@ -33,27 +55,66 @@ import Play from "../assets/play.svg?inline";</script>
 }
 
 .button {
+  cursor: pointer;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-flow: row;
   background: #222;
+  text-decoration: none;
 
   text-align: left;
-  padding: 1.5rem;
+  padding: 1rem;
 
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
 
-  border-radius: 150px;
+  border-radius: 2rem;
 
   color: white;
   font-size: 1.4rem;
+  overflow: hidden;
 
-  border: none;
+  border: 5px solid #222;
 
-  &__logo {
+  transition: background-color 0.5s ease, color 0.2s linear;
+
+  &__icon {
     color: white;
+    position: relative;
+    border-radius: 1.5rem;
+    padding: 1rem;
+    box-sizing: content-box;
+    transition: background-color 0.5s ease, color 0.2s linear;
+    background-color: #333;
+  }
+
+  &::before {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    content: '';
+    background: $primary;
+    border-radius: 1.5rem;
+    transform: translateX(-100%);
+    transition: 0.5s ease;
+    z-index: -1;
+  }
+
+  &:hover {
+    background: rgba(34, 34, 34, 0.62);
+
+    .button__icon {
+      background-color: $primary;
+      box-shadow: 0 0 5px rgb(0, 0, 0);
+    }
+
+    &::before {
+      transform: translateX(0);
+    }
   }
 
   &__subtext {
