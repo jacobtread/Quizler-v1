@@ -106,10 +106,15 @@ class SocketApi {
      * Called when the web socket connection is closed
      */
     onClose() {
-        console.log('Disconnected')
         this.isOpen = false
-        this.disconnect()
-        this.events.emit('state', 'closed')
+        if (this.isRunning) {
+            console.log('Disconnected')
+            this.disconnect()
+            this.events.emit('state', 'closed')
+        } else {
+            console.log('Lost connection. Attempting reconnect in 2 seconds')
+            this.ws = this.connect()
+        }
     }
 
     /**
