@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from "vue-router"
 
 import Home from "../pages/Home.vue"
 import Join from "../pages/Join.vue"
+import Create from "../pages/Create.vue"
+import CreateQuestion from "../pages/CreateQuestion.vue"
 
 const routes = [
     {
@@ -13,6 +15,16 @@ const routes = [
         name: 'Join',
         path: '/join',
         component: Join
+    },
+    {
+        name: 'Create',
+        path: '/create',
+        component: Create
+    },
+    {
+        name: 'CreateQuestion',
+        path: '/create/question',
+        component: CreateQuestion
     }
 ]
 

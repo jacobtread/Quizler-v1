@@ -13,13 +13,13 @@ import Logo from "../assets/logo.svg?inline";</script>
           <span class="button__subtext">Enter a game code and hop right in</span>
       </span>
       </router-link>
-      <button class="button">
+      <router-link :to="{name: 'Create'}" class="button">
         <Play class="button__icon"/>
         <span class="button__wrap">
         Create a quiz
         <span class="button__subtext">Create your own quiz</span>
       </span>
-      </button>
+      </router-link>
     </div>
   </div>
 </template>
@@ -77,6 +77,7 @@ import Logo from "../assets/logo.svg?inline";</script>
   overflow: hidden;
 
   border: 5px solid #222;
+
 
   transition: background-color 0.5s ease, color 0.2s linear;
 
