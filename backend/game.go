@@ -1,7 +1,6 @@
-package game
+package main
 
 import (
-	"backend/net"
 	"github.com/gorilla/websocket"
 	"log"
 	"math/rand"
@@ -42,7 +41,6 @@ type Player struct {
 	Answers   map[int16]string `json:"-"`
 	LastAlive time.Duration    `json:"last_alive"`
 	Connect   *websocket.Conn  `json:"-"`
-	Send      func(packet net.Packet)
 }
 
 // QuestionData A structure representing a question in the game
@@ -75,7 +73,7 @@ func CreateRandomId() string {
 }
 
 // CreatePlayerId Generate a random id for a player
-func CreatePlayerId(game *Game) string {
+func (game *Game) CreatePlayerId() string {
 	for {
 		id := CreateRandomId()
 		_, contains := game.Players[id]
@@ -85,9 +83,9 @@ func CreatePlayerId(game *Game) string {
 	}
 }
 
-// CreateGameId Generates random ids with CreateRandomId until a unique id that is not
+// GetRandomGameId Generates random ids with CreateRandomId until a unique id that is not
 // present in the list of games is generated
-func CreateGameId() string {
+func GetRandomGameId() string {
 	for {
 		id := CreateRandomId()
 		_, contains := Games[id]
@@ -100,7 +98,7 @@ func CreateGameId() string {
 // CreateGame creates a new game with the provided title and questions,
 // assigns it a unique id, stores it and returns the id and the game
 func CreateGame(title string, questions []QuestionData) *Game {
-	id := CreateGameId()
+	id := GetRandomGameId()
 	game := Game{
 		Id:        id,
 		Title:     title,
@@ -111,7 +109,7 @@ func CreateGame(title string, questions []QuestionData) *Game {
 		State:     Waiting,
 	}
 
-	go Loop(&game)
+	go game.Loop()
 
 	Games[id] = game
 	return &game
@@ -121,7 +119,7 @@ func Time() time.Duration {
 	return time.Duration(time.Now().UnixNano()) / time.Millisecond
 }
 
-func Loop(game *Game) {
+func (game *Game) Loop() {
 	log.Printf("Starting game loop for %s (%s)", game.Title, game.Id)
 	for game.Running {
 		t := Time()
@@ -133,7 +131,7 @@ func Loop(game *Game) {
 			for id, player := range game.Players {
 				passTime := player.LastAlive - t
 				if passTime >= 10*time.Second {
-					RemovePlayer(game, id, "Player timed out")
+					game.RemovePlayer(id, "Player timed out")
 				}
 			}
 
@@ -142,14 +140,14 @@ func Loop(game *Game) {
 			}
 
 		} else if game.State == Stopped {
-			StopGame(game)
+			game.Stop()
 		}
 
 	}
 }
 
 func JoinGame(name string, conn *websocket.Conn, game *Game) *Player {
-	id := CreatePlayerId(game)
+	id := game.CreatePlayerId()
 	player := Player{
 		Id:        id,
 		Name:      name,
@@ -159,58 +157,58 @@ func JoinGame(name string, conn *websocket.Conn, game *Game) *Player {
 		Connect:   conn,
 	}
 	game.Players[id] = player
-	BroadcastPacketExcluding(id, game, net.GetDisconnectOtherPacket(id, name))
+	game.BroadcastPacketExcluding(id, GetDisconnectOtherPacket(id, name))
 
 	for otherId, otherPlayer := range game.Players {
 		if otherId != id {
-			SendPacket(&player, net.GetPlayerDataPacket(otherId, otherPlayer.Name))
+			player.Send(GetPlayerDataPacket(otherId, otherPlayer.Name))
 		}
 	}
 
 	return &player
 }
 
-func HandlePacket(game *Game, player *Player, id net.PacketId, data net.PacketData) {
+func HandlePacket(game *Game, player *Player, id PacketId, data PacketData) {
 	if game.State == Started {
 		switch id {
-		case net.Answer:
+		case AnswerId:
 
 		}
 	}
 }
 
-func SendPacket(player *Player, packet net.Packet) {
+func (player *Player) Send(packet Packet) {
 	err := player.Connect.WriteJSON(packet)
 	if err != nil {
 		log.Printf("Failed to send packet to player '%s' (%s)", player.Name, player.Id)
 	}
 }
 
-func BroadcastPacket(game *Game, packet net.Packet) {
+func (game *Game) BroadcastPacket(packet Packet) {
 	for _, player := range game.Players {
-		SendPacket(&player, packet)
+		player.Send(packet)
 	}
 }
 
-func BroadcastPacketExcluding(exclude string, game *Game, packet net.Packet) {
+func (game *Game) BroadcastPacketExcluding(exclude string, packet Packet) {
 	for id, player := range game.Players {
 		if id != exclude {
-			SendPacket(&player, packet)
+			player.Send(packet)
 		}
 	}
 }
 
-func RemovePlayer(game *Game, id string, reason string) {
+func (game *Game) RemovePlayer(id string, reason string) {
 	player := game.Players[id]
 	player.Connect.Close()
 	delete(game.Players, id)
-	BroadcastPacketExcluding(id, game, net.GetDisconnectOtherPacket(id, reason))
+	game.BroadcastPacketExcluding(id, GetDisconnectOtherPacket(id, reason))
 }
 
-func StopGame(game *Game) {
+func (game *Game) Stop() {
 	game.Running = false
 	for id := range game.Players {
-		RemovePlayer(game, id, "Game ended")
+		game.RemovePlayer(id, "Game ended")
 	}
 	log.Printf("Stopping game %s", game.Id)
 }

@@ -1,7 +1,6 @@
-package net
+package main
 
 import (
-	"backend/game"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -26,8 +25,8 @@ func SocketConnect(c *gin.Context) {
 	// in ws.Close being called after this function is finished executing
 	defer func(ws *websocket.Conn) { _ = ws.Close() }(ws)
 
-	// The struct to store decoded packets in (Unknown by default)
-	packet := Packet{Id: Unknown}
+	// The struct to store decoded packets in (UnknownId by default)
+	packet := Packet{Id: UnknownId}
 
 	// Whether the client should continue running in a loop and accepting packets
 	running := true
@@ -61,46 +60,46 @@ func SocketConnect(c *gin.Context) {
 		// Read the incoming packet into the Command struct
 		err = ws.ReadJSON(&packet)
 		if err != nil {
-			// Disconnect the client for sending invalid data
+			// DisconnectId the client for sending invalid data
 			_ = ws.WriteJSON(GetDisconnectPacket("Client sent invalid data"))
 			break
 		}
 
-		var g *game.Game = nil
-		var player *game.Player = nil
+		var g *Game = nil
+		var player *Player = nil
 
 		switch packet.Id {
-		case Disconnect:
+		case DisconnectId:
 			data := packet.Data.(DisconnectData)
 			log.Printf("Client disconnected reason '%s'", data)
 			// End the connection with the client
 			running = false
-		case KeepAlive:
+		case KeepAliveId:
 			// Update last time the client was kept alive
 			lastKeepAlive = currentTime
 			// Return a keep alive to the client
 			Send(GetKeepAlive())
-		case CreateGame:
+		case CreateGameId:
 			data := packet.Data.(CreateGameData)
-			g = game.CreateGame(data.Title, data.Questions)
+			g = CreateGame(data.Title, data.Questions)
 			log.Printf("Created new g with id '%s' and title '%s'", g.Id, g.Title)
 			Send(GetJoinGamePacket(g.Id, g.Title))
-		case RequestJoin:
+		case RequestJoinId:
 			data := packet.Data.(RequestJoinData)
-			g = game.GetGame(data.Game)
+			g = GetGame(data.Game)
 			if g == nil {
 				Send(GetErrorPacket("That game code doesn't exist"))
 			} else {
-				if g.State != game.Waiting {
+				if g.State != Waiting {
 					Send(GetErrorPacket("That game is already started"))
 				} else {
-					player = game.JoinGame(data.Name, ws, g)
+					player = JoinGame(data.Name, ws, g)
 					Send(GetJoinGamePacket(g.Id, g.Title))
 				}
 			}
 		default:
 			if g != nil && player != nil {
-				game.HandlePacket(g, player, packet.Id, packet.Data)
+				HandlePacket(g, player, packet.Id, packet.Data)
 			}
 		}
 	}
