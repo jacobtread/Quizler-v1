@@ -79,6 +79,9 @@ func SocketConnect(c *gin.Context) {
 			lastKeepAlive = currentTime
 			// Return a keep alive to the client
 			Send(GetKeepAlive())
+			if player != nil {
+				player.LastAlive = lastKeepAlive
+			}
 		case CreateGameId:
 			data := packet.Data.(CreateGameData)
 			g = CreateGame(data.Title, data.Questions)
