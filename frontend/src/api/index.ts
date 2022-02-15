@@ -1,6 +1,6 @@
 import packets, { ErrorData, JoinGameData, Packet, PlayerData, QuestionData } from "./packets";
 import mitt from "mitt";
-import { $ref } from "vue/macros";
+import { ref, Ref } from "vue";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -158,7 +158,7 @@ class SocketApi {
      */
     onKeepAlive(api: SocketApi) {
         api.lastServerKeepAlive = performance.now()
-        if (this.isDebug) console.debug('Server is alive')
+        if (api.isDebug) console.debug('Server is alive')
     }
 
     /**
@@ -173,9 +173,9 @@ class SocketApi {
     }
 
     onJoinGame(api: SocketApi, data: JoinGameData) {
-        if (this.isDebug) console.debug(`Joined game with id ${data}`)
-        this.gameCode = data.id
-        this.events.emit('game', this.gameCode)
+        if (api.isDebug) console.debug(`Joined game with id ${data}`)
+        api.gameCode = data.id
+        api.events.emit('game', api.gameCode)
 
     }
 
@@ -270,8 +270,8 @@ let socket: SocketApi | null = null
 
 interface UseApi {
     socket: SocketApi;
-    open: boolean;
-    players: PlayerData[];
+    open: Ref<boolean>;
+    players: Ref<PlayerData[]>;
 }
 
 /**
@@ -281,16 +281,16 @@ interface UseApi {
  * open state event to an open ref
  */
 export function useApi(): UseApi {
-    let open = $ref(false)
+    let open = ref(false)
     if (socket == null) {
         socket = new SocketApi()
     }
     socket.events.on('state', (state: string) => {
-        open = state === 'open';
+        open.value = state === 'open';
     })
-    let players = $ref<PlayerData[]>([])
+    let players = ref<PlayerData[]>([])
     socket.events.on('player', (player: PlayerData) => {
-        players = socket!.players
+        players.value = socket!.players
     })
     return {socket, players, open}
 }

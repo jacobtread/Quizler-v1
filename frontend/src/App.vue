@@ -4,16 +4,14 @@ import Header from "./components/Header.vue";
 import { useApi } from "./api";
 import Loader from "./components/Loader.vue";
 
-const {socket, open} = useApi()
+const {socket, players, open} = useApi()
 
 
 </script>
 <template>
   <Header/>
   <template v-if="open">
-    <div>
-
-    </div>
+    <router-view/>
   </template>
   <template v-else>
     <div>
