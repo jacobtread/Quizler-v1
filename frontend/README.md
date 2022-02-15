@@ -1,3 +1,0 @@
-Current Designs
-
-Home: 
