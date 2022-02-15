@@ -76,14 +76,9 @@ function deleteQuestion(index: number) {
 <style scoped lang="scss">
 @import "../assets/variables";
 
-/*
-  Enter and leave animations can use different
-  durations and timing functions.
-*/
 .slide-fade-enter-active, .slide-fade-leave-active  {
   transition: all 0.2s ease;
 }
-
 
 .slide-fade-enter-from,
 .slide-fade-leave-to {

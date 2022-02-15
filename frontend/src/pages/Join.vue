@@ -31,9 +31,11 @@ watch(gameCode, () => {
                minlength="0"
                placeholder="XXXXX"
         >
-        <button class="button" :class="{'button--active': !disabled}" :disabled="disabled">
-          <Play/>
-        </button>
+        <transition name="button" appear>
+          <button class="button" v-if="!disabled" >
+            <Play/>
+          </button>
+        </transition>
       </div>
 
     </div>
@@ -111,26 +113,29 @@ watch(gameCode, () => {
   background-color: $primary;
   transition: 0.25s ease;
 
-
   display: flex;
   justify-content: center;
   align-items: center;
 
   overflow: hidden;
 
-  &--active {
-    width: 5rem;
-    transform: translateX(0) scale(1);
-  }
-
   &:disabled {
     background-color: #333;
     cursor: not-allowed;
-    width: 0;
-    transform: translateX(-100%) scale(0);
-    opacity: 0;
-    padding: 0;
   }
+}
+
+.button-enter-active,
+.button-leave-active {
+  width: 5rem;
+  transform: translateX(0) scale(1);
+}
+
+.button-leave-to, .button-enter-from  {
+  width: 0;
+  transform: translateX(-100%) scale(0);
+  opacity: 0;
+  padding: 0;
 }
 
 </style>
