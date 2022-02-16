@@ -132,6 +132,7 @@ function addQuestion() {
 
 @media screen and (max-width: 824px) {
   .main {
+    grid-template-rows: 1fr  1fr calc(2.5rem + 14px);
     grid-template-areas:
       "box1"
       "box2"
