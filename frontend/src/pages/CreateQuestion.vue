@@ -73,7 +73,7 @@ function addQuestion() {
     <Nav title="Add Question" back="Create"/>
     <div class="content">
       <div class="content__box">
-        <h2 class="answers__title">Details</h2>
+        <h2 class="content__box__title">Details</h2>
         <label class="input">
           <input type="text" class="input__value" placeholder="Title" v-model="question.title">
         </label>
@@ -84,7 +84,7 @@ function addQuestion() {
         </label>
       </div>
       <div class="content__box">
-        <h2 class="answers__title">Answers</h2>
+        <h2 class="content__box__title">Answers</h2>
         <Answers :question="question"/>
         <button class="button button--text button--block mt" @click="addQuestion">
           {{ isEdit ? 'Save' : 'Add' }}
@@ -119,6 +119,16 @@ function addQuestion() {
   &__box {
     display: block;
     flex: auto;
+
+    &__title {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      padding-left: 0.5rem;
+      color: #888;
+      text-align: left;
+      border-bottom: 2px solid #222;
+    }
   }
 }
 
