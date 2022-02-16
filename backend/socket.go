@@ -90,7 +90,7 @@ func SocketConnect(c *gin.Context) {
 		case CreateGameId:
 			data := OfType(packetData, CreateGameData{}).(CreateGameData)
 			g = CreateGame(data.Title, data.Questions)
-			log.Printf("Created new g with id '%s' and title '%s'", g.Id, g.Title)
+			log.Printf("Created new game with id '%s' and title '%s'", g.Id, g.Title)
 			Send(GetJoinGamePacket(g.Id, g.Title))
 		case RequestJoinId:
 			data := OfType(packetData, RequestJoinData{}).(RequestJoinData)
