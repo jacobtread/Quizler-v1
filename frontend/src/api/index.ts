@@ -1,4 +1,4 @@
-import packets, { ErrorData, JoinGameData, Packet, PlayerData, QuestionData } from "./packets";
+import packets, { DisconnectData, ErrorData, JoinGameData, Packet, PlayerData, QuestionData } from "./packets";
 import mitt from "mitt";
 import { ref, Ref } from "vue";
 
@@ -27,8 +27,9 @@ interface PacketHandlers {
 
 type Events = {
     state: string;
-    game: JoinGameData;
+    game: JoinGameData | null;
     player: PlayerData;
+    disconnect: string
 }
 
 /**
@@ -67,7 +68,9 @@ class SocketApi {
     private handlers: PacketHandlers = {
         0x00: IGNORE,
         0x01: this.onKeepAlive,
+        0x02: this.onDisconnect,
         0x03: this.onError,
+        0x06: this.onJoinGame,
         0x07: this.onPlayerData
     }
 
@@ -145,12 +148,24 @@ class SocketApi {
      * Packet handler for PlayerData packet (0x07) handles data about other
      * players in the game such as username and id's
      *
-     * @param api
-     * @param data
+     * @param api The current connection instance
+     * @param data The player data of the other player
      */
     onPlayerData(api: SocketApi, data: PlayerData) {
         api.players.push(data)
         api.events.emit('player', data)
+    }
+
+    /**
+     * Packet handler for the Disconnect packet (0x02) handles the player
+     * being disconnected from the game
+     *
+     * @param api The current connection instance
+     * @param data The disconnect data contains the reason for disconnect
+     */
+    onDisconnect(api: SocketApi, data: DisconnectData) {
+        api.setGameCode(null)
+        api.events.emit('disconnect', data.reason)
     }
 
     /**
@@ -175,10 +190,16 @@ class SocketApi {
         console.error(`An error occurred ${data.cause}`)
     }
 
+    /**
+     * Packet handler for the Join Game packet (0x06) handles the player
+     * joining the game. Sets the game code and emits relevent events
+     *
+     * @param api The current connection instance
+     * @param data The data for the game contains the id and title
+     */
     onJoinGame(api: SocketApi, data: JoinGameData) {
         if (api.isDebug) console.debug(`Joined game with id ${data}`)
-        api.gameCode = data.id
-        api.events.emit('game', data)
+        api.setGameCode(data)
     }
 
     /**
@@ -193,7 +214,8 @@ class SocketApi {
             let name = packets.names[id] // Retrieve debug friendly packet name
             if (!name) name = 'Unknown Name'
             if (packet.data !== undefined) {
-                console.debug(`[${dir}] ${name} (${toHex(id, 2)}) {${packet.data}}`)
+                const dataString = JSON.stringify(packet.data)
+                console.debug(`[${dir}] ${name} (${toHex(id, 2)}) {${dataString}}`)
             } else {
                 console.debug(`[${dir}] ${name} (${toHex(id, 2)})`)
             }
@@ -220,9 +242,34 @@ class SocketApi {
         this.send(packets.keepAlive())
     }
 
+    /**
+     * Tells the websocket server to create a new game instance
+     * with the provided tile and questions
+     *
+     * The server will respond with a 0x06 Game Join packet which
+     * contains the id and title of the created game server
+     *
+     * @param title The title for the game
+     * @param questions The questions for the game
+     */
     createGame(title: string, questions: QuestionData[]) {
         if (this.isDebug) console.debug(`Creating game ${title}`)
         this.send(packets.createGame(title, questions))
+    }
+
+    /**
+     * Tells the websocket server to close and destroy the game server
+     * that is owned by the current player
+     */
+    sendDestroy() {
+        if (this.isDebug) console.debug('Destroying game')
+        this.send(packets.destroy())
+        this.setGameCode(null)
+    }
+
+    setGameCode(data: JoinGameData | null) {
+        this.gameCode = data ? data.id : null
+        this.events.emit('game', data)
     }
 
     /**
@@ -262,9 +309,7 @@ class SocketApi {
                 this.keepAlive()
             }
         }
-
     }
-
 }
 
 // The socket instance

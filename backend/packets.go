@@ -17,6 +17,7 @@ const (
 	AnswerId               = 0x0A
 	TimeId                 = 0x0B
 	WinnersID              = 0x0C
+	DestroyId              = 0x0E
 )
 
 // Packet Represents a structure for a packet each packet contains an

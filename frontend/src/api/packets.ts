@@ -66,10 +66,12 @@ export default {
         0x04: 'Create Game',
         0x05: 'Request Join',
         0x06: 'Join Game',
+        0x0E: 'Destroy'
     } as Names,
     unknown: (): UnknownPacket => ({id: 0x00}),
     keepAlive: (): KeepAlivePacket => ({id: 0x01}),
     disconnect: (reason: string): DisconnectPacket => ({id: 0x02, data: {reason}}),
     error: (cause: string): ErrorPacket => ({id: 0x03, data: {cause}}),
-    createGame: (title: string, questions: QuestionData[]): CreateGamePacket => ({id: 0x04, data: {title, questions}})
+    createGame: (title: string, questions: QuestionData[]): CreateGamePacket => ({id: 0x04, data: {title, questions}}),
+    destroy: () => ({id: 0x0E})
 }

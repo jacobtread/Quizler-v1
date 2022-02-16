@@ -66,6 +66,7 @@ func SocketConnect(c *gin.Context) {
 			break
 		}
 
+		var hostOf *Game = nil
 		var g *Game = nil
 		var player *Player = nil
 
@@ -90,6 +91,7 @@ func SocketConnect(c *gin.Context) {
 		case CreateGameId:
 			data := OfType(packetData, CreateGameData{}).(CreateGameData)
 			g = CreateGame(data.Title, data.Questions)
+			hostOf = g
 			log.Printf("Created new game with id '%s' and title '%s'", g.Id, g.Title)
 			Send(GetJoinGamePacket(g.Id, g.Title, true))
 		case RequestJoinId:
@@ -105,8 +107,14 @@ func SocketConnect(c *gin.Context) {
 					Send(GetJoinGamePacket(g.Id, g.Title, false))
 				}
 			}
+		case DestroyId:
+			if hostOf == nil {
+				Send(GetErrorPacket("That game code doesn't exist"))
+			} else {
+				hostOf.Stop()
+			}
 		default:
-			if g != nil && player != nil {
+			if g != nil || player != nil {
 				HandlePacket(g, player, packet.Id, packetData)
 			}
 		}

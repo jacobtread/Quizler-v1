@@ -13,12 +13,17 @@ defineProps({
   back: {
     type: String,
     default: 'Home'
+  },
+  backFunction: {
+    type: Function,
+    default: () => {
+    }
   }
 });
 </script>
 <template>
   <div class="nav" role="navigation">
-    <router-link class="back-button" :to="{name: back}">
+    <router-link class="back-button" :to="{name: back}" @click="backFunction">
       <BackIcon/>
     </router-link>
     <h1 class="title">{{ title }}</h1>

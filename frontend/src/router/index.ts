@@ -4,6 +4,7 @@ import Home from "@page/Home.vue"
 import Join from "@page/Join.vue"
 import Create from "@page/Create.vue"
 import CreateQuestion from "@page/CreateQuestion.vue"
+import Overview from "@page/Overview.vue"
 
 const routes = [
     {
@@ -30,6 +31,11 @@ const routes = [
         name: 'Modify',
         path: '/modify/:edit',
         component: CreateQuestion
+    },
+    {
+        name: 'Overview',
+        path: '/overview',
+        component: Overview
     }
 ]
 

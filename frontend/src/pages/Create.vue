@@ -19,7 +19,7 @@ const store = useCreateStore()
 const router = useRouter()
 const {socket} = useApi()
 const gameState = useGameStore()
-const {questions, title} = storeToRefs(store)
+const {questions, title} = storeToRefs(useCreateStore())
 
 /**
  * Delete the question at the provided index. Filters
@@ -43,11 +43,14 @@ function createQuiz() {
   // Remove any existing join listeners
   socket.events.off('game')
   // Add a new join listener
-  socket.events.on('game', (data: JoinGameData) => {
-    // Copy the game data and set it into the gameState store
-    gameState.data = {...data}
-    // Redirect to the overview page
-    router.push({name: 'Overview'})
+  socket.events.on('game', (data: JoinGameData | null) => {
+    if (data != null) {
+      gameState.joined = true;
+      // Copy the game data and set it into the gameState store
+      gameState.data = {...data}
+      // Redirect to the overview page
+      router.push({name: 'Overview'})
+    }
   })
 }
 
