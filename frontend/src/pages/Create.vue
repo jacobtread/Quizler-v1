@@ -66,9 +66,12 @@ function deleteQuestion(index: number) {
             </div>
           </div>
         </transition-group>
-        <router-link :to="{name: 'CreateQuestion'}" class="add-button">
+        <router-link :to="{name: 'CreateQuestion'}" class="button">
           <Add class="add-button__icon"/>
         </router-link>
+        <button class="button button--create">
+          Create Quiz
+        </button>
       </div>
     </div>
   </div>
@@ -125,7 +128,7 @@ function deleteQuestion(index: number) {
   margin-bottom: 1.5rem;
 }
 
-.add-button {
+.button {
   display: block;
   cursor: pointer;
   padding: 0.5rem;
@@ -140,6 +143,12 @@ function deleteQuestion(index: number) {
 
   &:active {
     transform: scale(0.7);
+  }
+
+  &--create {
+    font-size: 1.5rem;
+    padding: 1rem;
+    margin-top: 1rem;
   }
 }
 

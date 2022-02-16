@@ -33,6 +33,7 @@ function setFromIndex(index: number) {
   question.values = other.values
   question.answers = other.answers
   question.title = other.title
+  question.image = other.image
 }
 
 let isEdit = false
@@ -77,7 +78,8 @@ function addQuestion() {
     question: question.question,
     values: [...question.values],
     answers: [...question.answers],
-    title: question.title
+    title: question.title,
+    image: question.image
   }
   if (isEdit) {
     questions.value[edit as number] = data
