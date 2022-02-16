@@ -1,4 +1,8 @@
 <script setup lang="ts">
+/*
+* Create page (/create) a page for creating new quiz's displays
+* a list of questions that can be modified, added, or deleted
+*/
 
 import Add from "@asset/add.svg?inline"
 import Cross from "@asset/cross.svg?inline"
