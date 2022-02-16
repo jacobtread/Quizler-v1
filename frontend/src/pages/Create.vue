@@ -31,29 +31,28 @@ function createQuiz() {
 }
 
 </script>
-
 <template>
   <div>
     <Nav title="Create Quiz"/>
-    <div class="content">
-      <div class="editor">
-        <p class="text">To get started creating your quiz press the
-          <Add class="inline-icon"/>
-          button to add a new question. If you accidentally
-          added a question just press the
-          <Cross class="inline-icon"/>
-          icon to remove it or
-          <Edit class="inline-icon"/>
-          to edit it
-        </p>
-        <div>
+    <div class="wrapper">
+      <main class="main">
+        <div class="box">
+          <p class="text">To get started creating your quiz press the
+            <Add class="inline-icon"/>
+            button to add a new question. If you accidentally
+            added a question just press the
+            <Cross class="inline-icon"/>
+            icon to remove it or
+            <Edit class="inline-icon"/>
+            to edit it
+          </p>
           <label class="input">
             <span class="input__label">Title</span>
             <input type="text" class="input__value" placeholder="Title" v-model="title">
           </label>
-
-          <h2 class="subtitle">Questions</h2>
-
+        </div>
+        <div class="box">
+          <h2 class="box__title">Questions</h2>
           <transition-group name="slide-fade">
             <div class="questions" v-if="questions.length > 0">
               <div v-for="(question, index) of questions" :key="index" class="question">
@@ -84,14 +83,16 @@ function createQuiz() {
               </div>
             </div>
           </transition-group>
-          <router-link :to="{name: 'CreateQuestion'}" class="button">
-            <Add class="add-button__icon"/>
+          <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block">
+            <Add class="button__icon"/>
           </router-link>
-          <button class="button button--create" @click="createQuiz">
+        </div>
+        <div class="full__box">
+          <button class="button button--text button--block" @click="createQuiz">
             Create Quiz
           </button>
         </div>
-      </div>
+      </main>
     </div>
   </div>
 </template>
@@ -99,66 +100,33 @@ function createQuiz() {
 <style scoped lang="scss">
 @import "../assets/variables";
 
-.slide-fade-enter-active, .slide-fade-leave-active {
-  transition: all 0.2s ease;
+.full__box {
+  grid-area: full;
 }
 
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateX(20px);
-  height: 0;
-  opacity: 0;
-}
-
-.content {
+.main {
   flex: auto;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
-  color: white;
-  overflow-y: auto;
-}
-
-.subtitle {
-  display: inline-block;
-  font-size: 1.5rem;
-  padding: 1rem;
-  background-color: #222;
-  border-radius: 1rem;
-  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr calc(2.5rem + 14px);
+  grid-template-areas:
+    "box1"
+    "box2"
+    "full";
+  align-items: initial;
   margin-bottom: 1rem;
+  gap: 1rem;
+  width: 100%;
+  max-width: 1200px;
+  padding: 1rem;
 }
 
 .text {
+  margin: 1.5rem auto;
   color: #CCCCCC;
   font-size: 1.2rem;
   max-width: 700px;
   line-height: 1.5;
-  margin-bottom: 1.5rem;
-}
-
-.button {
-  display: block;
-  cursor: pointer;
-  padding: 0.5rem;
-  width: 100%;
-  background-color: transparent;
-  border-radius: 0.5rem;
-
-  border: 5px solid #222;
-  color: white;
-
-  transition: transform 0.2s ease;
-
-  &:active {
-    transform: scale(0.7);
-  }
-
-  &--create {
-    font-size: 1.5rem;
-    padding: 1rem;
-    margin-top: 1rem;
-  }
 }
 
 .inline-icon {
@@ -173,11 +141,24 @@ function createQuiz() {
   border-radius: 0.25rem;
 }
 
+
+.questions {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-auto-flow: dense;
+  width: 100%;
+  gap: 1rem;
+}
+
 .question {
+  flex: auto;
   background-color: #222;
-  margin-bottom: 1.5rem;
   border-radius: 0.5rem;
   padding: 1.2rem;
+
+  &:nth-last-of-type(1) {
+    margin-bottom: 0;
+  }
 
   &__head {
     display: flex;

@@ -39,7 +39,7 @@ function removeAt(index: number) {
 </script>
 <template>
   <div class="wrapper">
-    <ul class="answers">
+    <ul class="answers" role="list">
       <li v-for="(_, index) of question.answers"
           class="answer"
           :key="index"
@@ -60,12 +60,6 @@ function removeAt(index: number) {
 
 <style scoped lang="scss">
 @import "../../assets/variables";
-
-.wrapper {
-  position: relative;
-  width: 100%;
-  flex: auto;
-}
 
 .answers {
   // Remove the dot list style

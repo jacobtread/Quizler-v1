@@ -149,30 +149,6 @@ function addQuestion() {
   }
 }
 
-.box {
-  display: flex;
-  flex-flow: column;
-  gap: 1rem;
-  flex: auto;
-
-  &:nth-child(1) {
-    grid-area: box1;
-  }
-
-  &:nth-child(2) {
-    grid-area: box2;
-  }
-
-  &__title {
-    font-size: 1.25rem;
-    padding-bottom: 0.5rem;
-    padding-left: 0.5rem;
-    color: #888;
-    text-align: left;
-    border-bottom: 2px solid #222;
-  }
-}
-
 .editor {
   display: block;
   width: 100%;
