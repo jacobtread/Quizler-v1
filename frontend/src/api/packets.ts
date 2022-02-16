@@ -31,7 +31,7 @@ export interface QuestionData {
     image?: string;
     question: string;
     answers: string[];
-    answer: number
+    values: number[];
 }
 
 export interface Player {

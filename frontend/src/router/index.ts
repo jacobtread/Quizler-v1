@@ -25,6 +25,11 @@ const routes = [
         name: 'CreateQuestion',
         path: '/create/question',
         component: CreateQuestion
+    },
+    {
+        name: 'Modify',
+        path: '/modify/:edit',
+        component: CreateQuestion
     }
 ]
 

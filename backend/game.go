@@ -52,7 +52,7 @@ type QuestionData struct {
 	Image    string   `json:"image"`
 	Question string   `json:"question"`
 	Answers  []string `json:"answers"`
-	Answer   int16    `json:"answer"`
+	Values   []int8   `json:"values"`
 }
 
 // UniqueIdLength The length in chars that should be used for generating unique game ids

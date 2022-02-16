@@ -42,9 +42,10 @@ function deleteQuestion(index: number) {
               <div class="question__head">
                 <h2 class="question__head__title">{{ question.title }}</h2>
                 <div class="question__head__buttons">
-                  <button class="question__head__button question__head__button--edit">
+                  <router-link :to="{name: 'Modify', params: {edit: index}}"
+                               class="question__head__button question__head__button--edit">
                     <Edit class="question__head__button__icon"/>
-                  </button>
+                  </router-link>
                   <button
                       class="question__head__button question__head__button--delete"
                       @click="deleteQuestion(index)"
@@ -57,7 +58,7 @@ function deleteQuestion(index: number) {
               <ul class="question__answers">
                 <li v-for="(answer, index) of question.answers"
                     class="question__answers__item"
-                    :class="{'question__answers__item--selected': question.answer === index}"
+                    :class="{'question__answers__item--selected': question.values.indexOf(index) !== -1}"
                 >
                   {{ answer }}
                 </li>
@@ -76,7 +77,7 @@ function deleteQuestion(index: number) {
 <style scoped lang="scss">
 @import "../assets/variables";
 
-.slide-fade-enter-active, .slide-fade-leave-active  {
+.slide-fade-enter-active, .slide-fade-leave-active {
   transition: all 0.2s ease;
 }
 

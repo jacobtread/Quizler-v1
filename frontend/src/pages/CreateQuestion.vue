@@ -6,22 +6,47 @@ import Add from "../assets/add.svg?inline"
 import Cross from "../assets/cross.svg?inline"
 import { useCreateStore } from "../store/create";
 import { storeToRefs } from "pinia";
-import { onMounted, reactive, ref } from "vue";
+import { reactive, ref } from "vue";
 import { QuestionData } from "../api/packets";
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 
 const store = useCreateStore()
 
 const {questions} = storeToRefs(store)
+const router = useRouter()
+const fileInput = ref<HTMLInputElement>()
+const route = useRoute();
+let edit: string | undefined | number = route.params.edit as (string | undefined)
 
 const question = reactive<QuestionData>({
   question: '',
-  answer: 0,
+  values: [0],
   answers: [
     'Example Answer'
   ],
   title: ''
 })
+
+function setFromIndex(index: number) {
+  const other = questions.value[index]
+  question.question = other.question
+  question.values = other.values
+  question.answers = other.answers
+  question.title = other.title
+}
+
+let isEdit = false
+
+if (edit) {
+  isEdit = true
+  edit = parseInt(edit)
+  if (edit >= questions.value.length) {
+    router.push({name: 'Create'})
+  } else {
+    setFromIndex(edit)
+  }
+}
+
 
 function addAnswer() {
   question.answers.push('')
@@ -29,13 +54,10 @@ function addAnswer() {
 
 function removeAnswer(index: number) {
   question.answers = question.answers.filter((_, i) => i != index)
-  if (question.answer === index) {
-    question.answer = 0
+  if (question.values.indexOf(index) != -1) {
+    question.values = question.values.filter((_, i) => i != index)
   }
 }
-
-const router = useRouter()
-const fileInput = ref<HTMLInputElement>()
 
 function onFileChange() {
   const input: HTMLInputElement = fileInput.value!
@@ -50,19 +72,20 @@ function onFileChange() {
   }
 }
 
-onMounted(() => {
-  const input: HTMLInputElement = fileInput.value!
-  console.log(input.files)
-})
-
 function addQuestion() {
-  questions.value.push({
+  const data: QuestionData = {
     question: question.question,
-    answer: question.answer,
+    values: [...question.values],
     answers: [...question.answers],
     title: question.title
-  })
-  router.push({name: 'Create'})
+  }
+  if (isEdit) {
+    questions.value[edit as number] = data
+    router.push({name: 'Create'})
+  } else {
+    questions.value.push(data)
+    router.push({name: 'Create'})
+  }
 }
 
 function removeImage() {
@@ -82,10 +105,6 @@ function removeImage() {
         <span class="input__label">Title</span>
         <input type="text" class="input__value" placeholder="Title" v-model="question.title">
       </label>
-      <label class="input input--area">
-        <span class="input__label">Question</span>
-        <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
-      </label>
 
       <template v-if="question.image">
         <div class="image"
@@ -96,34 +115,39 @@ function removeImage() {
         </div>
       </template>
       <template v-else>
-        <label class="input input--file">
+        <label class="input input--image">
           <Image class="input__image"/>
           <span>Click to add image</span>
           <input ref="fileInput" class="input__file" type="file" accept="image/*" @change="onFileChange">
         </label>
       </template>
 
+      <label class="input input--area">
+        <span class="input__label">Question</span>
+        <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
+      </label>
+
       <h2 class="answers__title">Answers</h2>
       <div>
-        <transition-group name="slide-fade" appear class="answers" tag="ul">
+        <ul class="answers">
           <li v-for="(answer, index) of question.answers"
               class="answer"
               :key="index"
-              :class="{'answer--selected': question.answer === index}"
+              :class="{'answer--selected': question.values.indexOf(index) !== -1}"
           >
             <label class="answer__select">
-              <input class="answer__select__radio" type="radio" :value="index" v-model="question.answer">
+              <input class="answer__select__radio" type="checkbox" v-model="question.values" :value="index">
             </label>
             <input class="answer__value" type="text" v-model="question.answers[index]">
             <Cross class="answer__button" v-if="index !== 0" @click="removeAnswer(index)"/>
           </li>
-        </transition-group>
+        </ul>
         <button class="add-button" @click="addAnswer">
           <Add class="add-button__icon"/>
         </button>
       </div>
       <button class=" done-button" @click="addQuestion">
-        Add
+        {{ isEdit ? 'Save' : 'Add' }}
       </button>
     </div>
   </div>
@@ -179,6 +203,30 @@ function removeImage() {
   &__file {
     display: none;
   }
+
+
+  &--image {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    flex: auto;
+    border: 5px solid #333;
+
+    background: #333;
+    border-radius: 0.5rem;
+    outline: none;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    flex-flow: row;
+    vertical-align: center;
+    justify-content: center;
+    color: white;
+
+    &--active, &:focus {
+      border-bottom-color: $primary;
+    }
+  }
+
 
   &__value {
     background-color: transparent;
