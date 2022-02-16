@@ -136,3 +136,15 @@ html, body {
 .mt {
   margin-top: 1rem;
 }
+
+.wrapper {
+  position: relative;
+  flex: auto;
+  overflow-y: auto;
+  width: 100%;
+
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  gap: 1rem;
+}

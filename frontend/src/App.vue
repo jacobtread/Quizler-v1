@@ -31,6 +31,9 @@ const {socket, players, open} = useApi()
   overflow: hidden;
 
   &__item {
+    display: flex;
+    align-items: center;
+    flex-flow: column;
     position: absolute;
     left: 0;
     top: 0;

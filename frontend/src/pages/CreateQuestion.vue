@@ -66,30 +66,32 @@ function addQuestion() {
 
 
 </script>
-
 <template>
   <div>
-
     <Nav title="Add Question" back="Create"/>
-    <div class="content">
-      <div class="content__box">
-        <h2 class="content__box__title">Details</h2>
-        <label class="input">
-          <input type="text" class="input__value" placeholder="Title" v-model="question.title">
-        </label>
-        <ImageSelector v-model="question.image"/>
-        <label class="input input--area">
-          <span class="input__label">Question</span>
-          <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
-        </label>
-      </div>
-      <div class="content__box">
-        <h2 class="content__box__title">Answers</h2>
-        <Answers :question="question"/>
-        <button class="button button--text button--block mt" @click="addQuestion">
-          {{ isEdit ? 'Save' : 'Add' }}
-        </button>
-      </div>
+    <div class="wrapper">
+      <main class="main">
+        <div class="box">
+          <h2 class="box__title">Details</h2>
+          <label class="input">
+            <input type="text" class="input__value" placeholder="Title" v-model="question.title">
+          </label>
+          <ImageSelector v-model="question.image"/>
+          <label class="input input--area question-text">
+            <span class="input__label">Question</span>
+            <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
+          </label>
+        </div>
+        <div class="box">
+          <h2 class="box__title">Answers</h2>
+          <Answers :question="question"/>
+        </div>
+        <div class="full__box">
+          <button class="button button--text button--block" @click="addQuestion">
+            {{ isEdit ? 'Save' : 'Add' }}
+          </button>
+        </div>
+      </main>
     </div>
   </div>
 </template>
@@ -100,35 +102,64 @@ function addQuestion() {
 
 .input--area {
   .input__value {
-    max-height: 200px;
+    flex: auto;
     resize: vertical;
   }
 }
 
-.content {
+.question-text {
   flex: auto;
-  justify-content: space-evenly;
-  align-items: flex-start;
-  display: flex;
-  flex-flow: row;
+}
+
+.full__box {
+  grid-area: full;
+}
+
+.main {
+  flex: auto;
+  display: grid;
+  grid-template-rows: 1fr calc(2.5rem + 14px);
+  grid-template-areas:
+    "box1 box2"
+    "full full";
+  align-items: initial;
+  margin-bottom: 1rem;
+  gap: 1rem;
   width: 100%;
   max-width: 1200px;
-  margin: 0 auto;
-  gap: 1rem;
+  padding: 1rem;
+}
 
-  &__box {
-    display: block;
-    flex: auto;
+@media screen and (max-width: 824px) {
+  .main {
+    grid-template-areas:
+      "box1"
+      "box2"
+      "full";
+  }
+}
 
-    &__title {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      padding-left: 0.5rem;
-      color: #888;
-      text-align: left;
-      border-bottom: 2px solid #222;
-    }
+.box {
+  display: flex;
+  flex-flow: column;
+  flex: auto;
+
+  &:nth-child(1) {
+    grid-area: box1;
+  }
+
+  &:nth-child(2) {
+    grid-area: box2;
+  }
+
+  &__title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    padding-left: 0.5rem;
+    color: #888;
+    text-align: left;
+    border-bottom: 2px solid #222;
   }
 }
 

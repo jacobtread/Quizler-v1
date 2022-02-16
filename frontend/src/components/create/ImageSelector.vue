@@ -76,11 +76,13 @@ function onFileChange() {
   background-position: center;
   background-size: cover;
   height: 300px;
+  flex: auto;
 
   &-wrapper {
     width: 100%;
     background: #333;
     border-radius: 0.5rem;
+    margin-top: 1rem;
   }
 
   &__text {

@@ -64,8 +64,8 @@ function removeAt(index: number) {
 .answers {
   list-style: none;
   width: 100%;
-  max-height: 50vh;
   overflow-y: auto;
+  flex: auto;
 
   &__title {
     margin: 1rem 0;

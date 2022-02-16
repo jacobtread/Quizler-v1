@@ -14,10 +14,8 @@ defineProps({
     type: String,
     default: 'Home'
   }
-})
-
+});
 </script>
-
 <template>
   <div class="nav" role="navigation">
     <router-link class="back-button" :to="{name: back}">
@@ -26,7 +24,6 @@ defineProps({
     <h1 class="title">{{ title }}</h1>
   </div>
 </template>
-
 <style scoped lang="scss">
 @import "../assets/variables";
 
@@ -35,6 +32,7 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: space-between;
+  width: 100%;
   padding: 1rem;
 }
 
