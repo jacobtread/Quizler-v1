@@ -38,7 +38,7 @@ function removeAt(index: number) {
 }
 </script>
 <template>
-  <div>
+  <div class="wrapper">
     <ul class="answers">
       <li v-for="(_, index) of question.answers"
           class="answer"
@@ -61,15 +61,18 @@ function removeAt(index: number) {
 <style scoped lang="scss">
 @import "../../assets/variables";
 
+.wrapper {
+  position: relative;
+  width: 100%;
+  flex: auto;
+}
+
 .answers {
   list-style: none;
   width: 100%;
-  overflow-y: auto;
-  flex: auto;
 
-  &__title {
-    margin: 1rem 0;
-    color: #CCC;
+  .answer:nth-last-of-type(1) {
+    margin-bottom: 0;
   }
 }
 
@@ -142,6 +145,7 @@ function removeAt(index: number) {
 
   &--selected {
     border-left: 5px solid $primary;
+
     .answer__select {
       &::after {
         transform: scale(1);

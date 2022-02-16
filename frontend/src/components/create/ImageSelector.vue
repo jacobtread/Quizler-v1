@@ -68,21 +68,20 @@ function onFileChange() {
 
 
 .image {
-  margin: 1rem 0;
   position: relative;
   display: block;
   width: 100%;
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
-  height: 300px;
-  flex: auto;
+  height: 100%;
 
   &-wrapper {
+    position: relative;
+    flex: auto 4 0;
     width: 100%;
     background: #333;
     border-radius: 0.5rem;
-    margin-top: 1rem;
   }
 
   &__text {

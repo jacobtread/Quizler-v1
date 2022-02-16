@@ -73,12 +73,11 @@ function addQuestion() {
       <main class="main">
         <div class="box">
           <h2 class="box__title">Details</h2>
+          <ImageSelector v-model="question.image"/>
           <label class="input">
             <input type="text" class="input__value" placeholder="Title" v-model="question.title">
           </label>
-          <ImageSelector v-model="question.image"/>
           <label class="input input--area question-text">
-            <span class="input__label">Question</span>
             <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
           </label>
         </div>
@@ -103,7 +102,7 @@ function addQuestion() {
 .input--area {
   .input__value {
     flex: auto;
-    resize: vertical;
+    resize: none;
   }
 }
 
@@ -143,6 +142,7 @@ function addQuestion() {
 .box {
   display: flex;
   flex-flow: column;
+  gap: 1rem;
   flex: auto;
 
   &:nth-child(1) {
@@ -155,7 +155,6 @@ function addQuestion() {
 
   &__title {
     font-size: 1.25rem;
-    margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     padding-left: 0.5rem;
     color: #888;
