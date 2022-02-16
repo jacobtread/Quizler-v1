@@ -17,15 +17,32 @@ const {socket} = useApi()
 const gameState = useGameStore()
 const {questions, title} = storeToRefs(store)
 
+/**
+ * Delete the question at the provided index. Filters
+ * through the questions and removes whatever is at
+ * the provided index
+ *
+ * @param index The index to remove
+ */
 function deleteQuestion(index: number) {
   questions.value = questions.value.filter((_, i) => i != index)
 }
 
+/**
+ * Create a new quiz sends a CreateGame packet (0x04) to the server along
+ * with the title and questions of the game. Listens for game join events
+ * and sets the screen to the overview screen when it receives one
+ */
 function createQuiz() {
+  // Send the creation game packet
   socket.createGame(title.value, questions.value)
+  // Remove any existing join listeners
   socket.events.off('game')
+  // Add a new join listener
   socket.events.on('game', (data: JoinGameData) => {
+    // Copy the game data and set it into the gameState store
     gameState.data = {...data}
+    // Redirect to the overview page
     router.push({name: 'Overview'})
   })
 }
