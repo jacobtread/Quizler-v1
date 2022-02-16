@@ -6,13 +6,20 @@ import Cross from "../assets/cross.svg?inline"
 import Edit from "../assets/edit.svg?inline"
 import { useCreateStore } from "../store/create";
 import { storeToRefs } from "pinia";
+import { useApi } from "../api";
+import { ref } from "vue";
 
 const store = useCreateStore()
-
+const {socket} = useApi()
+const title = ref('')
 const {questions} = storeToRefs(store)
 
 function deleteQuestion(index: number) {
   questions.value = questions.value.filter((_, i) => i != index)
+}
+
+function createQuiz() {
+  socket.createGame(title.value, questions.value)
 }
 
 </script>
@@ -34,6 +41,11 @@ function deleteQuestion(index: number) {
         to edit it
       </p>
       <div>
+        <label class="input">
+          <span class="input__label">Title</span>
+          <input type="text" class="input__value" placeholder="Title" v-model="title">
+        </label>
+
         <h2 class="subtitle">Questions</h2>
 
         <transition-group name="slide-fade">
@@ -69,7 +81,7 @@ function deleteQuestion(index: number) {
         <router-link :to="{name: 'CreateQuestion'}" class="button">
           <Add class="add-button__icon"/>
         </router-link>
-        <button class="button button--create">
+        <button class="button button--create" @click="createQuiz">
           Create Quiz
         </button>
       </div>

@@ -40,7 +40,7 @@ html, body {
   justify-content: center;
   align-content: center;
   border-radius: 0.5rem;
-  transition: background-color 0.25s ease,  transform 0.2s ease;
+  transition: background-color 0.25s ease, transform 0.2s ease;
 
   &:active {
     transform: scale(0.7);
@@ -49,4 +49,68 @@ html, body {
   &:hover {
     background: $primary;
   }
+
+}
+
+.input {
+  display: flex;
+  flex-flow: column;
+
+  &__label {
+    display: block;
+    text-align: left;
+    padding: 0.5rem;
+    color: #999;
+  }
+
+  &__file {
+    display: none;
+  }
+
+
+  &--image {
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    flex: auto;
+    border: 5px solid #333;
+
+    background: #333;
+    border-radius: 0.5rem;
+    outline: none;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    flex-flow: row;
+    vertical-align: center;
+    justify-content: center;
+    color: white;
+
+    &--active, &:focus {
+      border-bottom-color: $primary;
+    }
+  }
+
+
+  &__value {
+    background-color: transparent;
+    font-size: 1.2rem;
+    border: 5px solid #333;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    color: #CCC;
+    outline: none;
+
+    &:focus {
+      border-bottom-color: $primary;
+    }
+  }
+}
+
+
+.content {
+  flex: auto;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  color: white;
 }

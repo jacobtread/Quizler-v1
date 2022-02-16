@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/mitchellh/mapstructure"
 	"log"
 	"net/http"
 	"time"
@@ -68,9 +69,13 @@ func SocketConnect(c *gin.Context) {
 		var g *Game = nil
 		var player *Player = nil
 
+		var packetData map[string]interface{}
+		if packet.Data != nil {
+			packetData = packet.Data.(map[string]interface{})
+		}
 		switch packet.Id {
 		case DisconnectId:
-			data := packet.Data.(DisconnectData)
+			data := OfType(packetData, DisconnectData{}).(DisconnectData)
 			log.Printf("Client disconnected reason '%s'", data)
 			// End the connection with the client
 			running = false
@@ -83,12 +88,12 @@ func SocketConnect(c *gin.Context) {
 				player.LastAlive = lastKeepAlive
 			}
 		case CreateGameId:
-			data := packet.Data.(CreateGameData)
+			data := OfType(packetData, CreateGameData{}).(CreateGameData)
 			g = CreateGame(data.Title, data.Questions)
 			log.Printf("Created new g with id '%s' and title '%s'", g.Id, g.Title)
 			Send(GetJoinGamePacket(g.Id, g.Title))
 		case RequestJoinId:
-			data := packet.Data.(RequestJoinData)
+			data := OfType(packetData, RequestJoinData{}).(RequestJoinData)
 			g = GetGame(data.Game)
 			if g == nil {
 				Send(GetErrorPacket("That game code doesn't exist"))
@@ -102,8 +107,16 @@ func SocketConnect(c *gin.Context) {
 			}
 		default:
 			if g != nil && player != nil {
-				HandlePacket(g, player, packet.Id, packet.Data)
+				HandlePacket(g, player, packet.Id, packetData)
 			}
 		}
 	}
+}
+
+func OfType(data map[string]interface{}, ref interface{}) interface{} {
+	err := mapstructure.Decode(data, &ref)
+	if err != nil {
+		log.Panic(err)
+	}
+	return ref
 }

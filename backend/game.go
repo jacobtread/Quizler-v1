@@ -168,7 +168,7 @@ func JoinGame(name string, conn *websocket.Conn, game *Game) *Player {
 	return &player
 }
 
-func HandlePacket(game *Game, player *Player, id PacketId, data PacketData) {
+func HandlePacket(game *Game, player *Player, id PacketId, data map[string]interface{}) {
 	if game.State == Started {
 		switch id {
 		case AnswerId:

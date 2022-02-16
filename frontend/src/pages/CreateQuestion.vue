@@ -191,69 +191,6 @@ function removeImage() {
   }
 }
 
-.input {
-  display: flex;
-  flex-flow: column;
-
-  &__label {
-    display: block;
-    text-align: left;
-    padding: 0.5rem;
-    color: #999;
-  }
-
-  &__file {
-    display: none;
-  }
-
-
-  &--image {
-    font-size: 1.2rem;
-    padding: 0.5rem;
-    flex: auto;
-    border: 5px solid #333;
-
-    background: #333;
-    border-radius: 0.5rem;
-    outline: none;
-    margin-top: 1rem;
-    display: flex;
-    align-items: center;
-    flex-flow: row;
-    vertical-align: center;
-    justify-content: center;
-    color: white;
-
-    &--active, &:focus {
-      border-bottom-color: $primary;
-    }
-  }
-
-
-  &__value {
-    background-color: transparent;
-    font-size: 1.2rem;
-    border: 5px solid #333;
-    border-radius: 0.25rem;
-    padding: 0.5rem;
-    color: #CCC;
-    outline: none;
-
-    &:focus {
-      border-bottom-color: $primary;
-    }
-  }
-}
-
-
-.content {
-  flex: auto;
-  display: flex;
-  flex-flow: column;
-  align-items: center;
-  color: white;
-}
-
 .title {
   display: inline-block;
   font-size: 1.8rem;
