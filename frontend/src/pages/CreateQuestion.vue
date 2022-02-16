@@ -1,7 +1,5 @@
 <script setup lang="ts">
-
 import { useCreateStore } from "@store/create";
-import { storeToRefs } from "pinia";
 import { reactive } from "vue";
 import { QuestionData } from "@api/packets";
 import { useRoute, useRouter } from "vue-router"
@@ -10,23 +8,40 @@ import ImageSelector from "@component/create/ImageSelector.vue";
 import Answers from "@component/create/Answers.vue";
 
 const store = useCreateStore()
-
-const {questions} = storeToRefs(store)
 const router = useRouter()
 const route = useRoute();
-let edit: string | undefined | number = route.params.edit as (string | undefined)
 
+// A reactive object for the question data
 const question = reactive<QuestionData>({
+  title: '',
   question: '',
   values: [0],
-  answers: [
-    'Example Answer'
-  ],
-  title: ''
+  answers: ['Example Answer'],
 })
 
+// Whether we are editing an existing question
+let isEdit = false
+// The edit url parameter if present should be a string (we will convert it to an int)
+let edit: any = route.params.edit
+if (edit) { // If the edit id is present
+  isEdit = true
+  edit = parseInt(edit) // Convert the id to a number
+  if (!isNaN(edit) && edit >= store.questions.length) { // If the question doesn't exist
+    router.push({name: 'Create'}) // Return to the create page
+  } else {
+    // Set from the old question
+    setFromIndex(edit)
+  }
+}
+
+/**
+ * Sets the question values from the existing question
+ * at the provided index
+ *
+ * @param index The index of the existing question
+ */
 function setFromIndex(index: number) {
-  const other = questions.value[index]
+  const other = store.questions[index]
   question.question = other.question
   question.values = other.values
   question.answers = other.answers
@@ -34,20 +49,14 @@ function setFromIndex(index: number) {
   question.image = other.image
 }
 
-let isEdit = false
-
-if (edit) {
-  isEdit = true
-  edit = parseInt(edit)
-  if (edit >= questions.value.length) {
-    router.push({name: 'Create'})
-  } else {
-    setFromIndex(edit)
-  }
-}
-
-
+/**
+ * Creates a copy of the current question and either adds it to
+ * the list of questions if we are creating a question or replaces
+ * the existing question if we are editing then changes back to the
+ * create page
+ */
 function addQuestion() {
+  // Copy the question data so that it's not reactive anymore
   const data: QuestionData = {
     question: question.question,
     values: [...question.values],
@@ -55,16 +64,17 @@ function addQuestion() {
     title: question.title,
     image: question.image
   }
+  // If we are in edit mode
   if (isEdit) {
-    questions.value[edit as number] = data
-    router.push({name: 'Create'})
+    // Replace the existing question
+    store.questions[edit as number] = data
   } else {
-    questions.value.push(data)
-    router.push({name: 'Create'})
+    // Add the new question
+    store.questions.push(data)
   }
+  // Return to the create page
+  router.push({name: 'Create'})
 }
-
-
 </script>
 <template>
   <div>

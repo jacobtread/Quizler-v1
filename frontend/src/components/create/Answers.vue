@@ -46,7 +46,7 @@ function removeAt(index: number) {
           :class="{'answer--selected': question.values.indexOf(index) !== -1}"
       >
         <label class="answer__select">
-          <input class="answer__select__radio" type="checkbox" v-model="question.values" :value="index">
+          <input class="answer__select__value" type="checkbox" v-model="question.values" :value="index">
         </label>
         <input class="answer__value" type="text" v-model="question.answers[index]">
         <CrossIcon class="answer__button" v-if="index !== 0" @click="removeAt(index)"/>
@@ -68,12 +68,10 @@ function removeAt(index: number) {
 }
 
 .answers {
+  // Remove the dot list style
   list-style: none;
+  // Set full width so it can be set on children
   width: 100%;
-
-  .answer:nth-last-of-type(1) {
-    margin-bottom: 0;
-  }
 }
 
 .answer {
@@ -82,41 +80,54 @@ function removeAt(index: number) {
   margin-bottom: 1rem;
   align-items: center;
   justify-content: left;
-  transition: background-color 0.5s ease, border-left 0.2s ease;
   border-radius: 0.4rem;
   border-left: 0 solid #222;
+  transition: background-color 0.5s ease, border-left 0.2s ease;
 
+  // Checkbox inside answer
   &__select {
+    // Relative positioning so the pseudo element can be positioned
+    // relative to it
     position: relative;
     padding: 0.5rem;
     margin: 1rem;
-    background-color: #333;
     width: 2rem;
     height: 2rem;
     border-radius: 0.5rem;
+    background-color: #333;
 
+    // Create the filled in effect
     &::after {
+      // Create a new pseudo element
       content: '';
       position: absolute;
+      // Move in from left and top by .3 of root font size
       left: 0.3rem;
       top: 0.3rem;
+      // Make the width full - double the .3 of the font size for a gap
       width: calc(100% - 0.6rem);
       height: calc(100% - 0.6rem);
+      // Round the corners
       border-radius: 0.3rem;
+
+      // Grayish white color
       background-color: #CCC;
+
+      // Add a smooth transition between color and scale
       transition: background-color 0.2s ease, transform 0.2s ease;
+      // Set the initial uncheck scale to 0 (not visible)
       transform: scale(0);
     }
 
-    &__radio {
-      opacity: 0;
+    // Hide the underlying checkbox input
+    &__value {
+      display: none;
     }
   }
 
-  &:nth-of-type(1) {
-    .answer__value {
-      margin-right: 0.5rem;
-    }
+  // Remove the margin from the last element
+  &:nth-last-of-type(1) {
+    margin-bottom: 0;
   }
 
   &__value {
@@ -146,10 +157,10 @@ function removeAt(index: number) {
   &--selected {
     border-left: 5px solid $primary;
 
-    .answer__select {
-      &::after {
-        transform: scale(1);
-      }
+    // The pseudo checked box
+    .answer__select::after {
+      // Scale to original scale (1)
+      transform: scale(1);
     }
   }
 }
