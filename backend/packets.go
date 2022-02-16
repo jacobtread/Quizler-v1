@@ -72,11 +72,12 @@ func GetPlayerDataPacket(id string, name string) Packet {
 	}{}}
 }
 
-func GetJoinGamePacket(id string, title string) Packet {
+func GetJoinGamePacket(id string, title string, owner bool) Packet {
 	return Packet{Id: JoinGameId, Data: struct {
+		Owner bool   `json:"owner"`
 		Id    string `json:"id"`
 		Title string `json:"title"`
-	}{Id: id, Title: title}}
+	}{Id: id, Title: title, Owner: owner}}
 }
 
 func GetKeepAlive() Packet {

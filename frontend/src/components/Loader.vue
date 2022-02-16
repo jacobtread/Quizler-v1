@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Logo from "../assets/logo.svg?inline"</script>
+import Logo from "@asset/logo.svg?inline"</script>
 <template>
   <div class="loader">
     <div class="loader__ring"><span class="loader__ring__qu">?</span></div>

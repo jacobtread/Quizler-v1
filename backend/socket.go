@@ -91,7 +91,7 @@ func SocketConnect(c *gin.Context) {
 			data := OfType(packetData, CreateGameData{}).(CreateGameData)
 			g = CreateGame(data.Title, data.Questions)
 			log.Printf("Created new game with id '%s' and title '%s'", g.Id, g.Title)
-			Send(GetJoinGamePacket(g.Id, g.Title))
+			Send(GetJoinGamePacket(g.Id, g.Title, true))
 		case RequestJoinId:
 			data := OfType(packetData, RequestJoinData{}).(RequestJoinData)
 			g = GetGame(data.Game)
@@ -102,7 +102,7 @@ func SocketConnect(c *gin.Context) {
 					Send(GetErrorPacket("That game is already started"))
 				} else {
 					player = JoinGame(data.Name, ws, g)
-					Send(GetJoinGamePacket(g.Id, g.Title))
+					Send(GetJoinGamePacket(g.Id, g.Title, false))
 				}
 			}
 		default:

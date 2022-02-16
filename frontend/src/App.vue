@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import "./assets/global.scss"
-import Header from "./components/Header.vue";
-import { useApi } from "./api";
-import Loader from "./components/Loader.vue";
-import { computed } from "vue";
+import "@/assets/global.scss"
+import { useApi } from "@/api";
+import Loader from "@/components/Loader.vue";
 
 const {socket, players, open} = useApi()
 
 </script>
 <template>
-  <Header/>
   <template v-if="open">
     <div class="content">
       <router-view v-slot="{ Component }">
-        <transition name="fade">
+        <transition name="content">
           <component :is="Component" class="content__item"/>
         </transition>
       </router-view>
@@ -44,18 +41,15 @@ const {socket, players, open} = useApi()
 }
 
 
-.fade-enter-active,
-.fade-leave-active {
-  transition: transform 0.5s ease;
-  transform: translateX(0) scale(1);
+.content-enter-active,
+.content-leave-active {
+  transition: transform 0.25s ease;
+  transform: scale(1);
 }
 
-.fade-enter-from {
-  transform: translateX(100%) scale(0.5);
-}
-
-.fade-leave-to {
-  transform: translateX(-100%) scale(0.5);
+.content-enter-from, .content-leave-to {
+  transform: translateY(-100px) scale(1.1);
+  opacity: 0;
 }
 
 </style>

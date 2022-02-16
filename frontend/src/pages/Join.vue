@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import Back from "../assets/back.svg?inline"
-import Play from "../assets/play.svg?inline";
+import Back from "@asset/back.svg?inline"
+import Play from "@asset/play.svg?inline";
 
 let gameCode = ref('')
 let disabled = ref(true)

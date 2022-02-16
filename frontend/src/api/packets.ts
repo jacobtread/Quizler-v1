@@ -17,6 +17,7 @@ export interface CreateData {
 }
 
 export interface JoinGameData {
+    owner: boolean;
     id: string;
     title: string;
 }
@@ -62,7 +63,9 @@ export default {
         0x01: 'KeepAlive',
         0x02: 'Disconnect',
         0x03: 'Error',
-        0x04: 'Create Game'
+        0x04: 'Create Game',
+        0x05: 'Request Join',
+        0x06: 'Join Game',
     } as Names,
     unknown: (): UnknownPacket => ({id: 0x00}),
     keepAlive: (): KeepAlivePacket => ({id: 0x01}),

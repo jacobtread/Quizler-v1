@@ -27,29 +27,18 @@ html, body {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
 
-.back-button {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  padding: 0.5rem;
-  background: #222;
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  border-radius: 0.5rem;
-  transition: background-color 0.25s ease, transform 0.2s ease;
-
-  &:active {
-    transform: scale(0.7);
+  &::-webkit-scrollbar {
+    background-color: #333;
+    opacity: 0.5;
+    width: 8px;
   }
 
-  &:hover {
-    background: $primary;
+  &::-webkit-scrollbar-thumb {
+    background-color: $primary;
+    border-radius: 0.25rem;
+    opacity: 0.5;
   }
-
 }
 
 .input {
@@ -96,7 +85,7 @@ html, body {
     font-size: 1.2rem;
     border: 5px solid #333;
     border-radius: 0.25rem;
-    padding: 0.5rem;
+    padding: 0.8rem;
     color: #CCC;
     outline: none;
 
@@ -113,4 +102,37 @@ html, body {
   flex-flow: column;
   align-items: center;
   color: white;
+}
+
+.button {
+  cursor: pointer;
+  border: 5px solid #222;
+  color: white;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background-color: transparent;
+  text-decoration: none;
+
+  &--text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  &--block {
+    display: block;
+    width: 100%;
+  }
+
+  &--icon {
+    .button__icon {
+      height: 1.5rem;
+    }
+  }
+
+}
+
+.mt {
+  margin-top: 1rem;
 }

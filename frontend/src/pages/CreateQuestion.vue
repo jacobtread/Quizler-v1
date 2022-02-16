@@ -1,20 +1,19 @@
 <script setup lang="ts">
 
-import Image from "../assets/image.svg?inline"
-import Back from "../assets/back.svg?inline"
-import Add from "../assets/add.svg?inline"
-import Cross from "../assets/cross.svg?inline"
-import { useCreateStore } from "../store/create";
+import Add from "@asset/add.svg?inline"
+import Cross from "@asset/cross.svg?inline"
+import { useCreateStore } from "@store/create";
 import { storeToRefs } from "pinia";
-import { reactive, ref } from "vue";
-import { QuestionData } from "../api/packets";
+import { reactive } from "vue";
+import { QuestionData } from "@api/packets";
 import { useRoute, useRouter } from "vue-router"
+import Nav from "@component/Nav.vue";
+import ImageSelector from "@component/create/ImageSelector.vue";
 
 const store = useCreateStore()
 
 const {questions} = storeToRefs(store)
 const router = useRouter()
-const fileInput = ref<HTMLInputElement>()
 const route = useRoute();
 let edit: string | undefined | number = route.params.edit as (string | undefined)
 
@@ -49,30 +48,6 @@ if (edit) {
 }
 
 
-function addAnswer() {
-  question.answers.push('')
-}
-
-function removeAnswer(index: number) {
-  question.answers = question.answers.filter((_, i) => i != index)
-  if (question.values.indexOf(index) != -1) {
-    question.values = question.values.filter((_, i) => i != index)
-  }
-}
-
-function onFileChange() {
-  const input: HTMLInputElement = fileInput.value!
-  if (input.files && input.files[0]) {
-    const reader = new FileReader()
-    reader.onload = function (e) {
-      question.image = e.target!.result as string
-    }
-    reader.readAsDataURL(input.files[0])
-  } else {
-    question.image = undefined
-  }
-}
-
 function addQuestion() {
   const data: QuestionData = {
     question: question.question,
@@ -90,67 +65,49 @@ function addQuestion() {
   }
 }
 
-function removeImage() {
-  question.image = undefined
-}
 
 </script>
 
 <template>
-  <div class="content">
-    <router-link class="back-button" :to="{name: 'Create'}">
-      <Back/>
-    </router-link>
-    <h1 class="title">Add Question</h1>
-    <div class="editor">
-      <label class="input">
-        <span class="input__label">Title</span>
-        <input type="text" class="input__value" placeholder="Title" v-model="question.title">
-      </label>
+  <div>
 
-      <template v-if="question.image">
-        <div class="image"
-             @click="removeImage"
-             :style="{backgroundImage:`url(${question.image})`}"
-        >
-          <span class="image__text">Click to remove</span>
-        </div>
-      </template>
-      <template v-else>
-        <label class="input input--image">
-          <Image class="input__image"/>
-          <span>Click to add image</span>
-          <input ref="fileInput" class="input__file" type="file" accept="image/*" @change="onFileChange">
+    <Nav title="Add Question" back="Create"/>
+    <div class="content">
+      <div class="content__box">
+        <h2 class="answers__title">Details</h2>
+        <label class="input">
+          <input type="text" class="input__value" placeholder="Title" v-model="question.title">
         </label>
-      </template>
-
-      <label class="input input--area">
-        <span class="input__label">Question</span>
-        <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
-      </label>
-
-      <h2 class="answers__title">Answers</h2>
-      <div>
-        <ul class="answers">
-          <li v-for="(answer, index) of question.answers"
-              class="answer"
-              :key="index"
-              :class="{'answer--selected': question.values.indexOf(index) !== -1}"
-          >
-            <label class="answer__select">
-              <input class="answer__select__radio" type="checkbox" v-model="question.values" :value="index">
-            </label>
-            <input class="answer__value" type="text" v-model="question.answers[index]">
-            <Cross class="answer__button" v-if="index !== 0" @click="removeAnswer(index)"/>
-          </li>
-        </ul>
-        <button class="add-button" @click="addAnswer">
-          <Add class="add-button__icon"/>
+        <ImageSelector v-model="question.image"/>
+        <label class="input input--area">
+          <span class="input__label">Question</span>
+          <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
+        </label>
+      </div>
+      <div class="content__box">
+        <h2 class="answers__title">Answers</h2>
+        <div>
+          <ul class="answers">
+            <li v-for="(answer, index) of question.answers"
+                class="answer"
+                :key="index"
+                :class="{'answer--selected': question.values.indexOf(index) !== -1}"
+            >
+              <label class="answer__select">
+                <input class="answer__select__radio" type="checkbox" v-model="question.values" :value="index">
+              </label>
+              <input class="answer__value" type="text" v-model="question.answers[index]">
+              <Cross class="answer__button" v-if="index !== 0" @click="removeAnswer(index)"/>
+            </li>
+          </ul>
+          <button class="button button--icon button--block" @click="addAnswer">
+            <Add class="button__icon"/>
+          </button>
+        </div>
+        <button class="button button--text button--block mt" @click="addQuestion">
+          {{ isEdit ? 'Save' : 'Add' }}
         </button>
       </div>
-      <button class=" done-button" @click="addQuestion">
-        {{ isEdit ? 'Save' : 'Add' }}
-      </button>
     </div>
   </div>
 </template>
@@ -158,70 +115,28 @@ function removeImage() {
 <style scoped lang="scss">
 @import "../assets/variables";
 
-.slide-fade-enter-active, .slide-fade-leave-active {
-  transition: all 0.2s ease;
-}
-
-.slide-fade-enter-from,
-.slide-fade-leave-to {
-  transform: translateX(20px);
-  opacity: 0;
-}
-
-.image {
-  margin: 1rem 0;
-  position: relative;
-  display: block;
+.content {
+  flex: auto;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  display: flex;
+  flex-flow: row;
   width: 100%;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  height: 300px;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 1rem;
 
-  &__text {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    color: $primary;
-    font-weight: bold;
-    background: #222;
-    padding: 0.5rem;
-    text-shadow: 1px 1px 1px #000;
+  &__box {
+    display: block;
+    flex: auto;
   }
-}
-
-.title {
-  display: inline-block;
-  font-size: 1.8rem;
-  padding: 1rem;
-  background-color: #222;
-  border-radius: 1rem;
-  margin-top: 1rem;
-  margin-bottom: 1rem;
 }
 
 .editor {
   display: block;
   width: 100%;
   padding: 1.5rem;
-}
-
-
-.add-button, .done-button {
-  display: block;
-  cursor: pointer;
-  padding: 0.5rem;
-  width: 100%;
-  background-color: transparent;
-  border-radius: 0.5rem;
-
-  border: 5px solid #222;
-  color: white;
-
-  &__icon {
-    height: 1.5rem;
-  }
+  max-width: 800px;
 }
 
 .done-button {
@@ -313,7 +228,7 @@ function removeImage() {
   }
 
   &--selected {
-    background-color: #8b4425;
+    border-left: 5px solid $primary;
 
     .answer__select {
 
@@ -324,17 +239,7 @@ function removeImage() {
 
     }
 
-    .answer__value {
-      background-color: #8b4425;
-      border-bottom: 5px solid #222;
-
-      &--active, &:focus {
-        border-bottom-color: white;
-
-      }
-    }
   }
-
 
   &__button {
     cursor: pointer;

@@ -20,6 +20,7 @@ const (
 // Questions The questions for this game
 // Players
 type Game struct {
+	Host      *websocket.Conn   `json:"-"`
 	Id        string            `json:"id"`
 	Title     string            `json:"title"`
 	Questions []QuestionData    `json:"questions"`

@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router"
 
-import Home from "../pages/Home.vue"
-import Join from "../pages/Join.vue"
-import Create from "../pages/Create.vue"
-import CreateQuestion from "../pages/CreateQuestion.vue"
+import Home from "@page/Home.vue"
+import Join from "@page/Join.vue"
+import Create from "@page/Create.vue"
+import CreateQuestion from "@page/CreateQuestion.vue"
 
 const routes = [
     {

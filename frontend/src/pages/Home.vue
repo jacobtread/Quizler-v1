@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import Play from "../assets/play.svg?inline";
-import Logo from "../assets/logo.svg?inline";</script>
+import Play from "@asset/play.svg?inline";
+import Logo from "@asset/logo.svg?inline";</script>
 
 <template>
   <div class="content">
@@ -33,6 +33,7 @@ import Logo from "../assets/logo.svg?inline";</script>
   justify-content: center;
   align-items: center;
   flex-wrap: wrap;
+  flex-flow: row;
 }
 
 .logo {

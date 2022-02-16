@@ -4,8 +4,7 @@ import { ref, Ref } from "vue";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
-const IGNORE = () => {
-}
+const IGNORE = () => ({})
 
 /**
  * Converts the provided value to a hex string representation
@@ -28,7 +27,7 @@ interface PacketHandlers {
 
 type Events = {
     state: string;
-    game: string;
+    game: JoinGameData;
     player: PlayerData;
 }
 
@@ -142,7 +141,6 @@ class SocketApi {
         }
     }
 
-
     /**
      * Packet handler for PlayerData packet (0x07) handles data about other
      * players in the game such as username and id's
@@ -180,8 +178,7 @@ class SocketApi {
     onJoinGame(api: SocketApi, data: JoinGameData) {
         if (api.isDebug) console.debug(`Joined game with id ${data}`)
         api.gameCode = data.id
-        api.events.emit('game', api.gameCode)
-
+        api.events.emit('game', data)
     }
 
     /**
@@ -270,7 +267,7 @@ class SocketApi {
 
 }
 
-
+// The socket instance
 let socket: SocketApi | null = null
 
 interface UseApi {
@@ -294,7 +291,7 @@ export function useApi(): UseApi {
         open.value = state === 'open';
     })
     let players = ref<PlayerData[]>([])
-    socket.events.on('player', (player: PlayerData) => {
+    socket.events.on('player', () => {
         players.value = socket!.players
     })
     return {socket, players, open}
