@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { PlayerData } from "@api/packets";
 
 interface State {
     joined: boolean
@@ -6,6 +7,7 @@ interface State {
         owner: boolean;
         id: string;
         title: string;
+        players: PlayerData
     }
 }
 
@@ -15,7 +17,7 @@ export const useGameStore = defineStore('create', {
         data: {
             owner: false,
             id: '',
-            title: ''
+            title: '',
         }
     })
 })

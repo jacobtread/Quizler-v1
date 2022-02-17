@@ -10,7 +10,9 @@ const {socket} = useApi()
 const store = useGameStore()
 const router = useRouter()
 
-if (!store.joined) {
+if (store.joined) {
+
+} else {
   router.push({name: 'Home'})
 }
 

@@ -16,3 +16,4 @@
 | 0x0B     | Time             | Contains the remaining time for the question                                     |
 | 0x0C     | Winners          | Contains the information for those with the highest scores for game over         |
 | 0x0D     | Disconnect Other | Contains the information for those with the highest scores for game over         |
+| 0x0E     | Destroy          | Destroys the game created by the owner                                           |
