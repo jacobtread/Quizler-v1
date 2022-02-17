@@ -5,10 +5,11 @@ import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
 
-const {socket} = useApi()
+const {socket, players} = useApi()
 
 const store = useGameStore()
 const router = useRouter()
+
 
 if (store.joined) {
 
@@ -29,6 +30,9 @@ function destroyGame() {
     <div class="wrapper">
       <h1>Waiting to start</h1>
       <h2 class="code">{{ store.data.id }}</h2>
+      <div>
+        {{ players }}
+      </div>
     </div>
   </div>
 </template>

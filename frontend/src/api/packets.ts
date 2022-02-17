@@ -35,6 +35,10 @@ export interface QuestionData {
     values: number[];
 }
 
+interface RequestJoinData {
+    id: string;
+}
+
 export interface Player {
     id: number;
     name: string;
@@ -52,6 +56,7 @@ export type ErrorPacket = Packet<ErrorData>;
 export type DisconnectPacket = Packet<DisconnectData>;
 export type KeepAlivePacket = Packet<undefined>;
 export type CreateGamePacket = Packet<CreateData>;
+export type RequestJoinPacket = Packet<RequestJoinData>
 
 
 type Names = { [key: number]: string }
@@ -73,5 +78,6 @@ export default {
     disconnect: (reason: string): DisconnectPacket => ({id: 0x02, data: {reason}}),
     error: (cause: string): ErrorPacket => ({id: 0x03, data: {cause}}),
     createGame: (title: string, questions: QuestionData[]): CreateGamePacket => ({id: 0x04, data: {title, questions}}),
+    requestJoin: (id: string): RequestJoinPacket => ({id: 0x05, data: {id}}),
     destroy: () => ({id: 0x0E})
 }

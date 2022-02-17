@@ -2,15 +2,41 @@
 import { ref, watch } from "vue";
 import Back from "@asset/back.svg?inline"
 import Play from "@asset/play.svg?inline";
+import { useApi } from "@/api";
+import { JoinGameData } from "@api/packets";
+import { useGameStore } from "@store/game";
+import { useRouter } from "vue-router";
 
 let gameCode = ref('')
 let disabled = ref(true)
+
+const {socket} = useApi()
 
 watch(gameCode, () => {
   const value = gameCode.value.toUpperCase().replace(/[^a-fA-F0-9]/, '')
   gameCode.value = value
   disabled.value = value.length != 5
 })
+
+const gameState = useGameStore()
+const router = useRouter()
+
+function joinGame() {
+  const code = gameCode.value
+  socket.requestJoin(code)
+  // Remove any existing join listeners
+  socket.events.off('game')
+  // Add a new join listener
+  socket.events.on('game', (data: JoinGameData | null) => {
+    if (data != null) {
+      gameState.joined = true;
+      // Copy the game data and set it into the gameState store
+      gameState.data = {...data}
+      // Redirect to the overview page
+      router.push({name: 'Overview'})
+    }
+  })
+}
 
 </script>
 
@@ -32,7 +58,7 @@ watch(gameCode, () => {
                placeholder="XXXXX"
         >
         <transition name="button" appear>
-          <button class="button" v-if="!disabled" >
+          <button class="button" v-if="!disabled" @click="joinGame">
             <Play/>
           </button>
         </transition>
@@ -131,7 +157,7 @@ watch(gameCode, () => {
   transform: translateX(0) scale(1);
 }
 
-.button-leave-to, .button-enter-from  {
+.button-leave-to, .button-enter-from {
   width: 0;
   transform: translateX(-100%) scale(0);
   opacity: 0;

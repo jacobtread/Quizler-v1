@@ -15,11 +15,11 @@ import { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
 import Nav from "@component/Nav.vue";
 
-const store = useCreateStore()
 const router = useRouter()
 const {socket} = useApi()
 const gameState = useGameStore()
-const {questions, title} = storeToRefs(useCreateStore())
+const createState = useCreateStore()
+const {questions, title} = storeToRefs(createState)
 
 /**
  * Delete the question at the provided index. Filters

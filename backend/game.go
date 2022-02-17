@@ -98,9 +98,10 @@ func GetRandomGameId() string {
 
 // CreateGame creates a new game with the provided title and questions,
 // assigns it a unique id, stores it and returns the id and the game
-func CreateGame(title string, questions []QuestionData) *Game {
+func CreateGame(host *websocket.Conn, title string, questions []QuestionData) *Game {
 	id := GetRandomGameId()
 	game := Game{
+		Host:      host,
 		Id:        id,
 		Title:     title,
 		Questions: questions,
@@ -158,15 +159,20 @@ func JoinGame(name string, conn *websocket.Conn, game *Game) *Player {
 		Connect:   conn,
 	}
 	game.Players[id] = player
-	game.BroadcastPacketExcluding(id, GetDisconnectOtherPacket(id, name))
 
-	for otherId, otherPlayer := range game.Players {
-		if otherId != id {
-			player.Send(GetPlayerDataPacket(otherId, otherPlayer.Name))
-		}
-	}
+	dataPacket := GetPlayerDataPacket(id, name)
+
+	game.BroadcastPacketExcluding(id, dataPacket)
+	game.SendHost(dataPacket)
 
 	return &player
+}
+
+func (game *Game) SendHost(packet Packet) {
+	err := game.Host.WriteJSON(packet)
+	if err != nil {
+		log.Printf("Failed to send packet to host of '%s'", game.Id)
+	}
 }
 
 func HandlePacket(game *Game, player *Player, id PacketId, data map[string]interface{}) {
@@ -209,7 +215,7 @@ func (game *Game) RemovePlayer(id string, reason string) {
 func (game *Game) Stop() {
 	game.Running = false
 	for id := range game.Players {
-		game.RemovePlayer(id, "Game ended")
+		game.RemovePlayer(id, "Id ended")
 	}
 	log.Printf("Stopping game %s", game.Id)
 }

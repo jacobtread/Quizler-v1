@@ -258,6 +258,15 @@ class SocketApi {
     }
 
     /**
+     * Requests to join the provided game code
+     *
+     * @param id The id/code of the game room
+     */
+    requestJoin(id: string) {
+        this.send(packets.requestJoin(id))
+    }
+
+    /**
      * Tells the websocket server to close and destroy the game server
      * that is owned by the current player
      */

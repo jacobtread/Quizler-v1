@@ -43,7 +43,7 @@ type CreateGameData struct {
 
 type RequestJoinData struct {
 	Name string `json:"name"`
-	Game string `json:"game"`
+	Id   string `json:"id"`
 }
 
 func GetPacket(id PacketId, data interface{}) Packet {

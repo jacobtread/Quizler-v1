@@ -90,13 +90,13 @@ func SocketConnect(c *gin.Context) {
 			}
 		case CreateGameId:
 			data := OfType(packetData, CreateGameData{}).(CreateGameData)
-			g = CreateGame(data.Title, data.Questions)
+			g = CreateGame(ws, data.Title, data.Questions)
 			hostOf = g
 			log.Printf("Created new game with id '%s' and title '%s'", g.Id, g.Title)
 			Send(GetJoinGamePacket(g.Id, g.Title, true))
 		case RequestJoinId:
 			data := OfType(packetData, RequestJoinData{}).(RequestJoinData)
-			g = GetGame(data.Game)
+			g = GetGame(data.Id)
 			if g == nil {
 				Send(GetErrorPacket("That game code doesn't exist"))
 			} else {
