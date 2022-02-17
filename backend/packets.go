@@ -71,7 +71,7 @@ func GetPlayerDataPacket(id string, name string) Packet {
 	return Packet{Id: PlayerDataId, Data: struct {
 		Id   string `json:"id"`
 		Name string `json:"name"`
-	}{}}
+	}{Id: id, Name: name}}
 }
 
 func GetJoinGamePacket(id string, title string, owner bool) Packet {
