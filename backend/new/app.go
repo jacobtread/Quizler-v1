@@ -109,25 +109,51 @@ func SocketConnect(c *gin.Context) {
 		case net.CCheckNameTaken:
 			RequireData(rawPacket, func(data *net.CheckNameTakenData) {
 				g := game.Get(data.Id) // Retrieve the game
-				if g == nil {
+				if g == nil {          // If the game doesn't exist
 					Send(net.ErrorPacket("That game code doesn't exist"))
 				} else {
-					taken := g.IsNameTaken(data.Name) // Check if the name is taken
-					Send(net.NameTakenResultPacket(taken))
+					taken := g.IsNameTaken(data.Name)      // Check if the name is taken
+					Send(net.NameTakenResultPacket(taken)) // Send the result
 				}
 			})
 		case net.CRequestGameState: // Client requested game state
 			log.Printf("Client requested game state for")
 			RequireData(rawPacket, func(data *net.RequestGameStateData) {
 				g := game.Get(data.Id)
-				if g == nil {
+				if g == nil { // If the game doesn't exist
 					Send(net.ErrorPacket("That game code doesn't exist"))
 				} else {
+					// Send the current game state
 					Send(net.GameStatePacket(g.State))
 				}
 			})
 		case net.CRequestJoin:
-			
+			RequireData(rawPacket, func(data *net.RequestJoinData) {
+				activeGame = game.Get(data.Id)
+				if activeGame == nil {
+					Send(net.ErrorPacket("That game code doesn't exist"))
+				} else {
+					if activeGame.State != game.Waiting { // If the game isn't in waiting state
+						Send(net.ErrorPacket("That game is already started"))
+					} else {
+						if activeGame.IsNameTaken(data.Name) { // If the name is already taken
+							Send(net.ErrorPacket("That name is already in use"))
+							activeGame = nil // Clear the active game
+						} else {
+							// Join and set the active player
+							activePlayer = activeGame.Join(ws, data.Name)
+							// Tell the host they've joined the new game as a player
+							Send(net.JoinGamePacket(false, activeGame.Id, activeGame.Title))
+						}
+					}
+				}
+			})
+		case net.CAnswer:
+		// TODO: Handle answer submit
+		case net.CDestroy:
+			if hostOf != nil { // If the host exists stop the server
+				hostOf.Stop()
+			}
 		}
 	}
 

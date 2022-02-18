@@ -27,6 +27,15 @@ type CheckNameTakenData struct {
 	Name string `json:"name"` // The name to check if is taken
 }
 
+// RequestGameStateData A structure representing a client requesting the current state of
+// a game from the server this will be followed up with a SGameState packet
 type RequestGameStateData struct {
 	Id string `json:"id"` // The id of the game to get the state of
+}
+
+// RequestJoinData A structure representing a client requesting to join a game with the
+// provided Id using the provided Name
+type RequestJoinData struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
 }
