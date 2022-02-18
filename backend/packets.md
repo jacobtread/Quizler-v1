@@ -1,22 +1,33 @@
 # Packet Reference
 
-| Id (Hex) | Name              | Description                                                                      |
-|----------|-------------------|----------------------------------------------------------------------------------|
-| 0x00     | Unknown           | Describes a packet without any known data. Used for unfilled packets             |
-| 0x01     | Keep Alive        | Packet used to keep the connection alive between the client and server           |
-| 0x02     | Disconnect        | Send by the client or server when either one disconnects or becomes disconnected |
-| 0x03     | Error             | Describes an error that occurred on the server                                   |
-| 0x04     | Create Game       | Creates a new game                                                               |
-| 0x05     | Request Join      | Attempts to join a game                                                          |
-| 0x06     | Join Game         | Sent to the player to tell them they joined contains server info                 |
-| 0x07     | Player Data       | Contains information about other players                                         |
-| 0x08     | Game State        | Contains information about the current game "state"                              |
-| 0x09     | Question          | Contains the current question being asked                                        |
-| 0x0A     | Answer            | Contains the answer to the current question                                      |
-| 0x0B     | Time              | Contains the remaining time for the question                                     |
-| 0x0C     | Winners           | Contains the information for those with the highest scores for game over         |
-| 0x0D     | Disconnect Other  | Contains the information for those with the highest scores for game over         |
-| 0x0E     | Destroy           | Destroys the game created by the owner                                           |
-| 0x0F     | RequestGameState  | Requests the state fo the game with the provided id                              |
-| 0x10     | CheckName         | Checks if the game contains the name                                             |
-| 0x11     | Name taken result | Contains whether the name is taken or not                                        |
+## Server
+
+| Id   | Name              | Data                                                  | 
+|------|-------------------|-------------------------------------------------------|
+| 0x00 | KEEP_ALIVE        |                                                       |
+| 0x01 | DISCONNECT        | reason (string)                                       |
+| 0x02 | ERROR             | cause (string)                                        |
+| 0x03 | JOINED_GAME       | owner (bool), id (string) title (string)              |
+| 0x04 | NAME_TAKEN_RESULT | result (bool)                                         |
+| 0x05 | GAME_STATE        | state (uint8)                                         |
+| 0x06 | PLAYER_DATA       | id (string), name (string), type (uint8)              |
+| 0x07 | QUESTION          | image (string), question (string), answers (string[]) |
+| 0x08 | TIME_SYNC         | total (duration), remaining (duration)                |
+| 0x09 | GAME_OVER         | (NOT_DEFINED_YET)                                     |
+
+## Client
+
+| Id   | Name               | Data                                       |
+|------|--------------------|--------------------------------------------|
+| 0x00 | KEEP_ALIVE         |                                            |
+| 0x01 | DISCONNECT         |                                            |
+| 0x02 | CREATE_GAME        | title (string), questions (QuestionData[]) |
+| 0x03 | CHECK_NAME_TAKEN   | id (string), name (string)                 |
+| 0x04 | REQUEST_GAME_STATE | id (string)                                |
+| 0x05 | REQUEST_JOIN       | id (string), name (string)                 |
+| 0x06 | ANSWER             | id (uint16)                                |
+| 0x07 | DESTROY            | id (string)                                |
+
+
+    
+
