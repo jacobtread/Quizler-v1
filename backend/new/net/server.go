@@ -1,5 +1,8 @@
 package net
 
+import "backend/new/types"
+
+// Ids for server packets
 const (
 	SKeepAlive       PacketId = 0x00
 	SDisconnect               = 0x01
@@ -33,6 +36,13 @@ const (
 	RemoveMode
 )
 
+// ErrorPacket creates a new error packet with the provided cause
+func ErrorPacket(cause string) Packet {
+	return Packet{Id: SError, Data: struct {
+		Cause string `json:"cause"`
+	}{Cause: cause}}
+}
+
 // PlayerDataPacket creates a new player data packet with the provided id and name
 func PlayerDataPacket(id string, name string, mode PlayerDataMode) Packet {
 	return Packet{Id: SPlayerData, Data: struct {
@@ -42,10 +52,25 @@ func PlayerDataPacket(id string, name string, mode PlayerDataMode) Packet {
 	}{Id: id, Name: name, Mode: mode}}
 }
 
+// JoinGamePacket creates a new join game data packet with the provided values
 func JoinGamePacket(owner bool, id string, title string) Packet {
 	return Packet{Id: SJoinedGame, Data: struct {
 		Owner bool   `json:"owner"` // Whether the player is the host/owner of the quiz
 		Id    string `json:"id"`    // The id of the joined game
 		Title string `json:"title"` // The title of the joined game
 	}{Id: id, Title: title, Owner: owner}}
+}
+
+// NameTakenResultPacket creates a new name taken result packet with the provided result
+func NameTakenResultPacket(result bool) Packet {
+	return Packet{Id: SNameTakenResult, Data: struct {
+		Result bool `json:"result"` // The result of the name taken check
+	}{Result: result}}
+}
+
+// GameStatePacket creates a new game state packet with the provided state
+func GameStatePacket(state types.State) Packet {
+	return Packet{Id: SGameState, Data: struct {
+		State types.State `json:"state"`
+	}{State: state}}
 }

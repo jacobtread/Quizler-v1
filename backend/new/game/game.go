@@ -2,6 +2,7 @@ package game
 
 import (
 	"backend/new/net"
+	"backend/new/types"
 	"github.com/gorilla/websocket"
 	"log"
 	"math/rand"
@@ -10,24 +11,15 @@ import (
 	"time"
 )
 
-// State type for game states represented as an 8-bit integer
-type State = uint8
-
-// AnswerIndex represents the index for an answer as a 16-bit integer
-type AnswerIndex = int16
-
-// QuestionIndex represents the index for a question as a 16-bit integer
-type QuestionIndex = int16
-
 // Identifier represents a unique identifier
 type Identifier = string
 
 // Enum for game states
 const (
-	Waiting      State = iota // Waiting for the game to start
-	Started                   // The game is started an in progress
-	Stopped                   // The game has Stopped and is ready to shut down
-	DoesNotExist              // The game doesn't exist
+	Waiting      types.State = iota // Waiting for the game to start
+	Started                         // The game is started an in progress
+	Stopped                         // The game has Stopped and is ready to shut down
+	DoesNotExist                    // The game doesn't exist
 )
 
 // Connection represents a connection to a websocket has extension function
@@ -41,28 +33,20 @@ type Game struct {
 	Host      Connection             // The connection to the game host
 	Id        Identifier             // The unique identifier / game code for this game
 	Title     string                 // The title / name of this game
-	Questions []QuestionData         // An array of the questions for this game
+	Questions []types.QuestionData   // An array of the questions for this game
 	Players   map[Identifier]*Player // A map of the player identifiers to the players
 	PLock     *sync.RWMutex          // A lock for safe concurrent modification of the players map
 	StartTime time.Duration          // The system time in ms of when the game was created
-	State     State                  // The current state of the game
+	State     types.State            // The current state of the game
 }
 
 // Player A structure representing a player in the game
 type Player struct {
-	Net     Connection                    // The connection to the player socket
-	Id      Identifier                    // The unique ID of this player
-	Name    string                        // The name of this player
-	Score   uint16                        // The score this player has
-	Answers map[QuestionIndex]AnswerIndex // A map of the question index to the answer chosen
-}
-
-// QuestionData A structure representing a question for the quiz
-type QuestionData struct {
-	Image    string        // Optional - an image to display with the question
-	Question string        // The actual contents of the question
-	Answers  []string      // The possible answer values
-	Values   []AnswerIndex // The indexes of the correct answers
+	Net     Connection                                // The connection to the player socket
+	Id      Identifier                                // The unique ID of this player
+	Name    string                                    // The name of this player
+	Score   uint16                                    // The score this player has
+	Answers map[types.QuestionIndex]types.AnswerIndex // A map of the question index to the answer chosen
 }
 
 // CreateRandomId Creates a random identifier of the specified length using
@@ -124,7 +108,7 @@ func Get(identifier Identifier) *Game {
 // New Creates a new game instance with the provided host, title, and questions.
 // also starts a new goroutine for the games loop, adds it to Games and returns
 // a reference to the game
-func New(host *websocket.Conn, title string, questions []QuestionData) *Game {
+func New(host *websocket.Conn, title string, questions []types.QuestionData) *Game {
 	id := CreateGameId()
 	game := Game{
 		Host:      Connection{Socket: host},
@@ -164,7 +148,7 @@ func (game *Game) Join(conn *websocket.Conn, name string) *Player {
 		Id:      id,
 		Name:    name,
 		Score:   0,
-		Answers: map[QuestionIndex]AnswerIndex{},
+		Answers: map[types.QuestionIndex]types.AnswerIndex{},
 	}
 
 	game.PLock.RLock()                               // Lock reading of the players list for thread safety

@@ -87,8 +87,9 @@ func SocketConnect(c *gin.Context) {
 			break
 		}
 
-		var activeGame game.Game
-		var activePlayer game.Player
+		var hostOf *game.Game
+		var activeGame *game.Game
+		var activePlayer *game.Player
 
 		switch id.(net.PacketId) {
 		case net.CKeepAlive:
@@ -99,22 +100,41 @@ func SocketConnect(c *gin.Context) {
 			running = false
 		case net.CCreateGame:
 			RequireData(rawPacket, func(data *net.CreateGameData) {
-
+				// Create a new game
+				hostOf = game.New(ws, data.Title, data.Questions)
+				// Tell the host they've joined the new game as owner
+				Send(net.JoinGamePacket(true, hostOf.Id, hostOf.Title))
+				log.Printf("Created new game '%s' (%s)", hostOf.Title, hostOf.Id)
+			})
+		case net.CCheckNameTaken:
+			RequireData(rawPacket, func(data *net.CheckNameTakenData) {
+				g := game.Get(data.Id) // Retrieve the game
+				if g == nil {
+					Send(net.ErrorPacket("That game code doesn't exist"))
+				} else {
+					taken := g.IsNameTaken(data.Name) // Check if the name is taken
+					Send(net.NameTakenResultPacket(taken))
+				}
 			})
 		case net.CRequestGameState: // Client requested game state
 			log.Printf("Client requested game state for")
 			RequireData(rawPacket, func(data *net.RequestGameStateData) {
 				g := game.Get(data.Id)
-				if g != nil {
-
+				if g == nil {
+					Send(net.ErrorPacket("That game code doesn't exist"))
+				} else {
+					Send(net.GameStatePacket(g.State))
 				}
-
 			})
+		case net.CRequestJoin:
+			
 		}
 	}
 
 }
 
+// RequireData wraps around the packet data to create a type safe decoding
+// from the packet data map to the packet struct
 func RequireData[T interface{}](rawPacket net.RawPacket, action func(data *T)) {
 	d, dataExists := rawPacket["data"]
 	if dataExists {
@@ -126,6 +146,6 @@ func RequireData[T interface{}](rawPacket net.RawPacket, action func(data *T)) {
 		}
 		action(&out)
 	} else {
-		log.Printf("Packet with id '%x' expected data but recieved none", id)
+		log.Printf("Packet with id '%x' expected data but recieved none", rawPacket["id"])
 	}
 }
