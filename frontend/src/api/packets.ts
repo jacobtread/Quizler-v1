@@ -28,7 +28,6 @@ export interface GameStateData {
 }
 
 export interface QuestionData {
-    title: string;
     image?: string;
     question: string;
     answers: string[];

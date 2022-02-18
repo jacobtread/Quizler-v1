@@ -45,7 +45,6 @@ function setFromIndex(index: number) {
   question.question = other.question
   question.values = other.values
   question.answers = other.answers
-  question.title = other.title
   question.image = other.image
 }
 
@@ -61,7 +60,6 @@ function addQuestion() {
     question: question.question,
     values: [...question.values],
     answers: [...question.answers],
-    title: question.title,
     image: question.image
   }
   // If we are in edit mode
@@ -84,9 +82,6 @@ function addQuestion() {
         <div class="box">
           <h2 class="box__title">Details</h2>
           <ImageSelector v-model="question.image"/>
-          <label class="input">
-            <input type="text" class="input__value" placeholder="Title" v-model="question.title">
-          </label>
           <label class="input input--area question-text">
             <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
           </label>
