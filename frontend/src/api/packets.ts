@@ -35,6 +35,10 @@ export interface QuestionData {
     values: number[];
 }
 
+export interface NameTakenResultData {
+    result: boolean;
+}
+
 export interface Player {
     id: number;
     name: string;
@@ -62,7 +66,8 @@ export default {
         0x06: 'Join Game',
         0x0E: 'Destroy',
         0x0F: 'Request Game State',
-        0x10: 'Check name taken'
+        0x10: 'Check name taken',
+        0x11: 'Name taken result'
     } as Names,
     unknown: () => ({id: 0x00}),
     keepAlive: () => ({id: 0x01}),

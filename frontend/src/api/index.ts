@@ -3,6 +3,7 @@ import packets, {
     ErrorData,
     GameStateData,
     JoinGameData,
+    NameTakenResultData,
     Packet,
     PlayerData,
     QuestionData
@@ -39,6 +40,7 @@ type Events = {
     player: PlayerData;
     disconnect: string;
     gameState: GameState
+    nameTaken: boolean
 }
 
 export enum GameState {
@@ -90,7 +92,8 @@ class SocketApi {
         0x03: this.onError,
         0x06: this.onJoinGame,
         0x07: this.onPlayerData,
-        0x08: this.onGameState
+        0x08: this.onGameState,
+        0x11: this.onNameTakenResult
     }
 
     /**
@@ -186,6 +189,17 @@ class SocketApi {
         const state = api.getGameState(data.state)
         api.state = state
         api.events.emit('gameState', state)
+    }
+
+    /**
+     * Packet handler for NameTakenResult packet (0x11) handles the result
+     * of the name taken check
+     *
+     * @param api The current connection instance
+     * @param data Contains whether the name is token
+     */
+    onNameTakenResult(api: SocketApi, data: NameTakenResultData) {
+        api.events.emit('nameTaken', data.result)
     }
 
     private getGameState(id: number): GameState {
@@ -310,9 +324,10 @@ class SocketApi {
      * Requests to join the provided game code
      *
      * @param id The id/code of the game room
+     * @param name The name to join using
      */
     requestJoin(id: string, name: string) {
-        this.send(packets.requestJoin(id,name))
+        this.send(packets.requestJoin(id, name))
     }
 
     /**

@@ -2,7 +2,7 @@
 import { ref, watch } from "vue";
 import Play from "@asset/play.svg?inline";
 import { GameState, useApi } from "@/api";
-import { JoinGameData } from "@api/packets";
+import packets, { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
@@ -44,17 +44,25 @@ function checkGameExists() {
 
 function joinGame() {
   const code = gameCode.value
-  socket.requestJoin(code)
-  // Remove any existing join listeners
-  socket.events.off('game')
-  // Add a new join listener
-  socket.events.on('game', (data: JoinGameData | null) => {
-    if (data != null) {
-      gameState.joined = true;
-      // Copy the game data and set it into the gameState store
-      gameState.data = {...data}
-      // Redirect to the overview page
-      router.push({name: 'Overview'})
+  socket.send(packets.checkNameTaken(code, name.value))
+  socket.events.off('nameTaken')
+  socket.events.on('nameTaken', (taken: boolean) => {
+    if (taken) {
+      console.error('That name is already taken')
+    } else {
+      socket.requestJoin(code, name.value)
+      // Remove any existing join listeners
+      socket.events.off('game')
+      // Add a new join listener
+      socket.events.on('game', (data: JoinGameData | null) => {
+        if (data != null) {
+          gameState.joined = true;
+          // Copy the game data and set it into the gameState store
+          gameState.data = {...data}
+          // Redirect to the overview page
+          router.push({name: 'Overview'})
+        }
+      })
     }
   })
 }
