@@ -405,12 +405,17 @@ export function useApi(): UseApi {
     if (socket == null) {
         socket = new SocketApi()
     }
+    socket.events.off('state')
     socket.events.on('state', (state: string) => {
         open.value = state === 'open';
     })
+
     let players = ref<PlayerData[]>([])
+    socket.events.off('player')
     socket.events.on('player', () => {
+        console.log('Players in')
         players.value = socket!.players
+        console.log(socket?.players)
     })
     return {socket, players, open}
 }

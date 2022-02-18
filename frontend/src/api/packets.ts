@@ -64,6 +64,7 @@ export default {
         0x04: 'Create Game',
         0x05: 'Request Join',
         0x06: 'Join Game',
+        0x07: 'Player data',
         0x0E: 'Destroy',
         0x0F: 'Request Game State',
         0x10: 'Check name taken',

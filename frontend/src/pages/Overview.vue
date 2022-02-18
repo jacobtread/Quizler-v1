@@ -10,7 +10,6 @@ const {socket, players} = useApi()
 const store = useGameStore()
 const router = useRouter()
 
-
 if (store.joined) {
 
 } else {
@@ -31,7 +30,9 @@ function destroyGame() {
       <h1>Waiting to start</h1>
       <h2 class="code">{{ store.data.id }}</h2>
       <div>
-        {{ players }}
+        <div v-for="(player, index) of players" :key="index">
+          {{ player }}
+        </div>
       </div>
     </div>
   </div>
