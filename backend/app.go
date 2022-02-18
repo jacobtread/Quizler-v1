@@ -1,8 +1,8 @@
 package main
 
 import (
-	"backend/new/game"
-	"backend/new/net"
+	"backend/game"
+	"backend/net"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -10,8 +10,6 @@ import (
 	"log"
 	"net/http"
 )
-
-type Connection websocket.Conn
 
 func main() {
 	gin.SetMode(gin.ReleaseMode)
@@ -45,7 +43,7 @@ func SocketConnect(c *gin.Context) {
 	// in ws.Close being called after this function is finished executing
 	defer func(ws *websocket.Conn) { _ = ws.Close() }(ws)
 
-	var rawPacket net.RawPacket = map[string]interface{}{}
+	var rawPacket = net.PacketRaw{}
 
 	// Whether the client should continue running in a loop and accepting packets
 	running := true
@@ -74,14 +72,9 @@ func SocketConnect(c *gin.Context) {
 			Send(net.DisconnectPacket("Connection timed out"))
 		}
 
-		rawPacket = map[string]interface{}{}
-
-		delete(rawPacket, "id")
-
 		// Read incoming packet into the raw packet map
 		err = ws.ReadJSON(&rawPacket)
-		id, idExists := rawPacket["id"]
-		if err != nil || !idExists { // If packet parsing failed or the ID was missing
+		if err != nil { // If packet parsing failed or the ID was missing
 			// Disconnect the client for sending invalid data
 			Send(net.DisconnectPacket("Client sent invalid data"))
 			break
@@ -91,7 +84,7 @@ func SocketConnect(c *gin.Context) {
 		var activeGame *game.Game
 		var activePlayer *game.Player
 
-		switch id.(net.PacketId) {
+		switch rawPacket.Id {
 		case net.CKeepAlive:
 			lastKeepAlive = currentTime
 			Send(net.KeepAlivePacket())
@@ -149,6 +142,7 @@ func SocketConnect(c *gin.Context) {
 				}
 			})
 		case net.CAnswer:
+			activePlayer.Net.Send(net.ErrorPacket("Not implemented"))
 		// TODO: Handle answer submit
 		case net.CDestroy:
 			if hostOf != nil { // If the host exists stop the server
@@ -161,17 +155,16 @@ func SocketConnect(c *gin.Context) {
 
 // RequireData wraps around the packet data to create a type safe decoding
 // from the packet data map to the packet struct
-func RequireData[T interface{}](rawPacket net.RawPacket, action func(data *T)) {
-	d, dataExists := rawPacket["data"]
-	if dataExists {
-		raw := d.(net.RawPacketData)
-		out := T{}
-		err := mapstructure.Decode(raw, &out)
+func RequireData[T interface{}](rawPacket net.PacketRaw, action func(data *T)) {
+	d := rawPacket.Data
+	if d != nil {
+		out := new(T)
+		err := mapstructure.Decode(d, out)
 		if err != nil {
 			log.Panic(err)
 		}
-		action(&out)
+		action(out)
 	} else {
-		log.Printf("Packet with id '%x' expected data but recieved none", rawPacket["id"])
+		log.Printf("Packet with id '%x' expected data but recieved none", rawPacket.Id)
 	}
 }

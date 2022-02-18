@@ -1,6 +1,6 @@
 package net
 
-import "backend/new/types"
+import "backend/types"
 
 // Ids for client packets
 const (

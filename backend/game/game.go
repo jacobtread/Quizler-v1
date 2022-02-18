@@ -1,8 +1,8 @@
 package game
 
 import (
-	"backend/new/net"
-	"backend/new/types"
+	"backend/net"
+	"backend/types"
 	"github.com/gorilla/websocket"
 	"log"
 	"math/rand"

@@ -18,11 +18,17 @@ type RawPacket map[string]interface{}
 // RawPacketData The type of data raw packets contents are parsed into (a string -> interface map)
 type RawPacketData map[string]interface{}
 
-// Packet The structure for outbound and inbound packets only used for outbound
-// packets in this case though
+// Packet The structure for outbound packets
 type Packet struct {
 	Id   PacketId   `json:"id"`
 	Data PacketData `json:"data,omitempty"`
+}
+
+// PacketRaw The structure for  inbound packets only used for outbound
+// packets in this case though
+type PacketRaw struct {
+	Id   PacketId      `json:"id"`
+	Data RawPacketData `json:"data,omitempty"`
 }
 
 // AsType Used to convert the packet data map into the right struct
