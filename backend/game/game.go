@@ -218,7 +218,7 @@ func (game *Game) Loop() {
 		if state == Stopped {
 			break
 		}
-
+		time.Sleep(time.Second)
 	}
 }
 

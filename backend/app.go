@@ -50,6 +50,10 @@ func SocketConnect(c *gin.Context) {
 	// The last time in milliseconds when a keep alive was received
 	lastKeepAlive := game.Time()
 
+	var hostOf *game.Game
+	var activeGame *game.Game
+	var activePlayer *game.Player
+
 	for running {
 		// sends the provided packet over the websocket
 		// and stops the connection if an error occurs
@@ -79,10 +83,6 @@ func SocketConnect(c *gin.Context) {
 			Send(net.DisconnectPacket("Client sent invalid data"))
 			break
 		}
-
-		var hostOf *game.Game
-		var activeGame *game.Game
-		var activePlayer *game.Player
 
 		switch rawPacket.Id {
 		case net.CKeepAlive:
@@ -151,6 +151,13 @@ func SocketConnect(c *gin.Context) {
 		}
 	}
 
+	if activePlayer != nil && activeGame != nil {
+		activeGame.RemovePlayer(activePlayer)
+	}
+
+	if hostOf != nil {
+		hostOf.Stop()
+	}
 }
 
 // RequireData wraps around the packet data to create a type safe decoding
