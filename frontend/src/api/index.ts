@@ -13,8 +13,6 @@ import { ref, Ref } from "vue";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
-const IGNORE = () => ({})
-
 /**
  * Converts the provided value to a hex string representation
  * that must fit the length provided in padding
@@ -48,6 +46,11 @@ export enum GameState {
     STARTED,
     STOPPED,
     DOES_NOT_EXIST
+}
+
+enum Direction {
+    IN,
+    OUT
 }
 
 /**
@@ -86,14 +89,13 @@ class SocketApi {
      * they can be handled separately instead of a large switch statement
      */
     private handlers: PacketHandlers = {
-        0x00: IGNORE,
-        0x01: this.onKeepAlive,
-        0x02: this.onDisconnect,
-        0x03: this.onError,
-        0x06: this.onJoinGame,
-        0x07: this.onPlayerData,
-        0x08: this.onGameState,
-        0x11: this.onNameTakenResult
+        0x00: this.onKeepAlive,
+        0x01: this.onDisconnect,
+        0x02: this.onError,
+        0x03: this.onJoinGame,
+        0x04: this.onNameTakenResult,
+        0x05: this.onGameState,
+        0x06: this.onPlayerData,
     }
 
     /**
@@ -154,7 +156,7 @@ class SocketApi {
             const data: any = packet.data
             // Check to make sure we have a handler for this packet id
             if (id in this.handlers) {
-                this.debugPacket('IN', packet)
+                this.debugPacket(Direction.IN, packet)
                 const handler = this.handlers[id]
                 // Call the packet handler with this and the packet data
                 handler(this, data)
@@ -186,7 +188,7 @@ class SocketApi {
      * @param data The current game state
      */
     onGameState(api: SocketApi, data: GameStateData) {
-        const state = api.getGameState(data.state)
+        const state = SocketApi.getGameState(data.state)
         api.state = state
         api.events.emit('gameState', state)
     }
@@ -202,7 +204,7 @@ class SocketApi {
         api.events.emit('nameTaken', data.result)
     }
 
-    private getGameState(id: number): GameState {
+    private static getGameState(id: number): GameState {
         if (id == 0) {
             return GameState.WAITING
         } else if (id == 1) {
@@ -266,16 +268,18 @@ class SocketApi {
      * @param dir The direction the packet is going IN for inbound OUT for outbound
      * @param packet The packet to print debug info about
      */
-    debugPacket(dir: string, packet: Packet<any>) {
+    debugPacket(dir: Direction, packet: Packet<any>) {
         if (this.isDebug) { // Ensure that this only happens in debug mode
             const id = packet.id
-            let name = packets.names[id] // Retrieve debug friendly packet name
+            let name = packets.names[dir][id] // Retrieve debug friendly packet name
             if (!name) name = 'Unknown Name'
+            let dirName = dir == 0 ? '<-' : '->'
+
             if (packet.data !== undefined) {
                 const dataString = JSON.stringify(packet.data)
-                console.debug(`[${dir}] ${name} (${toHex(id, 2)}) {${dataString}}`)
+                console.debug(`[${dirName}] ${name} (${toHex(id, 2)}) {${dataString}}`)
             } else {
-                console.debug(`[${dir}] ${name} (${toHex(id, 2)})`)
+                console.debug(`[${dirName}] ${name} (${toHex(id, 2)})`)
             }
         }
     }
@@ -287,7 +291,7 @@ class SocketApi {
      * @param packet The packet to send
      */
     send(packet: Packet<any>) {
-        this.debugPacket('OUT', packet)
+        this.debugPacket(Direction.OUT, packet)
         this.ws.send(JSON.stringify(packet))
     }
 

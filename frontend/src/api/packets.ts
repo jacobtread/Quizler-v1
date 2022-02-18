@@ -56,27 +56,37 @@ type Names = { [key: number]: string }
 
 export default {
     // A map of packet id's to readable names for debugging
-    names: {
-        0x00: 'Unknown',
-        0x01: 'KeepAlive',
-        0x02: 'Disconnect',
-        0x03: 'Error',
-        0x04: 'Create Game',
-        0x05: 'Request Join',
-        0x06: 'Join Game',
-        0x07: 'Player data',
-        0x0E: 'Destroy',
-        0x0F: 'Request Game State',
-        0x10: 'Check name taken',
-        0x11: 'Name taken result'
-    } as Names,
-    unknown: () => ({id: 0x00}),
-    keepAlive: () => ({id: 0x01}),
-    disconnect: (reason: string) => ({id: 0x02, data: {reason}}),
-    error: (cause: string) => ({id: 0x03, data: {cause}}),
-    createGame: (title: string, questions: QuestionData[]) => ({id: 0x04, data: {title, questions}}),
+    names: [
+        {
+            0x00: 'KEEP_ALIVE',
+            0x01: 'DISCONNECT',
+            0x02: 'ERROR',
+            0x03: 'JOINED_GAME',
+            0x04: 'NAME_TAKEN_RESULT',
+            0x05: 'GAME_STATE',
+            0x06: 'PLAYER_DATA',
+            0x07: 'QUESTION',
+            0x08: 'TIME_SYNC',
+            0x09: 'GAME_OVER'
+        },
+        {
+            0x00: 'KEEP_ALIVE',
+            0x01: 'DISCONNECT',
+            0x02: 'CREATE_GAME',
+            0x03: 'CHECK_NAME_TAKEN',
+            0x04: 'REQUEST_GAME_STATE',
+            0x05: 'REQUEST_JOIN',
+            0x06: 'ANSWER',
+            0x07: 'DESTROY'
+        }
+    ] as Names[],
+    keepAlive: () => ({id: 0x00}),
+    disconnect: () => ({id: 0x01}),
+    createGame: (title: string, questions: QuestionData[]) => ({id: 0x02, data: {title, questions}}),
+    checkNameTaken: (id: string, name: string) => ({id: 0x03, data: {id, name}}),
+    requestGameState: (id: string) => ({id: 0x04, data: {id}}),
     requestJoin: (id: string, name: string) => ({id: 0x05, data: {id, name}}),
-    destroy: () => ({id: 0x0E}),
-    requestGameState: (id: string) => ({id: 0x0F, data: {id}}),
-    checkNameTaken: (id: string, name: string) => ({id: 0x10, data: {id, name}})
+    answer: (id: number) => ({id: 0x06, data: {id}}),
+    destroy: () => ({id: 0x07})
+
 }
