@@ -5,6 +5,7 @@ import (
 	"log"
 	"math/rand"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -22,14 +23,15 @@ const (
 // Questions The questions for this game
 // Players
 type Game struct {
-	Host      *websocket.Conn   `json:"-"`
-	Id        string            `json:"id"`
-	Title     string            `json:"title"`
-	Questions []QuestionData    `json:"questions"`
-	Players   map[string]Player `json:"players"`
-	Running   bool              `json:"running"`
-	StartTime time.Duration     `json:"start_time"`
-	State     State             `json:"state"`
+	Host        *websocket.Conn   `json:"-"`
+	Id          string            `json:"id"`
+	Title       string            `json:"title"`
+	Questions   []QuestionData    `json:"questions"`
+	Players     map[string]Player `json:"players"`
+	PlayersLock *sync.Mutex       `json:"-"`
+	Running     bool              `json:"running"`
+	StartTime   time.Duration     `json:"start_time"`
+	State       State             `json:"state"`
 }
 
 // Player A structure representing a player in the game
@@ -103,14 +105,15 @@ func GetRandomGameId() string {
 func CreateGame(host *websocket.Conn, title string, questions []QuestionData) *Game {
 	id := GetRandomGameId()
 	game := Game{
-		Host:      host,
-		Id:        id,
-		Title:     title,
-		Questions: questions,
-		Players:   map[string]Player{},
-		Running:   true,
-		StartTime: Time(),
-		State:     Waiting,
+		Host:        host,
+		Id:          id,
+		Title:       title,
+		Questions:   questions,
+		Players:     map[string]Player{},
+		PlayersLock: &sync.Mutex{},
+		Running:     true,
+		StartTime:   Time(),
+		State:       Waiting,
 	}
 
 	go game.Loop()
@@ -132,12 +135,14 @@ func (game *Game) Loop() {
 		if game.State == Started || game.State == Waiting {
 
 			// Process players remove any players that have been inactive for 10 seconds
+			game.PlayersLock.Lock()
 			for id, player := range game.Players {
 				passTime := player.LastAlive - t
 				if passTime >= 10*time.Second {
 					game.RemovePlayer(id, "Player timed out")
 				}
 			}
+			game.PlayersLock.Unlock()
 
 			if game.State == Started {
 
@@ -160,7 +165,11 @@ func JoinGame(name string, conn *websocket.Conn, game *Game) *Player {
 		LastAlive: Time(),
 		Connect:   conn,
 	}
+	log.Printf("Player '%s' joined game '%s' given id '%s'", player.Name, game.Id, player.Id)
+
+	game.PlayersLock.Lock()
 	game.Players[id] = player
+	game.PlayersLock.Unlock()
 
 	dataPacket := GetPlayerDataPacket(id, name)
 
@@ -194,40 +203,50 @@ func (player *Player) Send(packet Packet) {
 }
 
 func (game *Game) BroadcastPacket(packet Packet) {
+	game.PlayersLock.Lock()
 	for _, player := range game.Players {
 		player.Send(packet)
 	}
+	game.PlayersLock.Unlock()
 }
 
 func (game *Game) BroadcastPacketExcluding(exclude string, packet Packet) {
+	game.PlayersLock.Lock()
 	for id, player := range game.Players {
 		if id != exclude {
 			player.Send(packet)
 		}
 	}
+	game.PlayersLock.Unlock()
 }
 
 func (game *Game) RemovePlayer(id string, reason string) {
+	game.PlayersLock.Lock()
 	player := game.Players[id]
 	player.Connect.Close()
 	delete(game.Players, id)
+	game.PlayersLock.Unlock()
 	game.BroadcastPacketExcluding(id, GetDisconnectOtherPacket(id, reason))
 }
 
 func (game *Game) Stop() {
 	game.Running = false
+	game.PlayersLock.Lock()
 	for id := range game.Players {
 		game.RemovePlayer(id, "Id ended")
 	}
+	game.PlayersLock.Unlock()
 	log.Printf("Stopping game %s", game.Id)
 }
 
 func (game *Game) IsNameTaken(name string) bool {
+	game.PlayersLock.Lock()
 	for _, player := range game.Players {
 		if strings.ToLower(player.Name) == strings.ToLower(name) {
 			return true
 		}
 	}
+	game.PlayersLock.Unlock()
 	return false
 }
 
