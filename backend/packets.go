@@ -4,21 +4,24 @@ type PacketId uint32
 type PacketData interface{}
 
 const (
-	UnknownId         PacketId = 0x00
-	KeepAliveId                = 0x01
-	DisconnectId               = 0x02
-	ErrorId                    = 0x03
-	CreateGameId               = 0x04
-	RequestJoinId              = 0x05
-	JoinGameId                 = 0x06
-	PlayerDataId               = 0x07
-	GameStateId                = 0x08
-	QuestionId                 = 0x09
-	AnswerId                   = 0x0A
-	TimeId                     = 0x0B
-	WinnersID                  = 0x0C
-	DisconnectOtherId          = 0x0D
-	DestroyId                  = 0x0E
+	UnknownId          PacketId = 0x00
+	KeepAliveId                 = 0x01
+	DisconnectId                = 0x02
+	ErrorId                     = 0x03
+	CreateGameId                = 0x04
+	RequestJoinId               = 0x05
+	JoinGameId                  = 0x06
+	PlayerDataId                = 0x07
+	GameStateId                 = 0x08
+	QuestionId                  = 0x09
+	AnswerId                    = 0x0A
+	TimeId                      = 0x0B
+	WinnersID                   = 0x0C
+	DisconnectOtherId           = 0x0D
+	DestroyId                   = 0x0E
+	RequestGameStateId          = 0x0F
+	CheckNameTakenId            = 0x10
+	NameTakenResultId           = 0x11
 )
 
 // Packet Represents a structure for a packet each packet contains an
@@ -46,8 +49,23 @@ type RequestJoinData struct {
 	Id   string `json:"id"`
 }
 
+type GameStateRequestData struct {
+	Id string `json:"id"`
+}
+
+type NameTakenData struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func GetPacket(id PacketId, data interface{}) Packet {
 	return Packet{Id: id, Data: data}
+}
+
+func GetNameTakenResultPacket(result bool) Packet {
+	return Packet{Id: NameTakenResultId, Data: struct {
+		Result bool `json:"result"`
+	}{Result: result}}
 }
 
 func GetErrorPacket(cause string) Packet {

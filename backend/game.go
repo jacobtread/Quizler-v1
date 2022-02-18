@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -218,6 +219,15 @@ func (game *Game) Stop() {
 		game.RemovePlayer(id, "Id ended")
 	}
 	log.Printf("Stopping game %s", game.Id)
+}
+
+func (game *Game) IsNameTaken(name string) bool {
+	for _, player := range game.Players {
+		if strings.ToLower(player.Name) == strings.ToLower(name) {
+			return true
+		}
+	}
+	return false
 }
 
 // GetGame retrieves the game with the matching id from the games
