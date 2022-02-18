@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 
 interface State {
-    joined: boolean
+    joined: boolean;
+    name: string;
     data: {
         owner: boolean;
         id: string;
@@ -12,6 +13,7 @@ interface State {
 export const useGameStore = defineStore('game', {
     state: (): State => ({
         joined: false,
+        name: '',
         data: {
             owner: false,
             id: '',

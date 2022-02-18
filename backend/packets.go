@@ -49,7 +49,7 @@ type RequestJoinData struct {
 	Id   string `json:"id"`
 }
 
-type GameStateRequestData struct {
+type RequestGameStateData struct {
 	Id string `json:"id"`
 }
 
@@ -66,6 +66,12 @@ func GetNameTakenResultPacket(result bool) Packet {
 	return Packet{Id: NameTakenResultId, Data: struct {
 		Result bool `json:"result"`
 	}{Result: result}}
+}
+
+func GetGameStatePacket(state State) Packet {
+	return Packet{Id: GameStateId, Data: struct {
+		State State `json:"state"`
+	}{State: state}}
 }
 
 func GetErrorPacket(cause string) Packet {

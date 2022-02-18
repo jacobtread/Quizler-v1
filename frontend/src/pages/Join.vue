@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import Back from "@asset/back.svg?inline"
 import Play from "@asset/play.svg?inline";
-import { useApi } from "@/api";
+import { GameState, useApi } from "@/api";
 import { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
+import Nav from "@component/Nav.vue";
+import { storeToRefs } from "pinia";
 
 let gameCode = ref('')
 let disabled = ref(true)
@@ -19,7 +20,27 @@ watch(gameCode, () => {
 })
 
 const gameState = useGameStore()
+const {name} = storeToRefs(gameState)
 const router = useRouter()
+
+const hasGame = ref(false)
+const searching = ref(false)
+
+function checkGameExists() {
+  searching.value = true
+  hasGame.value = false
+  const code = gameCode.value
+  socket.requestGameState(code)
+  socket.events.off('gameState')
+  socket.events.on('gameState', (data: GameState) => {
+    if (data === GameState.WAITING) {
+      hasGame.value = true
+    } else if (data === GameState.DOES_NOT_EXIST) {
+      console.error('GAME NOT FOUND')
+    }
+    searching.value = false
+  })
+}
 
 function joinGame() {
   const code = gameCode.value
@@ -42,28 +63,51 @@ function joinGame() {
 
 <template>
   <div class="content">
-    <router-link class="back-button" :to="{name: 'Home'}">
-      <Back/>
-    </router-link>
-    <div class="main">
-      <h1 class="title">Enter Code</h1>
-      <p class="text">Please your quiz code</p>
-      <div class="input__wrapper">
-        <input class="input"
-               :class="{'input--active': !disabled}"
-               type="text"
-               v-model="gameCode"
-               maxlength="5"
-               minlength="0"
-               placeholder="XXXXX"
-        >
-        <transition name="button" appear>
-          <button class="button" v-if="!disabled" @click="joinGame">
-            <Play/>
-          </button>
-        </transition>
-      </div>
-
+    <Nav title="Join"/>
+    <div class="wrapper main">
+      <template v-if="searching">
+        <h1>Checking if game exists</h1>
+      </template>
+      <template v-else>
+        <template v-if="hasGame">
+          <h1 class="title">Enter Name</h1>
+          <p class="text">Please you name for the game</p>
+          <div class="input__wrapper">
+            <input class="input"
+                   :class="{'input--active': !disabled}"
+                   type="text"
+                   v-model="name"
+                   maxlength="12"
+                   minlength="0"
+                   placeholder="Name"
+            >
+            <transition name="button" appear>
+              <button class="button" v-if="!disabled" @click="joinGame">
+                <Play/>
+              </button>
+            </transition>
+          </div>
+        </template>
+        <template v-else>
+          <h1 class="title">Enter Code</h1>
+          <p class="text">Please your quiz code</p>
+          <div class="input__wrapper">
+            <input class="input"
+                   :class="{'input--active': !disabled}"
+                   type="text"
+                   v-model="gameCode"
+                   maxlength="5"
+                   minlength="0"
+                   placeholder="XXXXX"
+            >
+            <transition name="button" appear>
+              <button class="button" v-if="!disabled" @click="checkGameExists">
+                <Play/>
+              </button>
+            </transition>
+          </div>
+        </template>
+      </template>
     </div>
   </div>
 </template>
@@ -85,9 +129,8 @@ function joinGame() {
 }
 
 .main {
-  padding: 1rem;
-  color: white;
-  text-align: center;
+  justify-content: center;
+  align-items: center;
 }
 
 .title {

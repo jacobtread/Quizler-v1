@@ -14,6 +14,7 @@ const (
 	Waiting State = iota
 	Started
 	Stopped
+	DoesNotExist
 )
 
 // Game A structure representing a game itself

@@ -1,4 +1,12 @@
-import packets, { DisconnectData, ErrorData, JoinGameData, Packet, PlayerData, QuestionData } from "./packets";
+import packets, {
+    DisconnectData,
+    ErrorData,
+    GameStateData,
+    JoinGameData,
+    Packet,
+    PlayerData,
+    QuestionData
+} from "./packets";
 import mitt from "mitt";
 import { ref, Ref } from "vue";
 
@@ -29,7 +37,15 @@ type Events = {
     state: string;
     game: JoinGameData | null;
     player: PlayerData;
-    disconnect: string
+    disconnect: string;
+    gameState: GameState
+}
+
+export enum GameState {
+    WAITING,
+    STARTED,
+    STOPPED,
+    DOES_NOT_EXIST
 }
 
 /**
@@ -59,6 +75,8 @@ class SocketApi {
     // The last time that this client sent a keep alive at
     private lastSendKeepAlive: number = -1
 
+    state: GameState = GameState.DOES_NOT_EXIST
+
     events = mitt<Events>()
 
     /**
@@ -71,7 +89,8 @@ class SocketApi {
         0x02: this.onDisconnect,
         0x03: this.onError,
         0x06: this.onJoinGame,
-        0x07: this.onPlayerData
+        0x07: this.onPlayerData,
+        0x08: this.onGameState
     }
 
     /**
@@ -154,6 +173,31 @@ class SocketApi {
     onPlayerData(api: SocketApi, data: PlayerData) {
         api.players.push(data)
         api.events.emit('player', data)
+    }
+
+    /**
+     * Packet handler for GameState packet (0x08) handles keeping track
+     * of the games state
+     *
+     * @param api The current connection instance
+     * @param data The current game state
+     */
+    onGameState(api: SocketApi, data: GameStateData) {
+        const state = api.getGameState(data.state)
+        api.state = state
+        api.events.emit('gameState', state)
+    }
+
+    private getGameState(id: number): GameState {
+        if (id == 0) {
+            return GameState.WAITING
+        } else if (id == 1) {
+            return GameState.STARTED
+        } else if (id == 2) {
+            return GameState.STOPPED
+        } else {
+            return GameState.DOES_NOT_EXIST
+        }
     }
 
     /**
@@ -242,6 +286,11 @@ class SocketApi {
         this.send(packets.keepAlive())
     }
 
+
+    requestGameState(id: string) {
+        this.send(packets.requestGameState(id))
+    }
+
     /**
      * Tells the websocket server to create a new game instance
      * with the provided tile and questions
@@ -262,8 +311,8 @@ class SocketApi {
      *
      * @param id The id/code of the game room
      */
-    requestJoin(id: string) {
-        this.send(packets.requestJoin(id))
+    requestJoin(id: string, name: string) {
+        this.send(packets.requestJoin(id,name))
     }
 
     /**

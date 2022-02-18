@@ -88,6 +88,14 @@ func SocketConnect(c *gin.Context) {
 			if player != nil {
 				player.LastAlive = lastKeepAlive
 			}
+		case RequestGameStateId:
+			data := OfType(packetData, RequestGameStateData{}).(RequestGameStateData)
+			checkGame := GetGame(data.Id)
+			if checkGame == nil {
+				Send(GetGameStatePacket(DoesNotExist))
+			} else {
+				Send(GetGameStatePacket(checkGame.State))
+			}
 		case CheckNameTakenId:
 			data := OfType(packetData, NameTakenData{}).(NameTakenData)
 			checkGame := GetGame(data.Id)

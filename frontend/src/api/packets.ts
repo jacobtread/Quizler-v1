@@ -11,10 +11,6 @@ export interface DisconnectData {
     reason: string;
 }
 
-export interface CreateData {
-    title: string;
-    questions: QuestionData[];
-}
 
 export interface JoinGameData {
     owner: boolean;
@@ -27,16 +23,16 @@ export interface PlayerData {
     name: string;
 }
 
+export interface GameStateData {
+    state: number
+}
+
 export interface QuestionData {
     title: string;
     image?: string;
     question: string;
     answers: string[];
     values: number[];
-}
-
-interface RequestJoinData {
-    id: string;
 }
 
 export interface Player {
@@ -51,13 +47,6 @@ export interface Game {
     players: PlayerData[];
 }
 
-export type UnknownPacket = Packet<any>;
-export type ErrorPacket = Packet<ErrorData>;
-export type DisconnectPacket = Packet<DisconnectData>;
-export type KeepAlivePacket = Packet<undefined>;
-export type CreateGamePacket = Packet<CreateData>;
-export type RequestJoinPacket = Packet<RequestJoinData>
-
 
 type Names = { [key: number]: string }
 
@@ -71,13 +60,17 @@ export default {
         0x04: 'Create Game',
         0x05: 'Request Join',
         0x06: 'Join Game',
-        0x0E: 'Destroy'
+        0x0E: 'Destroy',
+        0x0F: 'Request Game State',
+        0x10: 'Check name taken'
     } as Names,
-    unknown: (): UnknownPacket => ({id: 0x00}),
-    keepAlive: (): KeepAlivePacket => ({id: 0x01}),
-    disconnect: (reason: string): DisconnectPacket => ({id: 0x02, data: {reason}}),
-    error: (cause: string): ErrorPacket => ({id: 0x03, data: {cause}}),
-    createGame: (title: string, questions: QuestionData[]): CreateGamePacket => ({id: 0x04, data: {title, questions}}),
-    requestJoin: (id: string): RequestJoinPacket => ({id: 0x05, data: {id}}),
-    destroy: () => ({id: 0x0E})
+    unknown: () => ({id: 0x00}),
+    keepAlive: () => ({id: 0x01}),
+    disconnect: (reason: string) => ({id: 0x02, data: {reason}}),
+    error: (cause: string) => ({id: 0x03, data: {cause}}),
+    createGame: (title: string, questions: QuestionData[]) => ({id: 0x04, data: {title, questions}}),
+    requestJoin: (id: string, name: string) => ({id: 0x05, data: {id, name}}),
+    destroy: () => ({id: 0x0E}),
+    requestGameState: (id: string) => ({id: 0x0F, data: {id}}),
+    checkNameTaken: (id: string, name: string) => ({id: 0x10, data: {id, name}})
 }
