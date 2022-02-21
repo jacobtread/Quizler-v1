@@ -82,7 +82,7 @@ export default {
             0x04: 'REQUEST_GAME_STATE',
             0x05: 'REQUEST_JOIN',
             0x06: 'ANSWER',
-            0x07: 'DESTROY'
+            0x07: 'KICK'
         }
     ] as Names[],
     keepAlive: () => ({id: 0x00}),
@@ -92,6 +92,5 @@ export default {
     requestGameState: (id: string) => ({id: 0x04, data: {id}}),
     requestJoin: (id: string, name: string) => ({id: 0x05, data: {id, name}}),
     answer: (id: number) => ({id: 0x06, data: {id}}),
-    destroy: () => ({id: 0x07})
-
+    kick: (id: string) => ({id: 0x07, data: {id}})
 }

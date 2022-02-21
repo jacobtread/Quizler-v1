@@ -360,6 +360,24 @@ class SocketApi {
         this.send(packets.disconnect())
     }
 
+    /**
+     * Removes a player from the game (HOST ONLY)
+     *
+     * @param id The id of the player to kick
+     */
+    kick(id: string) {
+        console.log('Kicked player ' + id)
+        delete this.players[id]
+        this.send(packets.kick(id))
+        this.events.emit('players', this.players)
+    }
+
+    /**
+     * Stops the main loop and ends the websocket connection
+     * indented for actually disconnecting from the websocket
+     * server itself. Use disconnect to only disconnect from
+     * the game
+     */
     stop() {
         console.log('Client Disconnect')
         this.isRunning = false
