@@ -17,8 +17,8 @@ if (store.joined) {
 }
 
 function destroyGame() {
-  if (store.joined && store.data.owner) {
-    socket.sendDestroy()
+  if (store.joined) {
+    socket.disconnect()
   }
 }
 

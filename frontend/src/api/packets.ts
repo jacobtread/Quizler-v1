@@ -23,6 +23,12 @@ export interface PlayerData {
     name: string;
 }
 
+export interface PlayerDataP {
+    id: string;
+    name: string;
+    mode: number;
+}
+
 export interface GameStateData {
     state: number
 }

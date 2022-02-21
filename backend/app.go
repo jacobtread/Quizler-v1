@@ -91,6 +91,12 @@ func SocketConnect(c *gin.Context) {
 		case net.CDisconnect:
 			log.Printf("Client disconnected")
 			running = false
+			if activeGame != nil {
+				activeGame.RemovePlayer(activePlayer)
+			}
+			if hostOf != nil { // If the host exists stop the server
+				hostOf.Stop()
+			}
 		case net.CCreateGame:
 			RequireData(rawPacket, func(data *net.CreateGameData) {
 				// Create a new game
@@ -143,11 +149,7 @@ func SocketConnect(c *gin.Context) {
 			})
 		case net.CAnswer:
 			activePlayer.Net.Send(net.ErrorPacket("Not implemented"))
-		// TODO: Handle answer submit
-		case net.CDestroy:
-			if hostOf != nil { // If the host exists stop the server
-				hostOf.Stop()
-			}
+			// TODO: Handle answer submit
 		}
 	}
 

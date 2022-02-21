@@ -32,7 +32,6 @@ type PlayerDataMode = uint8
 
 const (
 	AddMode PlayerDataMode = iota
-	ReplaceMode
 	RemoveMode
 )
 

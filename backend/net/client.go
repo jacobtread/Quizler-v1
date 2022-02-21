@@ -11,7 +11,6 @@ const (
 	CRequestGameState          = 0x04
 	CRequestJoin               = 0x05
 	CAnswer                    = 0x06
-	CDestroy                   = 0x07
 )
 
 // CreateGameData A structure representing the data a client will send to create a game

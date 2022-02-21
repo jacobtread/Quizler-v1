@@ -6,10 +6,11 @@ import packets, {
     NameTakenResultData,
     Packet,
     PlayerData,
+    PlayerDataP,
     QuestionData
 } from "./packets";
 import mitt from "mitt";
-import { ref, Ref } from "vue";
+import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -35,7 +36,7 @@ interface PacketHandlers {
 type Events = {
     state: string;
     game: JoinGameData | null;
-    player: PlayerData;
+    players: PlayerMap;
     disconnect: string;
     gameState: GameState
     nameTaken: boolean
@@ -46,6 +47,10 @@ export enum GameState {
     STARTED,
     STOPPED,
     DOES_NOT_EXIST
+}
+
+interface PlayerMap {
+    [name: string]: PlayerData
 }
 
 enum Direction {
@@ -70,7 +75,7 @@ class SocketApi {
     private isDebug: boolean = true
 
     private gameCode: string | null = null
-    players: PlayerData[] = []
+    players: PlayerMap = {}
 
     // The interval timer handle used to cancel the update interval
     private updateInterval: any = undefined
@@ -175,9 +180,14 @@ class SocketApi {
      * @param api The current connection instance
      * @param data The player data of the other player
      */
-    onPlayerData(api: SocketApi, data: PlayerData) {
-        api.players.push(data)
-        api.events.emit('player', data)
+    onPlayerData(api: SocketApi, data: PlayerDataP) {
+        const elm = {id: data.id, name: data.name}
+        if (data.mode === 0) {
+            api.players[data.id] = elm
+        } else if (data.mode === 1) {
+            delete api.players[elm.id]
+        }
+        api.events.emit('players', api.players)
     }
 
     /**
@@ -334,16 +344,6 @@ class SocketApi {
         this.send(packets.requestJoin(id, name))
     }
 
-    /**
-     * Tells the websocket server to close and destroy the game server
-     * that is owned by the current player
-     */
-    sendDestroy() {
-        if (this.isDebug) console.debug('Destroying game')
-        this.send(packets.destroy())
-        this.setGameCode(null)
-    }
-
     setGameCode(data: JoinGameData | null) {
         this.gameCode = data ? data.id : null
         this.events.emit('game', data)
@@ -355,12 +355,19 @@ class SocketApi {
      * connection is open according to isOpen then it will be closed as well
      */
     disconnect() {
+        console.log('Disconnected from game')
+        this.setGameCode(null)
+        this.send(packets.disconnect())
+    }
+
+    stop() {
         console.log('Client Disconnect')
         this.isRunning = false
         if (this.updateInterval) {
             clearInterval(this.updateInterval)
         }
         if (this.isOpen) {
+            this.send(packets.disconnect())
             this.isOpen = false
             try {
                 this.ws.close()
@@ -378,7 +385,7 @@ class SocketApi {
         if (this.isRunning && this.isOpen) {
             const time = performance.now()
             if (time - this.lastServerKeepAlive > 5000) {
-                this.disconnect()
+                this.stop()
                 return
             }
 
@@ -390,12 +397,12 @@ class SocketApi {
 }
 
 // The socket instance
-let socket: SocketApi | null = null
+let socket: SocketApi
 
 interface UseApi {
     socket: SocketApi;
     open: Ref<boolean>;
-    players: Ref<PlayerData[]>;
+    players: UnwrapNestedRefs<PlayerMap>;
 }
 
 /**
@@ -406,20 +413,31 @@ interface UseApi {
  */
 export function useApi(): UseApi {
     let open = ref(false)
-    if (socket == null) {
-        socket = new SocketApi()
+    if (!socket) socket = new SocketApi()
+
+
+    let players = reactive<PlayerMap>({})
+
+    function updatePlayers(data: PlayerMap) {
+        for (let dataKey in data) {
+            players[dataKey] = data[dataKey]
+        }
     }
-    socket.events.off('state')
-    socket.events.on('state', (state: string) => {
+
+    function updateState(state: string) {
         open.value = state === 'open';
+    }
+
+    onMounted(() => {
+        socket.events.on('state', updateState)
+        socket.events.on('players', updatePlayers)
+        updatePlayers(socket.players)
     })
 
-    let players = ref<PlayerData[]>([])
-    socket.events.off('player')
-    socket.events.on('player', () => {
-        console.log('Players in')
-        players.value = socket!.players
-        console.log(socket?.players)
+    onUnmounted(() => {
+        socket.events.off('state', updateState)
+        socket.events.off('players', updatePlayers)
     })
+
     return {socket, players, open}
 }

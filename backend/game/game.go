@@ -229,6 +229,7 @@ func (game *Game) RemovePlayer(player *Player) {
 	player.Net.Socket.Close()
 	delete(game.Players, player.Id)
 	game.PLock.Unlock()
+	log.Printf("Player '%s' (%s) removed from game '%s' (%s)", player.Name, player.Id, game.Title, game.Id)
 }
 
 // Stop Sets the game state to Stopped and calls RemovePlayer
