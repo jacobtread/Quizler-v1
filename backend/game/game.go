@@ -225,6 +225,9 @@ func (game *Game) Loop() {
 // RemovePlayer Deletes the player from the players list and closes
 // the socket connection. Made thread safe with PLock
 func (game *Game) RemovePlayer(player *Player) {
+	if game.State != Stopped {
+		game.BroadcastExcluding(player.Id, net.PlayerDataPacket(player.Id, player.Name, net.RemoveMode))
+	}
 	game.PLock.Lock()
 	player.Net.Socket.Close()
 	delete(game.Players, player.Id)
