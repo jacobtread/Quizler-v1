@@ -26,6 +26,7 @@
 | 0x04 | REQUEST_GAME_STATE | id (string)                                |
 | 0x05 | REQUEST_JOIN       | id (string), name (string)                 |
 | 0x06 | ANSWER             | id (uint16)                                |
+| 0x07 | KICK               | id (string)                                |
 
 
     

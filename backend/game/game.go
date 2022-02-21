@@ -222,6 +222,17 @@ func (game *Game) Loop() {
 	}
 }
 
+// GetPlayer thread safe method for retrieving players from the game players list by ID
+func (game *Game) GetPlayer(id string) *Player {
+	game.PLock.RLock()
+	player, exists := game.Players[id]
+	if !exists {
+		return nil
+	}
+	game.PLock.RUnlock()
+	return player
+}
+
 // RemovePlayer Deletes the player from the players list and closes
 // the socket connection. Made thread safe with PLock
 func (game *Game) RemovePlayer(player *Player) {

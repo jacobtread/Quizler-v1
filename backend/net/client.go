@@ -11,7 +11,13 @@ const (
 	CRequestGameState          = 0x04
 	CRequestJoin               = 0x05
 	CAnswer                    = 0x06
+	CKick                      = 0x07
 )
+
+// KickData A structure representing the data a client will send to kick a player
+type KickData struct {
+	Id string `json:"id"` // The id of the player to kick
+}
 
 // CreateGameData A structure representing the data a client will send to create a game
 type CreateGameData struct {

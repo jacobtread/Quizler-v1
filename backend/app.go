@@ -149,7 +149,16 @@ func SocketConnect(c *gin.Context) {
 			})
 		case net.CAnswer:
 			activePlayer.Net.Send(net.ErrorPacket("Not implemented"))
-			// TODO: Handle answer submit
+		// TODO: Handle answer submit
+		case net.CKick:
+			if hostOf != nil {
+				RequireData(rawPacket, func(data *net.KickData) {
+					p := hostOf.GetPlayer(data.Id)
+					if p != nil {
+						hostOf.RemovePlayer(p)
+					}
+				})
+			}
 		}
 	}
 
