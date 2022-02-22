@@ -17,13 +17,19 @@ const {socket, players, open} = useApi()
     </div>
   </template>
   <template v-else>
-    <div>
+    <div class="content loader-wrapper">
       <Loader/>
     </div>
   </template>
 </template>
 
 <style lang="scss">
+.loader-wrapper {
+  flex: auto;
+  justify-content: center;
+  align-items: center;
+}
+
 .content {
   position: relative;
   width: 100%;

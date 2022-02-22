@@ -29,8 +29,9 @@ import Logo from "@asset/logo.svg?inline"</script>
     width: 170px;
     height: 170px;
     border-radius: 100%;
-    border: 5px solid $primary;
-    animation: rotate 2s ease-in-out infinite;
+    border: 5px solid #222;
+    border-top-color: $primary;
+    animation: rotate 2s cubic-bezier(0.25, 0.46, 0.69,-0.16) infinite;
     z-index: -1;
 
     &__qu {
@@ -44,12 +45,13 @@ import Logo from "@asset/logo.svg?inline"</script>
   }
 
   &__logo {
-    width: 120px;
-    fill: $primary;
+    width: 90px;
+    fill: white;
   }
 
   &__text {
-    color: $primary;
+    color: #999;
+    margin-top: 0.2rem;
   }
 }
 

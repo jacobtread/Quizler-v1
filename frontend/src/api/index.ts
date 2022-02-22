@@ -113,7 +113,6 @@ class SocketApi {
         ws.onmessage = (e) => this.onMessage(e)
         ws.onclose = () => this.onClose()
         ws.onerror = (e: Event) => {
-            this.disconnect()
             console.error(e)
         }
         if (this.updateInterval) clearInterval(this.updateInterval)
@@ -138,13 +137,14 @@ class SocketApi {
      */
     onClose() {
         this.isOpen = false
+        this.events.emit('state', 'closed')
         if (this.isRunning) {
+            console.log('Lost connection. Attempting reconnect in 2 seconds')
+            const api = this
+            setTimeout(() => api.ws = api.connect(), 2000)
+        } else {
             console.log('Disconnected')
             this.disconnect()
-            this.events.emit('state', 'closed')
-        } else {
-            console.log('Lost connection. Attempting reconnect in 2 seconds')
-            this.ws = this.connect()
         }
     }
 
@@ -358,6 +358,9 @@ class SocketApi {
         console.log('Disconnected from game')
         this.setGameCode(null)
         this.send(packets.disconnect())
+        if (this.isRunning) {
+
+        }
     }
 
     /**
@@ -373,28 +376,6 @@ class SocketApi {
     }
 
     /**
-     * Stops the main loop and ends the websocket connection
-     * indented for actually disconnecting from the websocket
-     * server itself. Use disconnect to only disconnect from
-     * the game
-     */
-    stop() {
-        console.log('Client Disconnect')
-        this.isRunning = false
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval)
-        }
-        if (this.isOpen) {
-            this.send(packets.disconnect())
-            this.isOpen = false
-            try {
-                this.ws.close()
-            } catch (e) {
-            }
-        }
-    }
-
-    /**
      * An update loop. This runs constantly as long as disconnect is not
      * called. Currently, this just handles keeping the connection alive
      * and checking if the connection has timed out
@@ -403,7 +384,10 @@ class SocketApi {
         if (this.isRunning && this.isOpen) {
             const time = performance.now()
             if (time - this.lastServerKeepAlive > 5000) {
-                this.stop()
+                this.isOpen = false // Oops, we are no longer connected to the server
+                console.log('Lost connection. Attempting reconnect in 2 seconds')
+                const api = this
+                setTimeout(() => api.ws = api.connect(), 2000)
                 return
             }
 
@@ -432,8 +416,6 @@ interface UseApi {
 export function useApi(): UseApi {
     let open = ref(false)
     if (!socket) socket = new SocketApi()
-
-
     let players = reactive<PlayerMap>({})
 
     function updatePlayers(data: PlayerMap) {

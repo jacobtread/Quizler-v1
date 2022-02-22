@@ -31,8 +31,8 @@ function destroyGame() {
       <h2 class="code">{{ store.data.id }}</h2>
       <ul class="players">
         <li v-for="(player, index) of players" :key="index" class="player">
-          <span>{{ player.name }}</span>
-          <button @click="socket.kick(player.id)" v-if="store.data.owner">Kick</button>
+          <span class="player__name">{{ player.name }}</span>
+          <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">Kick</button>
         </li>
       </ul>
     </div>
