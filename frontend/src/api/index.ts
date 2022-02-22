@@ -117,7 +117,7 @@ class SocketApi {
         ws.onerror = (e: Event) => {
             console.error(e)
         }
-        if (this.updateInterval){
+        if (this.updateInterval) {
             clearInterval(this.updateInterval)
         }
         this.updateInterval = setInterval(() => this.update(), 100)
@@ -132,6 +132,7 @@ class SocketApi {
     onOpened() {
         console.log('Connected')
         if (this.ws.readyState != WebSocket.OPEN) return
+        this.lastServerKeepAlive = performance.now()
         this.isOpen = true
         this.events.emit('state', 'open')
     }

@@ -54,6 +54,12 @@ func SocketConnect(c *gin.Context) {
 	var activeGame *game.Game
 	var activePlayer *game.Player
 
+	ws.SetCloseHandler(func(code int, text string) error {
+		running = false
+		log.Printf("Websocket connection closed '%s' (%d)", text, code)
+		return nil
+	})
+
 	for running {
 		// sends the provided packet over the websocket
 		// and stops the connection if an error occurs
@@ -67,6 +73,7 @@ func SocketConnect(c *gin.Context) {
 				}
 			}
 		}
+
 		// The current system time
 		currentTime := game.Time()
 		// The elapsed time since the last keep alive
@@ -107,6 +114,8 @@ func SocketConnect(c *gin.Context) {
 				// Tell the host they've joined the new game as owner
 				Send(net.JoinGamePacket(true, hostOf.Id, hostOf.Title))
 				log.Printf("Created new game '%s' (%s)", hostOf.Title, hostOf.Id)
+
+				defer hostOf.Stop()
 			})
 		case net.CCheckNameTaken:
 			RequireData(rawPacket, func(data *net.CheckNameTakenData) {
@@ -146,6 +155,8 @@ func SocketConnect(c *gin.Context) {
 							activePlayer = activeGame.Join(ws, data.Name)
 							// Tell the host they've joined the new game as a player
 							Send(net.JoinGamePacket(false, activeGame.Id, activeGame.Title))
+
+							defer activeGame.RemovePlayer(activePlayer)
 						}
 					}
 				}
@@ -163,14 +174,6 @@ func SocketConnect(c *gin.Context) {
 				})
 			}
 		}
-	}
-
-	if activePlayer != nil && activeGame != nil {
-		activeGame.RemovePlayer(activePlayer)
-	}
-
-	if hostOf != nil {
-		hostOf.Stop()
 	}
 }
 
