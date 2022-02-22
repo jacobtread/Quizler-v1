@@ -62,4 +62,49 @@ function destroyGame() {
   font-weight: bold;
   font-size: 4rem;
 }
+
+.players {
+  display: flex;
+  justify-content: center;
+  flex-flow: row;
+  flex-wrap: wrap;
+  list-style: none;
+  max-width: 500px;
+  width: 100%;
+  gap: 1rem;
+
+}
+
+.player {
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  justify-content: space-between;
+  background: #222;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+  gap: 0.5rem;
+
+  &__name {
+    font-weight: bold;
+    letter-spacing: 1px;
+    padding-left: 0.5rem;
+  }
+
+  &__button {
+    background: #333;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.1rem;
+    font-size: 1rem;
+    opacity: 0.25;
+    transition: opacity 0.25s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
 </style>
