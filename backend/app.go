@@ -72,7 +72,7 @@ func SocketConnect(c *gin.Context) {
 		// The elapsed time since the last keep alive
 		elapsed := currentTime - lastKeepAlive
 
-		if elapsed > 5000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
+		if elapsed > 10000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
 			// Then we disconnect the client for "Connection timed out"
 			Send(net.DisconnectPacket("Connection timed out"))
 			break

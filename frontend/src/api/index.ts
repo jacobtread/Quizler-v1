@@ -117,7 +117,9 @@ class SocketApi {
         ws.onerror = (e: Event) => {
             console.error(e)
         }
-        if (this.updateInterval) clearInterval(this.updateInterval)
+        if (this.updateInterval){
+            clearInterval(this.updateInterval)
+        }
         this.updateInterval = setInterval(() => this.update(), 100)
         return ws
     }
@@ -131,7 +133,6 @@ class SocketApi {
         console.log('Connected')
         if (this.ws.readyState != WebSocket.OPEN) return
         this.isOpen = true
-        this.events.emit('reset')
         this.events.emit('state', 'open')
     }
 
@@ -158,6 +159,9 @@ class SocketApi {
         this.events.emit('reset')
         console.log('Lost connection. Attempting reconnect in 2 seconds')
         const api = this
+        if (this.updateInterval) {
+            clearInterval(this.updateInterval)
+        }
         setTimeout(() => api.ws = api.connect(), 2000)
     }
 
@@ -198,7 +202,7 @@ class SocketApi {
         if (data.mode === 0) {
             api.players[data.id] = elm
         } else if (data.mode === 1) {
-            delete api.players[elm.id]
+            delete api.players[data.id]
         }
         api.events.emit('players', api.players)
     }
@@ -397,7 +401,7 @@ class SocketApi {
     update() {
         if (this.isRunning && this.isOpen) {
             const time = performance.now()
-            if (time - this.lastServerKeepAlive > 5000) {
+            if (time - this.lastServerKeepAlive > 10000) {
                 this.retryConnect()
                 return
             }
