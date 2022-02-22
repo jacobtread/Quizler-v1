@@ -8,9 +8,9 @@ import packets, {
     PlayerData,
     PlayerDataP
 } from "./packets";
-import mitt from "mitt";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 import { useGameStore } from "@store/game";
+import { events } from "@/events";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -33,24 +33,15 @@ interface PacketHandlers {
     [id: number]: (api: SocketApi, data: any) => void
 }
 
-type Events = {
-    state: string;
-    game: JoinGameData | null;
-    players: PlayerMap;
-    disconnect: string;
-    gameState: GameState;
-    nameTaken: boolean;
-    reset: void;
-}
-
 export enum GameState {
     WAITING,
+    STARTING,
     STARTED,
     STOPPED,
     DOES_NOT_EXIST
 }
 
-interface PlayerMap {
+export interface PlayerMap {
     [name: string]: PlayerData
 }
 
@@ -84,10 +75,9 @@ class SocketApi {
     // The last time that this client sent a keep alive at
     private lastSendKeepAlive: number = -1
 
-    gameCode: string | null = null // The current game code or null 
+    gameCode: string | null = null // The current game code or null
     players: PlayerMap = {} // The map of players to their names
     state: GameState = GameState.DOES_NOT_EXIST // The current game state
-    events = mitt<Events>() // The event system
 
     /**
      * A mapping to convert the packet ids into handler functions so that
@@ -132,7 +122,7 @@ class SocketApi {
         if (this.ws.readyState != WebSocket.OPEN) return
         this.lastServerKeepAlive = performance.now()
         this.isOpen = true
-        this.events.emit('state', 'open')
+        events.emit('state', 'open')
     }
 
     /**
@@ -140,7 +130,7 @@ class SocketApi {
      */
     onClose() {
         this.isOpen = false
-        this.events.emit('state', 'closed')
+        events.emit('state', 'closed')
         if (this.isRunning) {
             this.retryConnect()
         } else {
@@ -155,7 +145,7 @@ class SocketApi {
      */
     retryConnect() {
         this.isOpen = false
-        this.events.emit('reset')
+        events.emit('reset')
         console.log('Lost connection. Attempting reconnect in 2 seconds')
         const api = this
         if (this.updateInterval) {
@@ -203,7 +193,7 @@ class SocketApi {
         } else if (data.mode === 1) {
             delete api.players[data.id]
         }
-        api.events.emit('players', api.players)
+        events.emit('players', api.players)
     }
 
     /**
@@ -216,7 +206,7 @@ class SocketApi {
     onGameState(api: SocketApi, data: GameStateData) {
         const state = SocketApi.getGameState(data.state)
         api.state = state
-        api.events.emit('gameState', state)
+        events.emit('gameState', state)
     }
 
     /**
@@ -227,7 +217,7 @@ class SocketApi {
      * @param data Contains whether the name is token
      */
     onNameTakenResult(api: SocketApi, data: NameTakenResultData) {
-        api.events.emit('nameTaken', data.result)
+        events.emit('nameTaken', data.result)
     }
 
     /**
@@ -241,8 +231,10 @@ class SocketApi {
         if (id == 0) {
             return GameState.WAITING
         } else if (id == 1) {
-            return GameState.STARTED
+            return GameState.STARTING
         } else if (id == 2) {
+            return GameState.STARTED
+        } else if (id == 3) {
             return GameState.STOPPED
         } else {
             return GameState.DOES_NOT_EXIST
@@ -257,9 +249,9 @@ class SocketApi {
      * @param data The disconnect data contains the reason for disconnect
      */
     onDisconnect(api: SocketApi, data: DisconnectData) {
-        api.events.emit('reset')
+        events.emit('reset')
         api.setGameCode(null)
-        api.events.emit('disconnect', data.reason)
+        events.emit('disconnect', data.reason)
     }
 
     /**
@@ -346,7 +338,7 @@ class SocketApi {
      */
     setGameCode(data: JoinGameData | null) {
         this.gameCode = data ? data.id : null
-        this.events.emit('game', data)
+        events.emit('game', data)
     }
 
     /**
@@ -372,7 +364,7 @@ class SocketApi {
         console.log('Kicked player ' + id)
         delete this.players[id]
         this.send(packets.kick(id))
-        this.events.emit('players', this.players)
+        events.emit('players', this.players)
     }
 
     /**
@@ -435,16 +427,16 @@ export function useApi(): UseApi {
     }
 
     onMounted(() => {
-        socket.events.on('state', updateState)
-        socket.events.on('players', updatePlayers)
-        socket.events.on('reset', handleReset)
+        events.on('state', updateState)
+        events.on('players', updatePlayers)
+        events.on('reset', handleReset)
         updatePlayers(socket.players)
     })
 
     onUnmounted(() => {
-        socket.events.off('state', updateState)
-        socket.events.off('players', updatePlayers)
-        socket.events.off('reset', handleReset)
+        events.off('state', updateState)
+        events.off('players', updatePlayers)
+        events.off('reset', handleReset)
     })
 
     return {socket, players, open}

@@ -26,9 +26,13 @@ function disconnect() {
   }
 }
 
+function startGame() {
+
+}
+
 </script>
 <template>
-  <div>
+  <form @submit.prevent="startGame">
     <Nav title="Waiting Room" :back-function="disconnect"/>
     <div class="wrapper">
       <h1 class="code">{{ store.data.id }}</h1>
@@ -40,8 +44,13 @@ function disconnect() {
           <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">Kick</button>
         </li>
       </ul>
+      <div v-if="store.data.owner">
+        <button class="button" @click="startGame">
+           Start Game
+        </button>
+      </div>
     </div>
-  </div>
+  </form>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";

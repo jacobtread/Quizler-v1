@@ -17,6 +17,7 @@ type Identifier = string
 // Enum for game states
 const (
 	Waiting      types.State = iota // Waiting for the game to start
+	Starting                        // The game is about to start
 	Started                         // The game is started an in progress
 	Stopped                         // The game has Stopped and is ready to shut down
 	DoesNotExist                    // The game doesn't exist
