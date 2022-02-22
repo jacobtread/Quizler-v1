@@ -89,8 +89,8 @@ func SocketConnect(c *gin.Context) {
 		err = ws.ReadJSON(&rawPacket)
 		if err != nil { // If packet parsing failed or the ID was missing
 			// Disconnect the client for sending invalid data
-			Send(net.DisconnectPacket("Client sent invalid data"))
-			log.Printf("Client sent invalid data")
+			Send(net.DisconnectPacket("Failed to decode packet"))
+			log.Println("Failed to decode packet", err)
 			break
 		}
 
@@ -114,7 +114,7 @@ func SocketConnect(c *gin.Context) {
 				// Tell the host they've joined the new game as owner
 				Send(net.JoinGamePacket(true, hostOf.Id, hostOf.Title))
 				log.Printf("Created new game '%s' (%s)", hostOf.Title, hostOf.Id)
-
+				// Stop the host game once this function finishes execution (running becomes false)
 				defer hostOf.Stop()
 			})
 		case net.CCheckNameTaken:
