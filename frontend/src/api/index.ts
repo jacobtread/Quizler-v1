@@ -435,6 +435,9 @@ export function useApi(): UseApi {
     let players = reactive<PlayerMap>({})
 
     function updatePlayers(data: PlayerMap) {
+        for (let key of Object.keys(players)) {
+            if (!data[key]) delete players[key]
+        }
         for (let dataKey in data) {
             players[dataKey] = data[dataKey]
         }
