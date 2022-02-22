@@ -13,7 +13,6 @@ const route = useRoute();
 
 // A reactive object for the question data
 const question = reactive<QuestionData>({
-  title: '',
   question: '',
   values: [0],
   answers: ['Example Answer'],
@@ -75,7 +74,7 @@ function addQuestion() {
 }
 </script>
 <template>
-  <div>
+  <form @submit.prevent="addQuestion">
     <Nav title="Add Question" back="Create"/>
     <div class="wrapper">
       <main class="main">
@@ -83,7 +82,7 @@ function addQuestion() {
           <h2 class="box__title">Details</h2>
           <ImageSelector v-model="question.image"/>
           <label class="input input--area question-text">
-            <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question"/>
+            <textarea rows="5" cols="10" class="input__value" placeholder="Question" v-model="question.question" required/>
           </label>
         </div>
         <div class="box">
@@ -91,13 +90,13 @@ function addQuestion() {
           <Answers :question="question"/>
         </div>
         <div class="full__box">
-          <button class="button button--text button--block" @click="addQuestion">
+          <button class="button button--text button--block" type="submit">
             {{ isEdit ? 'Save' : 'Add' }}
           </button>
         </div>
       </main>
     </div>
-  </div>
+  </form>
 </template>
 
 <style scoped lang="scss">

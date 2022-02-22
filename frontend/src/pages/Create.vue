@@ -56,7 +56,7 @@ function createQuiz() {
 
 </script>
 <template>
-  <div>
+  <form @submit.prevent="createQuiz">
     <Nav title="Create Quiz"/>
     <div class="wrapper">
       <main class="main">
@@ -72,7 +72,8 @@ function createQuiz() {
           </p>
           <label class="input">
             <span class="input__label">Title</span>
-            <input type="text" class="input__value" placeholder="Title" v-model="title">
+            <input type="text" class="input__value" placeholder="Title" v-model="title" required minlength="1"
+                   maxlength="30">
           </label>
         </div>
         <div class="box">
@@ -112,13 +113,13 @@ function createQuiz() {
           </router-link>
         </div>
         <div class="full__box">
-          <button class="button button--text button--block" @click="createQuiz">
+          <button class="button button--text button--block" type="submit">
             Create Quiz
           </button>
         </div>
       </main>
     </div>
-  </div>
+  </form>
 </template>
 
 <style scoped lang="scss">

@@ -80,40 +80,42 @@ function joinGame() {
         <template v-if="hasGame">
           <h1 class="title">Enter Name</h1>
           <p class="text">Please you name for the game</p>
-          <div class="input__wrapper">
+          <form class="input__wrapper" @submit.prevent="joinGame">
             <input class="input"
                    :class="{'input--active': !disabled}"
                    type="text"
                    v-model="name"
+                   required
                    maxlength="12"
-                   minlength="0"
+                   minlength="1"
                    placeholder="Name"
             >
             <transition name="button" appear>
-              <button class="button" v-if="!disabled" @click="joinGame">
+              <button class="button" v-if="!disabled" type="submit">
                 <Play/>
               </button>
             </transition>
-          </div>
+          </form>
         </template>
         <template v-else>
           <h1 class="title">Enter Code</h1>
           <p class="text">Please your quiz code</p>
-          <div class="input__wrapper">
+          <form class="input__wrapper" @submit.prevent="checkGameExists">
             <input class="input"
                    :class="{'input--active': !disabled}"
                    type="text"
                    v-model="gameCode"
+                   required
                    maxlength="5"
-                   minlength="0"
+                   minlength="5"
                    placeholder="XXXXX"
             >
             <transition name="button" appear>
-              <button class="button" v-if="!disabled" @click="checkGameExists">
+              <button class="button" v-if="!disabled" type="submit">
                 <Play/>
               </button>
             </transition>
-          </div>
+          </form>
         </template>
       </template>
     </div>
