@@ -233,14 +233,15 @@ func (game *Game) GetPlayer(id string) *Player {
 	return player
 }
 
-// RemovePlayer Deletes the player from the players list and closes
-// the socket connection. Made thread safe with PLock
+// RemovePlayer Deletes the player from the players list. Made thread safe with PLock
 func (game *Game) RemovePlayer(player *Player) {
 	if game.State != Stopped {
-		game.BroadcastExcluding(player.Id, net.PlayerDataPacket(player.Id, player.Name, net.RemoveMode))
+		dataPacket := net.PlayerDataPacket(player.Id, player.Name, net.RemoveMode)
+		game.BroadcastExcluding(player.Id, dataPacket)
+		game.Host.Send(dataPacket)
+		player.Net.Send(net.DisconnectPacket("Removed from game"))
 	}
 	game.PLock.Lock()
-	player.Net.Socket.Close()
 	delete(game.Players, player.Id)
 	game.PLock.Unlock()
 	log.Printf("Player '%s' (%s) removed from game '%s' (%s)", player.Name, player.Id, game.Title, game.Id)

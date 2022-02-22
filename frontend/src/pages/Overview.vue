@@ -10,6 +10,12 @@ const {socket, players} = useApi()
 const store = useGameStore()
 const router = useRouter()
 
+store.$subscribe((mutation, state) => {
+  if (!state.joined) {
+    router.push({name: 'Home'})
+  }
+}, {deep: true})
+
 if (store.joined) {
 
 } else {
@@ -27,8 +33,9 @@ function destroyGame() {
   <div>
     <Nav title="Waiting Room" :back-function="destroyGame"/>
     <div class="wrapper">
-      <h1>Waiting to start</h1>
-      <h2 class="code">{{ store.data.id }}</h2>
+      <h1 class="code">{{ store.data.id }}</h1>
+      <h2 class="title">{{ store.data.title }}</h2>
+      <h3 class="status">Waiting to start</h3>
       <ul class="players">
         <li v-for="(player, index) of players" :key="index" class="player">
           <span class="player__name">{{ player.name }}</span>
@@ -41,8 +48,18 @@ function destroyGame() {
 <style scoped lang="scss">
 @import "../assets/variables";
 
+.title {
+  font-size: 2rem;
+}
+
+.status {
+  font-size: 1.25rem;
+  color: #999;
+}
+
 .code {
   color: $primary;
   font-weight: bold;
+  font-size: 4rem;
 }
 </style>

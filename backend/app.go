@@ -62,6 +62,7 @@ func SocketConnect(c *gin.Context) {
 				err := ws.WriteJSON(packet) // Write the packet json out
 				// If we got an error stop the running loop
 				if err != nil {
+					log.Println("Failed to write data", err)
 					running = false
 				}
 			}
@@ -74,6 +75,7 @@ func SocketConnect(c *gin.Context) {
 		if elapsed > 5000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
 			// Then we disconnect the client for "Connection timed out"
 			Send(net.DisconnectPacket("Connection timed out"))
+			break
 		}
 
 		// Read incoming packet into the raw packet map
@@ -81,6 +83,7 @@ func SocketConnect(c *gin.Context) {
 		if err != nil { // If packet parsing failed or the ID was missing
 			// Disconnect the client for sending invalid data
 			Send(net.DisconnectPacket("Client sent invalid data"))
+			log.Printf("Client sent invalid data")
 			break
 		}
 

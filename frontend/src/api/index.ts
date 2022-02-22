@@ -11,6 +11,7 @@ import packets, {
 } from "./packets";
 import mitt from "mitt";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
+import { useGameStore } from "@store/game";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -38,8 +39,9 @@ type Events = {
     game: JoinGameData | null;
     players: PlayerMap;
     disconnect: string;
-    gameState: GameState
-    nameTaken: boolean
+    gameState: GameState;
+    nameTaken: boolean;
+    reset: void;
 }
 
 export enum GameState {
@@ -116,7 +118,7 @@ class SocketApi {
             console.error(e)
         }
         if (this.updateInterval) clearInterval(this.updateInterval)
-        this.updateInterval = setInterval(() => this.update(), 10)
+        this.updateInterval = setInterval(() => this.update(), 100)
         return ws
     }
 
@@ -129,6 +131,7 @@ class SocketApi {
         console.log('Connected')
         if (this.ws.readyState != WebSocket.OPEN) return
         this.isOpen = true
+        this.events.emit('reset')
         this.events.emit('state', 'open')
     }
 
@@ -139,13 +142,23 @@ class SocketApi {
         this.isOpen = false
         this.events.emit('state', 'closed')
         if (this.isRunning) {
-            console.log('Lost connection. Attempting reconnect in 2 seconds')
-            const api = this
-            setTimeout(() => api.ws = api.connect(), 2000)
+            this.retryConnect()
         } else {
             console.log('Disconnected')
             this.disconnect()
         }
+    }
+
+    /**
+     * Retries connecting to the websocket server in 2 seconds and resets the
+     * game state
+     */
+    retryConnect() {
+        this.isOpen = false
+        this.events.emit('reset')
+        console.log('Lost connection. Attempting reconnect in 2 seconds')
+        const api = this
+        setTimeout(() => api.ws = api.connect(), 2000)
     }
 
     /**
@@ -234,6 +247,7 @@ class SocketApi {
      * @param data The disconnect data contains the reason for disconnect
      */
     onDisconnect(api: SocketApi, data: DisconnectData) {
+        api.events.emit('reset')
         api.setGameCode(null)
         api.events.emit('disconnect', data.reason)
     }
@@ -384,10 +398,7 @@ class SocketApi {
         if (this.isRunning && this.isOpen) {
             const time = performance.now()
             if (time - this.lastServerKeepAlive > 5000) {
-                this.isOpen = false // Oops, we are no longer connected to the server
-                console.log('Lost connection. Attempting reconnect in 2 seconds')
-                const api = this
-                setTimeout(() => api.ws = api.connect(), 2000)
+                this.retryConnect()
                 return
             }
 
@@ -428,15 +439,23 @@ export function useApi(): UseApi {
         open.value = state === 'open';
     }
 
+    const gameState = useGameStore()
+
+    function handleReset() {
+        gameState.$reset()
+    }
+
     onMounted(() => {
         socket.events.on('state', updateState)
         socket.events.on('players', updatePlayers)
+        socket.events.on('reset', handleReset)
         updatePlayers(socket.players)
     })
 
     onUnmounted(() => {
         socket.events.off('state', updateState)
         socket.events.off('players', updatePlayers)
+        socket.events.off('reset', handleReset)
     })
 
     return {socket, players, open}
