@@ -10,19 +10,17 @@ const {socket, players} = useApi()
 const store = useGameStore()
 const router = useRouter()
 
+// Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
-  if (!state.joined) {
-    router.push({name: 'Home'})
+  if (!state.joined) { // If we are no longer in a game
+    router.push({name: 'Home'}) // Return to the home screen
   }
-}, {deep: true})
+}, {deep: true, immediate: true})
 
-if (store.joined) {
-
-} else {
-  router.push({name: 'Home'})
-}
-
-function destroyGame() {
+/**
+ * Disconnects from the current game
+ */
+function disconnect() {
   if (store.joined) {
     socket.disconnect()
   }
@@ -31,7 +29,7 @@ function destroyGame() {
 </script>
 <template>
   <div>
-    <Nav title="Waiting Room" :back-function="destroyGame"/>
+    <Nav title="Waiting Room" :back-function="disconnect"/>
     <div class="wrapper">
       <h1 class="code">{{ store.data.id }}</h1>
       <h2 class="title">{{ store.data.title }}</h2>

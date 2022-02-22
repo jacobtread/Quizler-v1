@@ -11,7 +11,7 @@ import { useCreateStore } from "@store/create";
 import { storeToRefs } from "pinia";
 import { useApi } from "@/api";
 import { useRouter } from "vue-router";
-import { JoinGameData } from "@api/packets";
+import packets, { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
 import Nav from "@component/Nav.vue";
 
@@ -39,7 +39,7 @@ function deleteQuestion(index: number) {
  */
 function createQuiz() {
   // Send the creation game packet
-  socket.createGame(title.value, questions.value)
+  socket.send(packets.createGame(title.value, questions.value))
   // Remove any existing join listeners
   socket.events.off('game')
   // Add a new join listener

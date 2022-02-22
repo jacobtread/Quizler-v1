@@ -6,8 +6,7 @@ import packets, {
     NameTakenResultData,
     Packet,
     PlayerData,
-    PlayerDataP,
-    QuestionData
+    PlayerDataP
 } from "./packets";
 import mitt from "mitt";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
@@ -76,8 +75,6 @@ class SocketApi {
     // Whether debug logging should be enabled
     private isDebug: boolean = true
 
-    private gameCode: string | null = null
-    players: PlayerMap = {}
 
     // The interval timer handle used to cancel the update interval
     private updateInterval: any = undefined
@@ -87,9 +84,10 @@ class SocketApi {
     // The last time that this client sent a keep alive at
     private lastSendKeepAlive: number = -1
 
-    state: GameState = GameState.DOES_NOT_EXIST
-
-    events = mitt<Events>()
+    gameCode: string | null = null // The current game code or null 
+    players: PlayerMap = {} // The map of players to their names
+    state: GameState = GameState.DOES_NOT_EXIST // The current game state
+    events = mitt<Events>() // The event system
 
     /**
      * A mapping to convert the packet ids into handler functions so that
@@ -232,7 +230,14 @@ class SocketApi {
         api.events.emit('nameTaken', data.result)
     }
 
-    private static getGameState(id: number): GameState {
+    /**
+     * Converts the game state id into the game
+     * state enum value
+     *
+     * @param id The id of the game state
+     * @return The game state enum
+     */
+    static getGameState(id: number): GameState {
         if (id == 0) {
             return GameState.WAITING
         } else if (id == 1) {
@@ -333,36 +338,12 @@ class SocketApi {
         this.send(packets.keepAlive())
     }
 
-
-    requestGameState(id: string) {
-        this.send(packets.requestGameState(id))
-    }
-
     /**
-     * Tells the websocket server to create a new game instance
-     * with the provided tile and questions
+     * Set's the current game code and emit the game
+     * event
      *
-     * The server will respond with a 0x06 Game Join packet which
-     * contains the id and title of the created game server
-     *
-     * @param title The title for the game
-     * @param questions The questions for the game
+     * @param data The data or null to clear the game code .
      */
-    createGame(title: string, questions: QuestionData[]) {
-        if (this.isDebug) console.debug(`Creating game ${title}`)
-        this.send(packets.createGame(title, questions))
-    }
-
-    /**
-     * Requests to join the provided game code
-     *
-     * @param id The id/code of the game room
-     * @param name The name to join using
-     */
-    requestJoin(id: string, name: string) {
-        this.send(packets.requestJoin(id, name))
-    }
-
     setGameCode(data: JoinGameData | null) {
         this.gameCode = data ? data.id : null
         this.events.emit('game', data)

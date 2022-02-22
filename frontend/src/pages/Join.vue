@@ -30,7 +30,7 @@ function checkGameExists() {
   searching.value = true
   hasGame.value = false
   const code = gameCode.value
-  socket.requestGameState(code)
+  socket.send(packets.requestGameState(code))
   socket.events.off('gameState')
   socket.events.on('gameState', (data: GameState) => {
     if (data === GameState.WAITING) {
@@ -50,7 +50,7 @@ function joinGame() {
     if (taken) {
       console.error('That name is already taken')
     } else {
-      socket.requestJoin(code, name.value)
+      socket.send(packets.requestJoin(code, name.value))
       // Remove any existing join listeners
       socket.events.off('game')
       // Add a new join listener
