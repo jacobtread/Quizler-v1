@@ -101,11 +101,14 @@ func SocketConnect(c *gin.Context) {
 		case net.CDisconnect:
 			log.Printf("Client disconnected")
 			running = false
-			if activeGame != nil {
-				activeGame.RemovePlayer(activePlayer)
+			if activeGame != nil { // If we are in a game
+				activeGame.RemovePlayer(activePlayer) // Remove the player from the game
+				activePlayer = nil                    // Set the player to nil
+				activeGame = nil                      // Set the game to nil
 			}
 			if hostOf != nil { // If the host exists stop the server
-				hostOf.Stop()
+				hostOf.Stop() // Stop the server
+				hostOf = nil  // Clear the host
 			}
 		case net.CCreateGame:
 			RequireData(rawPacket, func(data *net.CreateGameData) {
@@ -114,8 +117,6 @@ func SocketConnect(c *gin.Context) {
 				// Tell the host they've joined the new game as owner
 				Send(net.JoinGamePacket(true, hostOf.Id, hostOf.Title))
 				log.Printf("Created new game '%s' (%s)", hostOf.Title, hostOf.Id)
-				// Stop the host game once this function finishes execution (running becomes false)
-				defer hostOf.Stop()
 			})
 		case net.CCheckNameTaken:
 			RequireData(rawPacket, func(data *net.CheckNameTakenData) {
@@ -128,8 +129,8 @@ func SocketConnect(c *gin.Context) {
 				}
 			})
 		case net.CRequestGameState: // Client requested game state
-			log.Printf("Client requested game state for")
 			RequireData(rawPacket, func(data *net.RequestGameStateData) {
+				log.Printf("Client requested game state for '%s'", data.Id)
 				g := game.Get(data.Id)
 				if g == nil { // If the game doesn't exist
 					Send(net.ErrorPacket("That game code doesn't exist"))
@@ -155,8 +156,6 @@ func SocketConnect(c *gin.Context) {
 							activePlayer = activeGame.Join(ws, data.Name)
 							// Tell the host they've joined the new game as a player
 							Send(net.JoinGamePacket(false, activeGame.Id, activeGame.Title))
-
-							defer activeGame.RemovePlayer(activePlayer)
 						}
 					}
 				}
@@ -174,6 +173,14 @@ func SocketConnect(c *gin.Context) {
 				})
 			}
 		}
+	}
+
+	if hostOf != nil {
+		hostOf.Stop()
+	}
+
+	if activePlayer != nil && activeGame != nil {
+		activeGame.RemovePlayer(activePlayer)
 	}
 }
 
