@@ -28,23 +28,13 @@ store.$subscribe((mutation, state) => {
 
 watch(state, () => {
   console.log('State Changed to ' + state.value)
-  if (state.value === GameState.STARTING) {
-    countInterval = setInterval(() => {
-      if (state.value === GameState.STARTING) {
-        if (startTime.value - 1 >= 0) {
-          startTime.value--
-        }
-      } else {
-        clearInterval(countInterval)
-        countInterval = undefined
-      }
-    }, 1000)
-  } else {
-    if (countInterval) {
-      clearInterval(countInterval)
-    }
+
+  if (countInterval) {
+    clearInterval(countInterval)
+    countInterval = undefined
   }
-  
+
+
   if (state.value === GameState.STARTED && !store.data.owner) {
     // TODO: Move non host players to the game
   }
@@ -52,7 +42,23 @@ watch(state, () => {
 
 function onTimeSync(data: TimeSyncData) {
   timeData = data
-  startTime.value = data.remaining / 1000
+  startTime.value = Math.ceil(data.remaining / 1000)
+  if (countInterval) {
+    clearInterval(countInterval)
+    countInterval = undefined
+  }
+
+  countInterval = setInterval(() => {
+    console.log('Tick ' + startTime.value)
+    if (state.value === GameState.STARTING) {
+      if (startTime.value - 1 >= 0) {
+        startTime.value -= 1
+      }
+    } else {
+      clearInterval(countInterval)
+      countInterval = undefined
+    }
+  }, 1000)
 }
 
 
