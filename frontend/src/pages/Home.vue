@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import Play from "@asset/play.svg?inline";
-import Logo from "@asset/logo.svg?inline";</script>
+import Logo from "@asset/logo.svg?inline";
+import { dialog } from "@/events";
+</script>
 
 <template>
   <div>
@@ -23,6 +25,7 @@ import Logo from "@asset/logo.svg?inline";</script>
         </router-link>
       </div>
     </main>
+    <button @click="dialog('Hello there', 'This is a message')">DWA</button>
   </div>
 </template>
 

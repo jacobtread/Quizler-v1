@@ -11,6 +11,7 @@ type Events = {
     nameTaken: boolean;
     reset: void;
     toast: Toast;
+    dialog: DialogData;
 }
 
 export enum ToastType {
@@ -25,10 +26,19 @@ export interface Toast {
     content: string;
 }
 
+export interface DialogData {
+    title: string;
+    content: string;
+}
+
 
 export const events = mitt<Events>() // The event system
 
 
 export function toast(content: string, type: ToastType = ToastType.INFO) {
     events.emit('toast', {id: 0, content, type})
+}
+
+export function dialog(title: string, content: string) {
+    events.emit('dialog', {title, content})
 }
