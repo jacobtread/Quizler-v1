@@ -128,12 +128,20 @@ func (game *Game) BroadcastExcluding(exclude Identifier, packet net.Packet, host
 // time sync on the client's
 func (game *Game) Start() {
 	log.Printf("Game '%s' (%s) moving into starting state", game.Title, game.Id)
-	game.State = Starting
-	game.Broadcast(net.GameStatePacket(Starting), true)
+	game.SetState(Starting)
+	game.StartTime = Time()
 }
+
+const (
+	StartDelay = 10 * time.Second
+)
 
 // Loop Run the game loop for the provided game
 func (game *Game) Loop() {
+	// Set the last sync time to very long ago to make sure that
+	// we will always sync the time straight away on the first go
+	var lastTimeSync = time.Duration(0)
+
 	for {
 		state := game.State
 
@@ -141,10 +149,33 @@ func (game *Game) Loop() {
 			break // break from the game loop
 		}
 
+		if state == Starting { // If the game is starting
+			t := Time()
+			// The total time passed since the last time sync
+			elapsedSinceSync := t - lastTimeSync
+			// If two seconds has passed since the last time sync
+			if elapsedSinceSync > 2*time.Second {
+				elapsedSinceStart := t - game.StartTime
+				if elapsedSinceStart >= StartDelay { // If we have waited the full start delay duration
+					game.SetState(Started) // Set the game as started
+				} else {
+					// Get the remaining time for the countdown
+					remaining := StartDelay - elapsedSinceStart
+					// Broadcast a time syncing packet to all clients including host
+					game.Broadcast(net.TimeSyncPacket(StartDelay, remaining), true)
+				}
+			}
+		}
+
 		// Sleep for one second after every iteration to not put
 		// too much stress on the CPU
 		time.Sleep(time.Second)
 	}
+}
+
+func (game *Game) SetState(state types.State) {
+	game.State = state
+	game.Broadcast(net.GameStatePacket(state), true)
 }
 
 // RemovePlayer Deletes the player from the players list. Made thread safe with PLock

@@ -1,6 +1,9 @@
 package net
 
-import "backend/types"
+import (
+	"backend/types"
+	"time"
+)
 
 // Ids for server packets
 const (
@@ -72,4 +75,13 @@ func GameStatePacket(state types.State) Packet {
 	return Packet{Id: SGameState, Data: struct {
 		State types.State `json:"state"`
 	}{State: state}}
+}
+
+// TimeSyncPacket creates a new time sync packet which keeps the current timing
+// of the server countdowns in sync with the clients
+func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
+	return Packet{Id: STimeSync, Data: struct {
+		Total     time.Duration `json:"total"`
+		Remaining time.Duration `json:"remaining"`
+	}{Total: total, Remaining: remaining}}
 }
