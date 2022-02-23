@@ -97,6 +97,7 @@ onUnmounted(() => {
                     </router-link>
                     <button
                         class="question__head__button question__head__button--delete"
+                        type="button"
                         @click="deleteQuestion(index)"
                     >
                       <Cross class="question__head__button__icon"/>

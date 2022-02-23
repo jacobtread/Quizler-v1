@@ -2,6 +2,7 @@
 import "@/assets/global.scss"
 import { useApi } from "@/api";
 import Loader from "@/components/Loader.vue";
+import ToastSystem from "@component/ToastSystem.vue";
 
 const {socket, players, open} = useApi()
 
@@ -14,6 +15,7 @@ const {socket, players, open} = useApi()
           <component :is="Component" class="content__item"/>
         </transition>
       </router-view>
+      <ToastSystem/>
     </div>
   </template>
   <template v-else>

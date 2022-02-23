@@ -52,7 +52,7 @@ function removeAt(index: number) {
         <CrossIcon class="answer__button" v-if="index !== 0" @click="removeAt(index)"/>
       </li>
     </ul>
-    <button class="button button--icon button--block" @click="add">
+    <button class="button button--icon button--block" @click="add" type="button">
       <AddIcon class="button__icon"/>
     </button>
   </div>
