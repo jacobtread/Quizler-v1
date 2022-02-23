@@ -3,11 +3,11 @@ package types
 // State type for game states represented as an 8-bit integer
 type State = uint8
 
-// AnswerIndex represents the index for an answer as a 16-bit integer
-type AnswerIndex = int16
+// AnswerIndex represents the index for an answer as an integer
+type AnswerIndex = int
 
-// QuestionIndex represents the index for a question as a 16-bit integer
-type QuestionIndex = int16
+// QuestionIndex represents the index for a question as an integer
+type QuestionIndex = int
 
 // QuestionData A structure representing a question for the quiz
 type QuestionData struct {

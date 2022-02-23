@@ -20,21 +20,22 @@ const (
 
 // Game a structure representing the game itself
 type Game struct {
-	Host      *net.Connection // The connection to the game host
-	Id        Identifier      // The unique identifier / game code for this game
-	Title     string          // The title / name of this game
-	Questions []QuestionData  // An array of the questions for this game
-	Players   PlayerStore     // The player store instance
-	StartTime time.Duration   // The system time in ms of when the game was created
-	State     State           // The current state of the game
-	Question  *ActiveQuestion // The currently active question nil by default
+	Host           *net.Connection // The connection to the game host
+	Id             Identifier      // The unique identifier / game code for this game
+	Title          string          // The title / name of this game
+	Questions      []QuestionData  // An array of the questions for this game
+	Players        PlayerStore     // The player store instance
+	StartTime      time.Duration   // The system time in ms of when the game was created
+	State          State           // The current state of the game
+	ActiveQuestion *ActiveQuestion // The currently active question nil by default
 }
 
 // ActiveQuestion a structure representing the currently served question
 type ActiveQuestion struct {
 	Question  *QuestionData // The actual question itself
-	Index     int           // The index of this question in the array of questions
+	Index     QuestionIndex // The index of this question in the array of questions
 	StartTime time.Duration // The time that this question started at
+	Marked    bool          // Whether the question has been marked
 }
 
 // Time Retrieves the current time in milliseconds
@@ -146,6 +147,7 @@ const (
 	StartDelay   = 10 * time.Second
 	QuestionTime = 10 * time.Second
 	SyncDelay    = 2 * time.Second
+	MarkTime     = 3 * time.Second
 )
 
 // Loop Run the game loop for the provided game
@@ -185,12 +187,18 @@ func (game *Game) Loop() {
 		}
 
 		if state == Started { // If the game is started
-			if game.Question == nil { // If we don't already have an active question
+			if game.ActiveQuestion == nil { // If we don't already have an active question
 				game.NextQuestion() // Proceed to the next question
+				lastTimeSync = -1   // Clear the last time sync so we sync straight away
 			} else {
 				elapsedSinceStart := t - activeQuestion.StartTime
 				if elapsedSinceStart >= QuestionTime { // If we have passed the total question time
-					game.NextQuestion() // Move on to the next question
+					if elapsedSinceStart >= QuestionTime+MarkTime { // If the marking time has also completed
+						game.NextQuestion() // Move on to the next question
+						lastTimeSync = -1   // Clear the last time sync so we sync straight away
+					} else if !game.ActiveQuestion.Marked { // If the question hasn't been marked
+						game.MarkQuestion(game.ActiveQuestion) // Mark the question
+					}
 				} else if elapsedSinceSync >= SyncDelay { // If the current time needs to be synced
 					lastTimeSync = t                                                  // Update the last sync time
 					remaining := QuestionTime - elapsedSinceStart                     // Calculate the
@@ -205,31 +213,49 @@ func (game *Game) Loop() {
 	}
 }
 
-func (game *Game) MarkQuestion(question *ActiveQuestion) {
-
+// IsCorrect checks the correct answers for a question and checks if they match
+// the provided answer index
+func (question *ActiveQuestion) IsCorrect(answer AnswerIndex) bool {
+	correctAnswers := question.Question.Values
+	for _, value := range correctAnswers { // Iterate over the correct answers
+		if value == answer { // If it matches
+			return true // The answer is correct
+		}
+	}
+	return false
 }
 
+// MarkQuestion Marks the question at the end of the
+func (game *Game) MarkQuestion(question *ActiveQuestion) {
+	game.Players.ForEach(func(id Identifier, player *Player) {
+		answerIndex, answered := player.GetAnswer(question.Index)
+		if answered && question.IsCorrect(answerIndex) {
+			// TODO: Send answer result
+		}
+	})
+	// Set the question as marked
+	question.Marked = true
+}
+
+// NextQuestion moves on to the next question and informs all of the clients
+// what the current question is
 func (game *Game) NextQuestion() {
-	t := Time()
-	var nextIndex int
-	if game.Question == nil { // If there isn't already an active question
+	t := Time() // Get the current time
+	var nextIndex QuestionIndex
+	if game.ActiveQuestion == nil { // If there isn't already an active question
 		nextIndex = 0 // Set the next index to the first index
 	} else { // Else
-
-		index := game.Question.Index
-
-		game.MarkQuestion(game.Question)
-
-		nextIndex = index + 1 // Increase the index by 1
+		nextIndex = game.ActiveQuestion.Index + 1 // Increase the index by 1
 	}
 	if nextIndex >= len(game.Questions) { // If the next index is higher than the amount of questions
 		game.GameOver() // Game over
 	} else {
 		q := game.Questions[nextIndex] // Retrieve the next question
-		game.Question = &ActiveQuestion{
+		game.ActiveQuestion = &ActiveQuestion{
 			Question:  &q,
 			Index:     nextIndex,
 			StartTime: t,
+			Marked:    false,
 		}
 		// Broadcast the question
 		game.Broadcast(net.QuestionPacket(q), false)

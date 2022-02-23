@@ -13,7 +13,7 @@
 | 0x06 | PLAYER_DATA       | id (string), name (string), type (uint8)              |
 | 0x07 | TIME_SYNC         | total (duration), remaining (duration)                |
 | 0x08 | QUESTION          | image (string), question (string), answers (string[]) |
-| 0x09 | SAnswerResult     | result (Result), correct (int)                        |
+| 0x09 | ANSWER_RESULT     | result (Result), correct (int)                        |
 
 ## Client
 

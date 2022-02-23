@@ -31,6 +31,25 @@ func NewPlayerStore() PlayerStore {
 	}
 }
 
+// GetAnswer retrieves the player answer for the provided question index and
+// returns both the value and weather it exists or not
+func (player *Player) GetAnswer(index QuestionIndex) (AnswerIndex, bool) {
+	// Retrieve the value
+	answer, exists := player.Answers[index]
+	return answer, exists
+}
+
+// Answer sets the player answer to the provided answer index for the current quest
+func (player *Player) Answer(game *Game, id AnswerIndex) {
+	q := game.ActiveQuestion                         // Retrieve the active question from the game
+	max := len(game.ActiveQuestion.Question.Answers) // Get the maximum question index
+	if id >= max {                                   // If the provided answer is greater
+		id = max - 1 // Set the answer to the last answer
+	}
+	// Set the index of the answer in the player answers map
+	player.Answers[q.Index] = id
+}
+
 // CreatePlayerId Creates a new unique player identifier. Safely establishes read
 // locks over the player map before accessing it
 func (store *PlayerStore) CreatePlayerId() Identifier {
