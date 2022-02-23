@@ -1,7 +1,7 @@
 package net
 
 import (
-	"backend/types"
+	. "backend/types"
 	"time"
 )
 
@@ -72,9 +72,9 @@ func NameTakenResultPacket(result bool) Packet {
 }
 
 // GameStatePacket creates a new game state packet with the provided state
-func GameStatePacket(state types.State) Packet {
+func GameStatePacket(state State) Packet {
 	return Packet{Id: SGameState, Data: struct {
-		State types.State `json:"state"`
+		State State `json:"state"`
 	}{State: state}}
 }
 
@@ -89,10 +89,18 @@ func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
 
 // QuestionPacket creates a new question packet which informs the client which
 // question they are currently answering
-func QuestionPacket(data types.QuestionData) Packet {
+func QuestionPacket(data QuestionData) Packet {
 	return Packet{Id: SQuestion, Data: struct {
 		Image    string   `json:"image"`
 		Question string   `json:"question"`
 		Answers  []string `json:"answers"`
 	}{Image: data.Image, Question: data.Question, Answers: data.Answers}}
+}
+
+// AnswerResultPacket creates a new answer result packet which informs the client
+// whether the answer they chose was correct after marking
+func AnswerResultPacket(result bool) Packet {
+	return Packet{Id: SAnswerResult, Data: struct {
+		Result bool `json:"result"`
+	}{Result: result}}
 }

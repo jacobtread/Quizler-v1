@@ -228,16 +228,18 @@ func (question *ActiveQuestion) IsCorrect(answer AnswerIndex) bool {
 // MarkQuestion Marks the question at the end of the
 func (game *Game) MarkQuestion(question *ActiveQuestion) {
 	game.Players.ForEach(func(id Identifier, player *Player) {
+		// Retrieve the player answer
 		answerIndex, answered := player.GetAnswer(question.Index)
-		if answered && question.IsCorrect(answerIndex) {
-			// TODO: Send answer result
-		}
+		// Check the player answer
+		correct := answered && question.IsCorrect(answerIndex)
+		// Send the player their marking result
+		player.Net.Send(net.AnswerResultPacket(correct))
 	})
 	// Set the question as marked
 	question.Marked = true
 }
 
-// NextQuestion moves on to the next question and informs all of the clients
+// NextQuestion moves on to the next question and informs all the clients
 // what the current question is
 func (game *Game) NextQuestion() {
 	t := Time() // Get the current time
