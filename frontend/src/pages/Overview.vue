@@ -17,8 +17,6 @@ let timeData: TimeSyncData
 
 const startTime = ref(10)
 
-let countInterval: any
-
 // Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
   if (!state.joined) { // If we are no longer in a game
@@ -28,13 +26,6 @@ store.$subscribe((mutation, state) => {
 
 watch(state, () => {
   console.log('State Changed to ' + state.value)
-
-  if (countInterval) {
-    clearInterval(countInterval)
-    countInterval = undefined
-  }
-
-
   if (state.value === GameState.STARTED && !store.data.owner) {
     // TODO: Move non host players to the game
   }
@@ -43,22 +34,20 @@ watch(state, () => {
 function onTimeSync(data: TimeSyncData) {
   timeData = data
   startTime.value = Math.ceil(data.remaining / 1000)
-  if (countInterval) {
-    clearInterval(countInterval)
-    countInterval = undefined
-  }
+  requestAnimationFrame(updateTime)
+}
 
-  countInterval = setInterval(() => {
-    console.log('Tick ' + startTime.value)
-    if (state.value === GameState.STARTING) {
-      if (startTime.value - 1 >= 0) {
-        startTime.value -= 1
-      }
-    } else {
-      clearInterval(countInterval)
-      countInterval = undefined
-    }
-  }, 1000)
+let lastFrameChange = -1
+
+function updateTime() {
+  if (startTime.value - 1 < 0) return
+  let time = performance.now()
+  let elapsed = time - lastFrameChange
+  if (elapsed >= 1000) {
+    lastFrameChange = time
+    startTime.value--
+  }
+  requestAnimationFrame(updateTime)
 }
 
 
@@ -84,10 +73,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   events.off('timeSync', onTimeSync)
-  if (countInterval) {
-    clearInterval(countInterval)
-    countInterval = undefined
-  }
 })
 
 
