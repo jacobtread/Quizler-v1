@@ -19,22 +19,46 @@ function close() {
 
 </script>
 <template>
-  <div class="dialog-wrapper" v-if="open">
-    <div class="dialog">
-      <h2 class="dialog__title">{{ title }}</h2>
-      <p class="dialog__message">{{ message }}</p>
-      <button class="button button--text button--block" @click="close">Close</button>
+  <transition appear name="fade">
+    <div class="dialog-wrapper" v-if="open">
+      <div class="dialog">
+        <h2 class="dialog__title">{{ title }}</h2>
+        <p class="dialog__message">{{ message }}</p>
+        <button class="button button--text button--block" @click="close">Close</button>
+      </div>
     </div>
-  </div>
+  </transition>
 </template>
 <style scoped lang="scss">
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+  opacity: 1;
+
+  .dialog {
+    transition: transform 0.25s ease;
+    transform: translateX(0) scale(1);
+  }
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+
+  .dialog {
+    transform: translateX(-15px) scale(0.5);
+  }
+}
+
+
 .dialog-wrapper {
   position: fixed;
   left: 0;
   top: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.8));
 
   display: flex;
   justify-content: center;
@@ -48,9 +72,9 @@ function close() {
   max-width: 400px;
   width: 100%;
   min-height: 200px;
-  border: 1px solid #333;
   border-radius: 0.5rem;
   flex-flow: column;
+  box-shadow: 0 0 10px rgb(0, 0, 0);
 
   &__title {
     font-size: 1.25rem;
@@ -60,8 +84,9 @@ function close() {
 
   &__message {
     text-align: left;
-    font-size: 1rem;
+    font-size: 1.1rem;
     flex: auto;
+    color: #777;
 
   }
 }
