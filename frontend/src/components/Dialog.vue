@@ -1,17 +1,21 @@
 <script setup lang="ts">
 
-import { ref } from "vue";
+import { onUnmounted, ref } from "vue";
 import { DialogData, events } from "@/events";
 
 const open = ref(false)
 const title = ref('')
 const message = ref('')
 
-events.on('dialog', (data: DialogData) => {
+function onDialog(data: DialogData) {
   open.value = true
   title.value = data.title
   message.value = data.content
-})
+}
+
+events.on('dialog', onDialog)
+
+onUnmounted(() => events.off('dialog', onDialog))
 
 function close() {
   open.value = false

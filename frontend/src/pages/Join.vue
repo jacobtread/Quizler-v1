@@ -45,17 +45,8 @@ function checkGameExists() {
   hasGame.value = false
   const code = gameCode.value
   socket.send(packets.requestGameState(code))
+  events.off('gameState')
   events.on('gameState', onGameState)
-}
-
-function onGameJoined(data: JoinGameData | null) {
-  if (data != null) {
-    gameState.joined = true;
-    // Copy the game data and set it into the gameState store
-    gameState.data = {...data}
-    // Redirect to the overview page
-    router.push({name: 'Overview'})
-  }
 }
 
 function onNameTaken(taken: boolean) {
@@ -63,23 +54,32 @@ function onNameTaken(taken: boolean) {
     dialog('Name taken', 'That name is already in use. Please choose another')
   } else {
     socket.send(packets.requestJoin(gameCode.value, name.value))
+    events.off('game') // Clear existing join listeners
     // Add a new join listener
-    events.on('game', onGameJoined)
+    events.on('game', (data: JoinGameData | null) => {
+      if (data != null) {
+        gameState.joined = true;
+        // Copy the game data and set it into the gameState store
+        gameState.data = {...data}
+        // Redirect to the overview page
+        router.push({name: 'Overview'})
+      }
+    })
   }
 }
 
 function joinGame() {
   const code = gameCode.value
   socket.send(packets.checkNameTaken(code, name.value))
+  events.off('nameTaken')
   events.on('nameTaken', onNameTaken)
 }
 
 onUnmounted(() => {
-  events.off('gameState', onGameState)
-  events.off('nameTaken', onNameTaken)
-  events.off('game', onGameJoined)
+  events.off('nameTaken')
+  events.off('game')
+  events.off('gameState')
 })
-
 
 </script>
 

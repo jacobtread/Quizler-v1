@@ -5,7 +5,7 @@ import Loader from "@/components/Loader.vue";
 import ToastSystem from "@component/ToastSystem.vue";
 import Dialog from "@component/Dialog.vue";
 
-const {socket, players, open} = useApi()
+const {open} = useApi()
 
 </script>
 <template>

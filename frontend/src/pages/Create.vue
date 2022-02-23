@@ -15,7 +15,6 @@ import packets, { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
 import Nav from "@component/Nav.vue";
 import { events } from "@/events";
-import { onUnmounted } from "vue";
 
 const router = useRouter()
 const {socket} = useApi()
@@ -34,17 +33,6 @@ function deleteQuestion(index: number) {
   questions.value = questions.value.filter((_, i) => i != index)
 }
 
-function onJoinGame(data: JoinGameData | null) {
-  if (data != null) {
-    gameState.joined = true;
-    // Copy the game data and set it into the gameState store
-    gameState.data = {...data}
-    // Redirect to the overview page
-    router.push({name: 'Overview'})
-  }
-}
-
-
 /**
  * Create a new quiz sends a CreateGame packet (0x04) to the server along
  * with the title and questions of the game. Listens for game join events
@@ -53,13 +41,19 @@ function onJoinGame(data: JoinGameData | null) {
 function createQuiz() {
   // Send the creation game packet
   socket.send(packets.createGame(title.value, questions.value))
-  // Add a new join listener
-  events.on('game', onJoinGame)
-}
 
-onUnmounted(() => {
-  events.off('game', onJoinGame)
-})
+  // Add a new join listener
+  events.off('game')
+  events.on('game', (data: JoinGameData | null) => {
+    if (data != null) {
+      gameState.joined = true;
+      // Copy the game data and set it into the gameState store
+      gameState.data = {...data}
+      // Redirect to the overview page
+      router.push({name: 'Overview'})
+    }
+  })
+}
 
 </script>
 <template>
