@@ -84,6 +84,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   events.off('timeSync', onTimeSync)
+  if (countInterval) {
+    clearInterval(countInterval)
+    countInterval = undefined
+  }
 })
 
 
