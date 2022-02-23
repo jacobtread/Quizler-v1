@@ -91,7 +91,7 @@ func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
 // question they are currently answering
 func QuestionPacket(data QuestionData) Packet {
 	return Packet{Id: SQuestion, Data: struct {
-		Image    string   `json:"image"`
+		Image    string   `json:"image,omitempty"`
 		Question string   `json:"question"`
 		Answers  []string `json:"answers"`
 	}{Image: data.Image, Question: data.Question, Answers: data.Answers}}

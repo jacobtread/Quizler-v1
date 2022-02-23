@@ -61,6 +61,11 @@ export interface TimeSyncData {
     remaining: number;
 }
 
+export interface QuestionData {
+    image?: string;
+    question: string;
+    answers: string[];
+}
 
 type Names = { [key: number]: string }
 
@@ -77,7 +82,8 @@ export default {
             0x06: 'PLAYER_DATA',
             0x07: 'TIME_SYNC',
             0x08: 'QUESTION',
-            0x09: 'GAME_OVER'
+            0x09: 'ANSWER_RESULT',
+            0x0A: 'GAME_OVER'
         },
         {
             0x00: 'KEEP_ALIVE',

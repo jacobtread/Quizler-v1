@@ -6,7 +6,6 @@ import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
 import packets, { TimeSyncData } from "@api/packets";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import { events } from "@/events";
 
 const {socket, players, state} = useApi()
 
@@ -71,11 +70,11 @@ function startGame() {
 
 
 onMounted(() => {
-  events.on('timeSync', onTimeSync)
+  socket.setHandler(0x08, onTimeSync)
 })
 
 onUnmounted(() => {
-  events.off('timeSync', onTimeSync)
+  socket.clearHandler(0x08)
 })
 
 

@@ -6,8 +6,7 @@ import packets, {
     NameTakenResultData,
     Packet,
     PlayerData,
-    PlayerDataP,
-    TimeSyncData
+    PlayerDataP
 } from "./packets";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 import { useGameStore } from "@store/game";
@@ -50,6 +49,10 @@ enum Direction {
     IN,
     OUT
 }
+
+const EMPTY_HANDLER = () => {
+}
+
 
 /**
  * Stores all logic for communicating between the client and server over the
@@ -94,7 +97,16 @@ class SocketApi {
         0x04: this.onNameTakenResult,
         0x05: this.onGameState,
         0x06: this.onPlayerData,
-        0x07: this.onTimeSync
+        0x07: EMPTY_HANDLER,
+        0x08: EMPTY_HANDLER
+    }
+
+    setHandler<V>(id: number, handle: (data: V) => any) {
+        this.handlers[id] = (api: SocketApi, data: V) => handle(data)
+    }
+
+    clearHandler(id: number) {
+        this.handlers[id] = EMPTY_HANDLER
     }
 
     /**
@@ -127,10 +139,6 @@ class SocketApi {
         this.lastServerKeepAlive = performance.now()
         this.isOpen = true
         events.emit('open', true)
-    }
-
-    onTimeSync(api: SocketApi, data: TimeSyncData) {
-        events.emit('timeSync', data)
     }
 
     /**
