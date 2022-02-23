@@ -1,4 +1,4 @@
-import { JoinGameData } from "@api/packets";
+import { JoinGameData, TimeSyncData } from "@api/packets";
 import { GameState, PlayerMap } from "@/api";
 import mitt from "mitt";
 
@@ -11,6 +11,7 @@ type Events = {
     reset: void; // Event for resetting the game state
     toast: Toast; // Event for creating toasts
     dialog: DialogData; // Event for creating dialogs
+    timeSync: TimeSyncData; // Event for server time sync
 }
 
 export enum ToastType {

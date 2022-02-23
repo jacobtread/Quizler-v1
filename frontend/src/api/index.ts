@@ -130,7 +130,7 @@ class SocketApi {
     }
 
     onTimeSync(api: SocketApi, data: TimeSyncData) {
-    
+        events.emit('timeSync', data)
     }
 
     /**
