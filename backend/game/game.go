@@ -31,7 +31,7 @@ type Game struct {
 
 // Time Retrieves the current time in milliseconds
 func Time() time.Duration {
-	return time.Duration(time.Now().UnixNano()) / time.Millisecond
+	return time.Duration(time.Now().UnixNano())
 }
 
 // Games A map of games to their identifiers
@@ -154,7 +154,7 @@ func (game *Game) Loop() {
 			// The total time passed since the last time sync
 			elapsedSinceSync := t - lastTimeSync
 			// If two seconds has passed since the last time sync
-			if elapsedSinceSync > 2*time.Second {
+			if elapsedSinceSync > 4*time.Second {
 				elapsedSinceStart := t - game.StartTime
 				if elapsedSinceStart >= StartDelay { // If we have waited the full start delay duration
 					game.SetState(Started) // Set the game as started
@@ -173,6 +173,8 @@ func (game *Game) Loop() {
 	}
 }
 
+// SetState sets the current game state and broadcasts the game state packet
+// to inform all the clients of the game state change
 func (game *Game) SetState(state types.State) {
 	game.State = state
 	game.Broadcast(net.GameStatePacket(state), true)

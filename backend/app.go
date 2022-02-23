@@ -8,6 +8,7 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -59,7 +60,7 @@ func SocketConnect(c *gin.Context) {
 		// The elapsed time since the last keep alive
 		elapsed := currentTime - lastKeepAlive
 
-		if elapsed > 10000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
+		if elapsed > 10*time.Second { // If we didn't receive a Keep Alive Packet within the last 10s
 			// Then we disconnect the client for "Connection timed out"
 			conn.Send(DisconnectPacket("Connection timed out"))
 			break

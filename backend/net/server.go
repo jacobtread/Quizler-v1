@@ -14,8 +14,8 @@ const (
 	SNameTakenResult          = 0x04
 	SGameState                = 0x05
 	SPlayerData               = 0x06
-	SQuestion                 = 0x07
-	STimeSync                 = 0x08
+	STimeSync                 = 0x07
+	SQuestion                 = 0x08
 	SGameOver                 = 0x09
 )
 
@@ -81,7 +81,7 @@ func GameStatePacket(state types.State) Packet {
 // of the server countdowns in sync with the clients
 func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
 	return Packet{Id: STimeSync, Data: struct {
-		Total     time.Duration `json:"total"`
-		Remaining time.Duration `json:"remaining"`
-	}{Total: total, Remaining: remaining}}
+		Total     int64 `json:"total"`
+		Remaining int64 `json:"remaining"`
+	}{Total: total.Milliseconds(), Remaining: remaining.Milliseconds()}}
 }

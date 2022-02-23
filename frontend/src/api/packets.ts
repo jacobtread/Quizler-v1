@@ -56,6 +56,11 @@ export interface Game {
     players: PlayerData[];
 }
 
+export interface TimeSyncData {
+    total: number;
+    remaining: number;
+}
+
 
 type Names = { [key: number]: string }
 
@@ -70,8 +75,8 @@ export default {
             0x04: 'NAME_TAKEN_RESULT',
             0x05: 'GAME_STATE',
             0x06: 'PLAYER_DATA',
-            0x07: 'QUESTION',
-            0x08: 'TIME_SYNC',
+            0x07: 'TIME_SYNC',
+            0x08: 'QUESTION',
             0x09: 'GAME_OVER'
         },
         {

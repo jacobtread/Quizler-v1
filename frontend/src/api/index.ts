@@ -6,7 +6,8 @@ import packets, {
     NameTakenResultData,
     Packet,
     PlayerData,
-    PlayerDataP
+    PlayerDataP,
+    TimeSyncData
 } from "./packets";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 import { useGameStore } from "@store/game";
@@ -93,6 +94,7 @@ class SocketApi {
         0x04: this.onNameTakenResult,
         0x05: this.onGameState,
         0x06: this.onPlayerData,
+        0x07: this.onTimeSync
     }
 
     /**
@@ -125,6 +127,10 @@ class SocketApi {
         this.lastServerKeepAlive = performance.now()
         this.isOpen = true
         events.emit('open', true)
+    }
+
+    onTimeSync(api: SocketApi, data: TimeSyncData) {
+    
     }
 
     /**
