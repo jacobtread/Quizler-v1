@@ -15,17 +15,9 @@ const router = useRouter()
 
 let timeData: TimeSyncData
 
-const startTime = ref(0)
+const startTime = ref(10)
 
-let countInterval = setInterval(() => {
-  if (state.value === GameState.STARTING) {
-    while (startTime.value > 0) {
-      startTime.value--
-    }
-  } else {
-    clearInterval(countInterval)
-  }
-}, 1000)
+let countInterval: any
 
 // Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
@@ -36,6 +28,23 @@ store.$subscribe((mutation, state) => {
 
 watch(state, () => {
   console.log('State Changed to ' + state.value)
+  if (state.value === GameState.STARTING) {
+    countInterval = setInterval(() => {
+      if (state.value === GameState.STARTING) {
+        if (startTime.value - 1 >= 0) {
+          startTime.value--
+        }
+      } else {
+        clearInterval(countInterval)
+        countInterval = undefined
+      }
+    }, 1000)
+  } else {
+    if (countInterval) {
+      clearInterval(countInterval)
+    }
+  }
+  
   if (state.value === GameState.STARTED && !store.data.owner) {
     // TODO: Move non host players to the game
   }
@@ -95,7 +104,7 @@ onUnmounted(() => {
       </template>
       <template v-else-if="state === GameState.STARTING">
         <h3 class="status">Game starting in</h3>
-        <h2></h2>
+        <h2 class="countdown">{{ startTime.toFixed(0) }}s</h2>
       </template>
       <template v-else-if="state === GameState.STARTED">
         <h3 class="status">Game started</h3>
@@ -119,6 +128,12 @@ onUnmounted(() => {
   color: $primary;
   font-weight: bold;
   font-size: 4rem;
+}
+
+.countdown {
+  font-size: 5rem;
+  color: $primary;
+  font-weight: bold;
 }
 
 .players {

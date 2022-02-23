@@ -82,6 +82,8 @@ func New(host *net.Connection, title string, questions []types.QuestionData) *Ga
 // and returns a reference to the player
 func (game *Game) Join(conn *net.Connection, name string) *Player {
 	player := game.Players.Create(conn, name) // Create a new player
+	// Send the initial state of the game
+	player.Net.Send(net.GameStatePacket(game.State))
 	// Information all other connections that this new player was added
 	game.BroadcastExcluding(player.Id, net.PlayerDataPacket(player.Id, name, net.AddMode), true)
 	log.Printf("Player '%s' has joined '%s' (%s) given id '%s'", name, game.Title, game.Id, player.Id)
@@ -154,7 +156,9 @@ func (game *Game) Loop() {
 			// The total time passed since the last time sync
 			elapsedSinceSync := t - lastTimeSync
 			// If two seconds has passed since the last time sync
-			if elapsedSinceSync > 4*time.Second {
+			if elapsedSinceSync > 2*time.Second {
+				lastTimeSync = t // Update the last time sync
+
 				elapsedSinceStart := t - game.StartTime
 				if elapsedSinceStart >= StartDelay { // If we have waited the full start delay duration
 					game.SetState(Started) // Set the game as started

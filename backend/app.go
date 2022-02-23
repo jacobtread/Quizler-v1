@@ -96,6 +96,7 @@ func SocketConnect(c *gin.Context) {
 				hostOf = game.New(conn, data.Title, data.Questions)
 				// Tell the host they've joined the new game as owner
 				conn.Send(JoinGamePacket(true, hostOf.Id, hostOf.Title))
+				conn.Send(GameStatePacket(game.Waiting))
 				log.Printf("Created new game '%s' (%s)", hostOf.Title, hostOf.Id)
 			})
 		case CCheckNameTaken:
