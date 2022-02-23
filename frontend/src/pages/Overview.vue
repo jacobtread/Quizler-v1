@@ -12,8 +12,6 @@ const {socket, players, state} = useApi()
 const store = useGameStore()
 const router = useRouter()
 
-let timeData: TimeSyncData
-
 const startTime = ref(10)
 
 const canPlay = computed(() => Object.keys(players).length > 0)
@@ -28,12 +26,11 @@ store.$subscribe((mutation, state) => {
 watch(state, () => {
   console.log('State Changed to ' + state.value)
   if (state.value === GameState.STARTED && !store.data.owner) {
-    // TODO: Move non host players to the game
+    router.push({name: 'Game'})
   }
 }, {immediate: true})
 
 function onTimeSync(data: TimeSyncData) {
-  timeData = data
   startTime.value = Math.ceil(data.remaining / 1000)
   lastFrameChange = performance.now()
   requestAnimationFrame(updateTime)
@@ -70,11 +67,11 @@ function startGame() {
 
 
 onMounted(() => {
-  socket.setHandler(0x08, onTimeSync)
+  socket.setHandler(0x07, onTimeSync)
 })
 
 onUnmounted(() => {
-  socket.clearHandler(0x08)
+  socket.clearHandler(0x07)
 })
 
 

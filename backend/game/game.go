@@ -155,7 +155,6 @@ func (game *Game) Loop() {
 	// Set the last sync time to very long ago to make sure that
 	// we will always sync the time straight away on the first go
 	var lastTimeSync = time.Duration(0)
-	var activeQuestion *ActiveQuestion = nil
 
 	for {
 		state := game.State
@@ -191,7 +190,7 @@ func (game *Game) Loop() {
 				game.NextQuestion() // Proceed to the next question
 				lastTimeSync = -1   // Clear the last time sync so we sync straight away
 			} else {
-				elapsedSinceStart := t - activeQuestion.StartTime
+				elapsedSinceStart := t - game.ActiveQuestion.StartTime
 				if elapsedSinceStart >= QuestionTime { // If we have passed the total question time
 					if elapsedSinceStart >= QuestionTime+MarkTime { // If the marking time has also completed
 						game.NextQuestion() // Move on to the next question
@@ -227,6 +226,7 @@ func (question *ActiveQuestion) IsCorrect(answer AnswerIndex) bool {
 
 // MarkQuestion Marks the question at the end of the
 func (game *Game) MarkQuestion(question *ActiveQuestion) {
+	log.Printf("Marking questions for game '%s' (%s)", game.Title, game.Id)
 	game.Players.ForEach(func(id Identifier, player *Player) {
 		// Retrieve the player answer
 		answerIndex, answered := player.GetAnswer(question.Index)
@@ -265,7 +265,8 @@ func (game *Game) NextQuestion() {
 }
 
 func (game *Game) GameOver() {
-
+	log.Printf("Game over for game '%s' (%s)", game.Title, game.Id)
+	game.SetState(Stopped)
 }
 
 // SetState sets the current game state and broadcasts the game state packet

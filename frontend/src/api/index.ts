@@ -97,8 +97,9 @@ class SocketApi {
         0x04: this.onNameTakenResult,
         0x05: this.onGameState,
         0x06: this.onPlayerData,
-        0x07: EMPTY_HANDLER,
-        0x08: EMPTY_HANDLER
+        0x07: EMPTY_HANDLER, // onTimeSyc
+        0x08: EMPTY_HANDLER, // onQuestion
+        0x09: EMPTY_HANDLER, // onAnswerResult
     }
 
     setHandler<V>(id: number, handle: (data: V) => any) {

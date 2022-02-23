@@ -37,7 +37,7 @@ export interface QuestionData {
     image?: string;
     question: string;
     answers: string[];
-    values: number[];
+    values?: number[];
 }
 
 export interface NameTakenResultData {
@@ -61,10 +61,9 @@ export interface TimeSyncData {
     remaining: number;
 }
 
-export interface QuestionData {
-    image?: string;
-    question: string;
-    answers: string[];
+
+export interface AnswerResult {
+    result: boolean;
 }
 
 type Names = { [key: number]: string }
