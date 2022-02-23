@@ -5,7 +5,7 @@ import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
 import packets, { TimeSyncData } from "@api/packets";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { events } from "@/events";
 
 const {socket, players, state} = useApi()
@@ -16,6 +16,8 @@ const router = useRouter()
 let timeData: TimeSyncData
 
 const startTime = ref(10)
+
+const canPlay = computed(() => Object.keys(players).length > 0)
 
 // Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
@@ -86,7 +88,7 @@ onUnmounted(() => {
       <h2 class="title">{{ store.data.title }}</h2>
       <template v-if="state === GameState.WAITING">
         <h3 class="status">Waiting to start</h3>
-        <form v-if="store.data.owner" @submit.prevent="startGame">
+        <form v-if="store.data.owner && canPlay" @submit.prevent="startGame">
           <button class="button button--text" type="submit">
             Start Game
           </button>
