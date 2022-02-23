@@ -1,15 +1,31 @@
 <script setup lang="ts">
 
-import { useApi } from "@/api";
+import { GameState, useApi } from "@/api";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets from "@api/packets";
+import packets, { TimeSyncData } from "@api/packets";
+import { onMounted, onUnmounted, ref, watch } from "vue";
+import { events } from "@/events";
 
-const {socket, players} = useApi()
+const {socket, players, state} = useApi()
 
 const store = useGameStore()
 const router = useRouter()
+
+let timeData: TimeSyncData
+
+const startTime = ref(0)
+
+let countInterval = setInterval(() => {
+  if (state.value === GameState.STARTING) {
+    while (startTime.value > 0) {
+      startTime.value--
+    }
+  } else {
+    clearInterval(countInterval)
+  }
+}, 1000)
 
 // Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
@@ -18,9 +34,23 @@ store.$subscribe((mutation, state) => {
   }
 }, {deep: true, immediate: true})
 
+watch(state, () => {
+  console.log('State Changed to ' + state.value)
+  if (state.value === GameState.STARTED && !store.data.owner) {
+    // TODO: Move non host players to the game
+  }
+}, {immediate: true})
+
+function onTimeSync(data: TimeSyncData) {
+  timeData = data
+  startTime.value = data.remaining / 1000
+}
+
+
 /**
  * Disconnects from the current game
  */
+
 function disconnect() {
   if (store.joined) {
     socket.disconnect()
@@ -32,6 +62,16 @@ function startGame() {
   socket.send(packets.start())
 }
 
+
+onMounted(() => {
+  events.on('timeSync', onTimeSync)
+})
+
+onUnmounted(() => {
+  events.off('timeSync', onTimeSync)
+})
+
+
 </script>
 <template>
   <form @submit.prevent="startGame">
@@ -39,18 +79,27 @@ function startGame() {
     <div class="wrapper">
       <h1 class="code">{{ store.data.id }}</h1>
       <h2 class="title">{{ store.data.title }}</h2>
-      <h3 class="status">Waiting to start</h3>
-      <ul class="players">
-        <li v-for="(player, index) of players" :key="index" class="player">
-          <span class="player__name">{{ player.name }}</span>
-          <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">Kick</button>
-        </li>
-      </ul>
-      <form v-if="store.data.owner" @submit.prevent="startGame">
-        <button class="button button--text" type="submit">
-          Start Game
-        </button>
-      </form>
+      <template v-if="state === GameState.WAITING">
+        <h3 class="status">Waiting to start</h3>
+        <form v-if="store.data.owner" @submit.prevent="startGame">
+          <button class="button button--text" type="submit">
+            Start Game
+          </button>
+        </form>
+        <ul class="players">
+          <li v-for="(player, index) of players" :key="index" class="player">
+            <span class="player__name">{{ player.name }}</span>
+            <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">Kick</button>
+          </li>
+        </ul>
+      </template>
+      <template v-else-if="state === GameState.STARTING">
+        <h3 class="status">Game starting in</h3>
+        <h2></h2>
+      </template>
+      <template v-else-if="state === GameState.STARTED">
+        <h3 class="status">Game started</h3>
+      </template>
     </div>
   </form>
 </template>

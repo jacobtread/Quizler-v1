@@ -407,6 +407,7 @@ let socket: SocketApi
 interface UseApi {
     socket: SocketApi;
     open: Ref<boolean>;
+    state: Ref<GameState>;
     players: UnwrapNestedRefs<PlayerMap>;
 }
 
@@ -417,9 +418,10 @@ interface UseApi {
  * open state event to an open ref
  */
 export function useApi(): UseApi {
-    let open = ref(false)
+    const open = ref(false)
+    const state = ref<GameState>(GameState.DOES_NOT_EXIST)
     if (!socket) socket = new SocketApi()
-    let players = reactive<PlayerMap>({})
+    const players = reactive<PlayerMap>({})
 
     function updatePlayers(data: PlayerMap) {
         for (let key of Object.keys(players)) {
@@ -434,6 +436,10 @@ export function useApi(): UseApi {
         open.value = state;
     }
 
+    function updateGameState(data: GameState) {
+        state.value = data
+    }
+
     const gameState = useGameStore()
 
     function handleReset() {
@@ -444,17 +450,20 @@ export function useApi(): UseApi {
     }
 
     onMounted(() => {
+        events.on('gameState', updateGameState)
         events.on('open', updateState)
         events.on('players', updatePlayers)
         events.on('reset', handleReset)
         updatePlayers(socket.players)
+        state.value = socket.state
     })
 
     onUnmounted(() => {
+        events.off('gameState', updateGameState)
         events.off('open', updateState)
         events.off('players', updatePlayers)
         events.off('reset', handleReset)
     })
 
-    return {socket, players, open}
+    return {socket, players, open, state}
 }
