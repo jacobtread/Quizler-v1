@@ -10,8 +10,9 @@ const (
 	CCheckNameTaken            = 0x03
 	CRequestGameState          = 0x04
 	CRequestJoin               = 0x05
-	CAnswer                    = 0x06
-	CKick                      = 0x07
+	CStart                     = 0x06
+	CAnswer                    = 0x07
+	CKick                      = 0x08
 )
 
 // KickData A structure representing the data a client will send to kick a player

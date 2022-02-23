@@ -81,8 +81,9 @@ export default {
             0x03: 'CHECK_NAME_TAKEN',
             0x04: 'REQUEST_GAME_STATE',
             0x05: 'REQUEST_JOIN',
-            0x06: 'ANSWER',
-            0x07: 'KICK'
+            0x06: 'START',
+            0x07: 'ANSWER',
+            0x08: 'KICK'
         }
     ] as Names[],
     keepAlive: () => ({id: 0x00}),
@@ -91,6 +92,7 @@ export default {
     checkNameTaken: (id: string, name: string) => ({id: 0x03, data: {id, name}}),
     requestGameState: (id: string) => ({id: 0x04, data: {id}}),
     requestJoin: (id: string, name: string) => ({id: 0x05, data: {id, name}}),
-    answer: (id: number) => ({id: 0x06, data: {id}}),
-    kick: (id: string) => ({id: 0x07, data: {id}})
+    start: () => ({id: 0x06}),
+    answer: (id: number) => ({id: 0x07, data: {id}}),
+    kick: (id: string) => ({id: 0x08, data: {id}})
 }

@@ -97,11 +97,15 @@ func (game *Game) IsNameTaken(name string) bool {
 }
 
 // Broadcast sends the provided packet to all the players in the game
-func (game *Game) Broadcast(packet net.Packet) {
+func (game *Game) Broadcast(packet net.Packet, host bool) {
 	// Iterate over all the players
 	game.Players.ForEach(func(id Identifier, player *Player) {
 		player.Net.Send(packet) // Send the packet to the player
 	})
+	if host { // If this packet should also be sent to the host
+		// Send the host the packet as well
+		game.Host.Send(packet)
+	}
 }
 
 // BroadcastExcluding sends the provided packet to all the players in the game
@@ -118,6 +122,14 @@ func (game *Game) BroadcastExcluding(exclude Identifier, packet net.Packet, host
 		// Send the host the packet as well
 		game.Host.Send(packet)
 	}
+}
+
+// Start Marks the game as Starting and begins the startup countdown and
+// time sync on the client's
+func (game *Game) Start() {
+	log.Printf("Game '%s' (%s) moving into starting state", game.Title, game.Id)
+	game.State = Starting
+	game.Broadcast(net.GameStatePacket(Starting), true)
 }
 
 // Loop Run the game loop for the provided game

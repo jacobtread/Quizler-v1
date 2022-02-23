@@ -139,6 +139,14 @@ func SocketConnect(c *gin.Context) {
 					}
 				}
 			})
+		case CStart:
+			if hostOf == nil {
+				conn.Send(ErrorPacket("Failed to start game. You aren't hosting one?"))
+			} else if hostOf.State != game.Waiting {
+				conn.Send(ErrorPacket("Game is already started/starting"))
+			} else {
+				hostOf.Start()
+			}
 		case CAnswer:
 			activePlayer.Net.Send(ErrorPacket("Not implemented"))
 		// TODO: Handle answer submit

@@ -4,6 +4,7 @@ import { useApi } from "@/api";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
+import packets from "@api/packets";
 
 const {socket, players} = useApi()
 
@@ -27,7 +28,8 @@ function disconnect() {
 }
 
 function startGame() {
-
+  // Send the start game packet
+  socket.send(packets.start())
 }
 
 </script>
@@ -44,11 +46,11 @@ function startGame() {
           <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">Kick</button>
         </li>
       </ul>
-      <div v-if="store.data.owner">
-        <button class="button" @click="startGame">
-           Start Game
+      <form v-if="store.data.owner" @submit.prevent="startGame">
+        <button class="button button--text" type="submit">
+          Start Game
         </button>
-      </div>
+      </form>
     </div>
   </form>
 </template>

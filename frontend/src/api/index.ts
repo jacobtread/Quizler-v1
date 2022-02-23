@@ -65,6 +65,8 @@ class SocketApi {
     private isRunning: boolean = true
     // Whether debug logging should be enabled
     private isDebug: boolean = true
+    // Whether to hide keep alive packets from the debug log
+    private isDebugHideKeepAlive: boolean = true
 
 
     // The interval timer handle used to cancel the update interval
@@ -262,7 +264,6 @@ class SocketApi {
      */
     onKeepAlive(api: SocketApi) {
         api.lastServerKeepAlive = performance.now()
-        if (api.isDebug) console.debug('Server is alive')
     }
 
     /**
@@ -279,13 +280,12 @@ class SocketApi {
 
     /**
      * Packet handler for the Join Game packet (0x06) handles the player
-     * joining the game. Sets the game code and emits relevent events
+     * joining the game. Sets the game code and emits relevant events
      *
      * @param api The current connection instance
      * @param data The data for the game contains the id and title
      */
     onJoinGame(api: SocketApi, data: JoinGameData) {
-        if (api.isDebug) console.debug(`Joined game with id ${data}`)
         api.setGameCode(data)
     }
 
@@ -298,13 +298,16 @@ class SocketApi {
     debugPacket(dir: Direction, packet: Packet<any>) {
         if (this.isDebug) { // Ensure that this only happens in debug mode
             const id = packet.id
+            if (this.isDebugHideKeepAlive && id === 0x00) {
+                return
+            }
             let name = packets.names[dir][id] // Retrieve debug friendly packet name
             if (!name) name = 'Unknown Name'
             let dirName = dir == 0 ? '<-' : '->'
 
             if (packet.data !== undefined) {
                 const dataString = JSON.stringify(packet.data)
-                console.debug(`[${dirName}] ${name} (${toHex(id, 2)}) {${dataString}}`)
+                console.debug(`[${dirName}] ${name} (${toHex(id, 2)}) ${dataString}`)
             } else {
                 console.debug(`[${dirName}] ${name} (${toHex(id, 2)})`)
             }
