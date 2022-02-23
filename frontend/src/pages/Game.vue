@@ -3,13 +3,16 @@
 import { useApi } from "@/api";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
-import { onMounted, onUnmounted, watch } from "vue";
+import { onMounted, onUnmounted, ref, watch } from "vue";
 import { AnswerResult, QuestionData } from "@api/packets";
+import Loader from "@component/Loader.vue";
 
 const {socket, players, state} = useApi()
 
 const store = useGameStore()
 const router = useRouter()
+
+const question = ref<QuestionData | null>(null)
 
 // Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
@@ -23,6 +26,7 @@ watch(state, () => {
 }, {immediate: true})
 
 function onQuestion(data: QuestionData) {
+  question.value = data
 }
 
 function onAnswerResult(data: AnswerResult) {
@@ -40,7 +44,17 @@ onUnmounted(() => {
 })
 </script>
 <template>
-
+  <div>
+    <div class="content loader-wrapper" v-if="question !== null">
+      <Loader/>
+    </div>
+    <div v-else>
+      <p>{{ question.question }}</p>
+      <div>
+        <button v-for="answer in question.answers">{{ answer }}</button>
+      </div>
+    </div>
+  </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";

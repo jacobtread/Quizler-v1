@@ -28,12 +28,6 @@ const {open} = useApi()
 </template>
 
 <style lang="scss">
-.loader-wrapper {
-  flex: auto;
-  justify-content: center;
-  align-items: center;
-}
-
 .content {
   position: relative;
   width: 100%;
