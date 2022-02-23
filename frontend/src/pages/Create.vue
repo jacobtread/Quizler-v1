@@ -15,12 +15,15 @@ import packets, { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
 import Nav from "@component/Nav.vue";
 import { events } from "@/events";
+import { computed } from "vue";
 
 const router = useRouter()
 const {socket} = useApi()
 const gameState = useGameStore()
 const createState = useCreateStore()
 const {questions, title} = storeToRefs(createState)
+
+const hasQuestions = computed(() => questions.value.length > 0)
 
 /**
  * Delete the question at the provided index. Filters
@@ -115,7 +118,7 @@ function createQuiz() {
           </router-link>
         </div>
         <div class="full__box">
-          <button class="button button--text button--block" type="submit">
+          <button class="button button--text button--block" type="submit" :disabled="!hasQuestions">
             Create Quiz
           </button>
         </div>
