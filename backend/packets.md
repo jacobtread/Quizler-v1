@@ -13,7 +13,7 @@
 | 0x06 | PLAYER_DATA       | id (string), name (string), type (uint8)              |
 | 0x07 | TIME_SYNC         | total (duration), remaining (duration)                |
 | 0x08 | QUESTION          | image (string), question (string), answers (string[]) |
-| 0x09 | GAME_OVER         | (NOT_DEFINED_YET)                                     |
+| 0x09 | SAnswerResult     | result (Result), correct (int)                        |
 
 ## Client
 
@@ -28,6 +28,7 @@
 | 0x06 | START              |                                            |
 | 0x07 | ANSWER             | id (uint16)                                |
 | 0x08 | KICK               | id (string)                                |
+| 0x09 | SKIP               |                                            |
 
 
     

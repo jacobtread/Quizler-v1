@@ -16,7 +16,8 @@ const (
 	SPlayerData               = 0x06
 	STimeSync                 = 0x07
 	SQuestion                 = 0x08
-	SGameOver                 = 0x09
+	SAnswerResult             = 0x09
+	SGameOver                 = 0x0A
 )
 
 // DisconnectPacket creates a new disconnect packet with the provided reason
@@ -84,4 +85,14 @@ func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
 		Total     int64 `json:"total"`
 		Remaining int64 `json:"remaining"`
 	}{Total: total.Milliseconds(), Remaining: remaining.Milliseconds()}}
+}
+
+// QuestionPacket creates a new question packet which informs the client which
+// question they are currently answering
+func QuestionPacket(data types.QuestionData) Packet {
+	return Packet{Id: SQuestion, Data: struct {
+		Image    string   `json:"image"`
+		Question string   `json:"question"`
+		Answers  []string `json:"answers"`
+	}{Image: data.Image, Question: data.Question, Answers: data.Answers}}
 }

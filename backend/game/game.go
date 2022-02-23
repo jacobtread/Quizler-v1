@@ -3,7 +3,7 @@ package game
 import (
 	"backend/net"
 	. "backend/tools"
-	"backend/types"
+	. "backend/types"
 	"log"
 	"strings"
 	"time"
@@ -11,22 +11,30 @@ import (
 
 // Enum for game states
 const (
-	Waiting      types.State = iota // Waiting for the game to start
-	Starting                        // The game is about to start
-	Started                         // The game is started an in progress
-	Stopped                         // The game has Stopped and is ready to shut down
-	DoesNotExist                    // The game doesn't exist
+	Waiting      State = iota // Waiting for the game to start
+	Starting                  // The game is about to start
+	Started                   // The game is started an in progress
+	Stopped                   // The game has Stopped and is ready to shut down
+	DoesNotExist              // The game doesn't exist
 )
 
 // Game a structure representing the game itself
 type Game struct {
-	Host      *net.Connection      // The connection to the game host
-	Id        Identifier           // The unique identifier / game code for this game
-	Title     string               // The title / name of this game
-	Questions []types.QuestionData // An array of the questions for this game
-	Players   PlayerStore          // The player store instance
-	StartTime time.Duration        // The system time in ms of when the game was created
-	State     types.State          // The current state of the game
+	Host      *net.Connection // The connection to the game host
+	Id        Identifier      // The unique identifier / game code for this game
+	Title     string          // The title / name of this game
+	Questions []QuestionData  // An array of the questions for this game
+	Players   PlayerStore     // The player store instance
+	StartTime time.Duration   // The system time in ms of when the game was created
+	State     State           // The current state of the game
+	Question  *ActiveQuestion // The currently active question nil by default
+}
+
+// ActiveQuestion a structure representing the currently served question
+type ActiveQuestion struct {
+	Question  *QuestionData // The actual question itself
+	Index     int           // The index of this question in the array of questions
+	StartTime time.Duration // The time that this question started at
 }
 
 // Time Retrieves the current time in milliseconds
@@ -61,7 +69,7 @@ func Get(identifier Identifier) *Game {
 // New Creates a new game instance with the provided host, title, and questions.
 // also starts a new goroutine for the games loop, adds it to Games and returns
 // a reference to the game
-func New(host *net.Connection, title string, questions []types.QuestionData) *Game {
+func New(host *net.Connection, title string, questions []QuestionData) *Game {
 	id := CreateGameId() // Create a new unique game ID
 	game := Game{
 		Host:      host,
@@ -135,7 +143,9 @@ func (game *Game) Start() {
 }
 
 const (
-	StartDelay = 10 * time.Second
+	StartDelay   = 10 * time.Second
+	QuestionTime = 10 * time.Second
+	SyncDelay    = 2 * time.Second
 )
 
 // Loop Run the game loop for the provided game
@@ -143,6 +153,7 @@ func (game *Game) Loop() {
 	// Set the last sync time to very long ago to make sure that
 	// we will always sync the time straight away on the first go
 	var lastTimeSync = time.Duration(0)
+	var activeQuestion *ActiveQuestion = nil
 
 	for {
 		state := game.State
@@ -151,12 +162,14 @@ func (game *Game) Loop() {
 			break // break from the game loop
 		}
 
+		t := Time()
+
+		// The total time passed since the last time sync
+		elapsedSinceSync := t - lastTimeSync
+
 		if state == Starting { // If the game is starting
-			t := Time()
-			// The total time passed since the last time sync
-			elapsedSinceSync := t - lastTimeSync
 			// If two seconds has passed since the last time sync
-			if elapsedSinceSync > 2*time.Second {
+			if elapsedSinceSync >= SyncDelay {
 				lastTimeSync = t // Update the last time sync
 
 				elapsedSinceStart := t - game.StartTime
@@ -171,15 +184,65 @@ func (game *Game) Loop() {
 			}
 		}
 
+		if state == Started { // If the game is started
+			if game.Question == nil { // If we don't already have an active question
+				game.NextQuestion() // Proceed to the next question
+			} else {
+				elapsedSinceStart := t - activeQuestion.StartTime
+				if elapsedSinceStart >= QuestionTime { // If we have passed the total question time
+					game.NextQuestion() // Move on to the next question
+				} else if elapsedSinceSync >= SyncDelay { // If the current time needs to be synced
+					lastTimeSync = t                                                  // Update the last sync time
+					remaining := QuestionTime - elapsedSinceStart                     // Calculate the
+					game.Broadcast(net.TimeSyncPacket(QuestionTime, remaining), true) // Broadcast the time sync packet
+				}
+			}
+		}
+
 		// Sleep for one second after every iteration to not put
 		// too much stress on the CPU
 		time.Sleep(time.Second)
 	}
 }
 
+func (game *Game) MarkQuestion(question *ActiveQuestion) {
+
+}
+
+func (game *Game) NextQuestion() {
+	t := Time()
+	var nextIndex int
+	if game.Question == nil { // If there isn't already an active question
+		nextIndex = 0 // Set the next index to the first index
+	} else { // Else
+
+		index := game.Question.Index
+
+		game.MarkQuestion(game.Question)
+
+		nextIndex = index + 1 // Increase the index by 1
+	}
+	if nextIndex >= len(game.Questions) { // If the next index is higher than the amount of questions
+		game.GameOver() // Game over
+	} else {
+		q := game.Questions[nextIndex] // Retrieve the next question
+		game.Question = &ActiveQuestion{
+			Question:  &q,
+			Index:     nextIndex,
+			StartTime: t,
+		}
+		// Broadcast the question
+		game.Broadcast(net.QuestionPacket(q), false)
+	}
+}
+
+func (game *Game) GameOver() {
+
+}
+
 // SetState sets the current game state and broadcasts the game state packet
 // to inform all the clients of the game state change
-func (game *Game) SetState(state types.State) {
+func (game *Game) SetState(state State) {
 	game.State = state
 	game.Broadcast(net.GameStatePacket(state), true)
 }
