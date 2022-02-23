@@ -10,7 +10,7 @@ import packets, {
 } from "./packets";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 import { useGameStore } from "@store/game";
-import { events } from "@/events";
+import { dialog, events } from "@/events";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -249,6 +249,7 @@ class SocketApi {
      * @param data The disconnect data contains the reason for disconnect
      */
     onDisconnect(api: SocketApi, data: DisconnectData) {
+        dialog('Disconnected', data.reason)
         events.emit('reset')
         api.setGameCode(null)
         events.emit('disconnect', data.reason)
