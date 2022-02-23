@@ -1,6 +1,7 @@
 package net
 
 import (
+	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
 	"log"
 )
@@ -31,11 +32,51 @@ type PacketRaw struct {
 	Data RawPacketData `json:"data,omitempty"`
 }
 
-// AsType Used to convert the packet data map into the right struct
-func Decode[T *interface{}](data RawPacketData, out T) T {
-	err := mapstructure.Decode(data, out)
-	if err != nil {
-		log.Panic(err)
+// Connection represents a connection to a websocket has extension function
+// for doing actions such as sending packets
+type Connection struct {
+	Open   bool            // Whether the connection is still open or not
+	Socket *websocket.Conn // The connection to the socket
+}
+
+// NewConnection Creates a new connection struct and sets the close handler
+func NewConnection(ws *websocket.Conn) *Connection {
+	// Create the new connection
+	conn := Connection{Socket: ws, Open: true}
+	ws.SetCloseHandler(func(code int, text string) error {
+		// Print to the console that the connection closed
+		log.Printf("Websocket connection closed '%s' (%d)", text, code)
+		// Set the connection open to false
+		conn.Open = false
+		return nil
+	})
+	// Return the connection pointer
+	return &conn
+}
+
+// Send will send the provided packet to the connection socket
+func (conn *Connection) Send(packet Packet) {
+	if conn.Open { // Only send the packet if the connection is open
+		// Write the packet to the socket as JSON
+		err := conn.Socket.WriteJSON(packet)
+		if err != nil { // If the packet failed to write
+			log.Printf("Failed to send packet '%x'", packet.Id)
+		}
 	}
-	return out
+}
+
+// RequireData wraps around the packet data to create a type safe decoding
+// from the packet data map to the packet struct
+func RequireData[T interface{}](rawPacket PacketRaw, action func(data *T)) {
+	d := rawPacket.Data
+	if d != nil {
+		out := new(T)
+		err := mapstructure.Decode(d, out)
+		if err != nil {
+			log.Panic(err)
+		}
+		action(out)
+	} else {
+		log.Printf("Packet with id '%x' expected data but recieved none", rawPacket.Id)
+	}
 }

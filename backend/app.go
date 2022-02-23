@@ -2,11 +2,10 @@ package main
 
 import (
 	"backend/game"
-	"backend/net"
+	. "backend/net"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/mitchellh/mapstructure"
 	"log"
 	"net/http"
 )
@@ -43,10 +42,8 @@ func SocketConnect(c *gin.Context) {
 	// in ws.Close being called after this function is finished executing
 	defer func(ws *websocket.Conn) { _ = ws.Close() }(ws)
 
-	var rawPacket = net.PacketRaw{}
+	var rawPacket = PacketRaw{}
 
-	// Whether the client should continue running in a loop and accepting packets
-	running := true
 	// The last time in milliseconds when a keep alive was received
 	lastKeepAlive := game.Time()
 
@@ -54,26 +51,9 @@ func SocketConnect(c *gin.Context) {
 	var activeGame *game.Game
 	var activePlayer *game.Player
 
-	ws.SetCloseHandler(func(code int, text string) error {
-		running = false
-		log.Printf("Websocket connection closed '%s' (%d)", text, code)
-		return nil
-	})
+	conn := NewConnection(ws)
 
-	for running {
-		// sends the provided packet over the websocket
-		// and stops the connection if an error occurs
-		Send := func(packet net.Packet) {
-			if running { // Only send packets if we are running
-				err := ws.WriteJSON(packet) // Write the packet json out
-				// If we got an error stop the running loop
-				if err != nil {
-					log.Println("Failed to write data", err)
-					running = false
-				}
-			}
-		}
-
+	for conn.Open {
 		// The current system time
 		currentTime := game.Time()
 		// The elapsed time since the last keep alive
@@ -81,7 +61,7 @@ func SocketConnect(c *gin.Context) {
 
 		if elapsed > 10000 { // If we didn't receive a Keep Alive Packet within the last 5000ms
 			// Then we disconnect the client for "Connection timed out"
-			Send(net.DisconnectPacket("Connection timed out"))
+			conn.Send(DisconnectPacket("Connection timed out"))
 			break
 		}
 
@@ -89,16 +69,16 @@ func SocketConnect(c *gin.Context) {
 		err = ws.ReadJSON(&rawPacket)
 		if err != nil { // If packet parsing failed or the ID was missing
 			// Disconnect the client for sending invalid data
-			Send(net.DisconnectPacket("Failed to decode packet"))
+			conn.Send(DisconnectPacket("Failed to decode packet"))
 			log.Println("Failed to decode packet", err)
 			break
 		}
 
 		switch rawPacket.Id {
-		case net.CKeepAlive:
+		case CKeepAlive:
 			lastKeepAlive = currentTime
-			Send(net.KeepAlivePacket())
-		case net.CDisconnect:
+			conn.Send(KeepAlivePacket())
+		case CDisconnect:
 			log.Printf("Player disconnected")
 			if activeGame != nil { // If we are in a game
 				activeGame.RemovePlayer(activePlayer) // Remove the player from the game
@@ -109,64 +89,63 @@ func SocketConnect(c *gin.Context) {
 				hostOf.Stop() // Stop the server
 				hostOf = nil  // Clear the host
 			}
-		case net.CCreateGame:
-			RequireData(rawPacket, func(data *net.CreateGameData) {
+		case CCreateGame:
+			RequireData(rawPacket, func(data *CreateGameData) {
 				// Create a new game
-				hostOf = game.New(ws, data.Title, data.Questions)
+				hostOf = game.New(conn, data.Title, data.Questions)
 				// Tell the host they've joined the new game as owner
-				Send(net.JoinGamePacket(true, hostOf.Id, hostOf.Title))
+				conn.Send(JoinGamePacket(true, hostOf.Id, hostOf.Title))
 				log.Printf("Created new game '%s' (%s)", hostOf.Title, hostOf.Id)
 			})
-		case net.CCheckNameTaken:
-			RequireData(rawPacket, func(data *net.CheckNameTakenData) {
+		case CCheckNameTaken:
+			RequireData(rawPacket, func(data *CheckNameTakenData) {
 				g := game.Get(data.Id) // Retrieve the game
 				if g == nil {          // If the game doesn't exist
-					Send(net.ErrorPacket("That game code doesn't exist"))
+					conn.Send(ErrorPacket("That game code doesn't exist"))
 				} else {
-					taken := g.IsNameTaken(data.Name)      // Check if the name is taken
-					Send(net.NameTakenResultPacket(taken)) // Send the result
+
+					taken := g.IsNameTaken(data.Name)       // Check if the name is taken
+					conn.Send(NameTakenResultPacket(taken)) // Send the result
 				}
 			})
-		case net.CRequestGameState: // Client requested game state
-			RequireData(rawPacket, func(data *net.RequestGameStateData) {
+		case CRequestGameState: // Client requested game state
+			RequireData(rawPacket, func(data *RequestGameStateData) {
 				log.Printf("Client requested game state for '%s'", data.Id)
 				g := game.Get(data.Id)
 				if g == nil { // If the game doesn't exist
-					Send(net.GameStatePacket(game.DoesNotExist))
+					conn.Send(GameStatePacket(game.DoesNotExist))
 				} else {
 					// Send the current game state
-					Send(net.GameStatePacket(g.State))
+					conn.Send(GameStatePacket(g.State))
 				}
 			})
-		case net.CRequestJoin:
-			RequireData(rawPacket, func(data *net.RequestJoinData) {
+		case CRequestJoin:
+			RequireData(rawPacket, func(data *RequestJoinData) {
 				activeGame = game.Get(data.Id)
 				if activeGame == nil {
-					Send(net.ErrorPacket("That game code doesn't exist"))
+					conn.Send(ErrorPacket("That game code doesn't exist"))
 				} else {
 					if activeGame.State != game.Waiting { // If the game isn't in waiting state
 						log.Printf("%d", activeGame.State)
-						Send(net.ErrorPacket("That game is already started"))
+						conn.Send(ErrorPacket("That game is already started"))
+					} else if activeGame.IsNameTaken(data.Name) { // If the name is already taken
+						conn.Send(ErrorPacket("That name is already in use"))
+						activeGame = nil // Clear the active game
 					} else {
-						if activeGame.IsNameTaken(data.Name) { // If the name is already taken
-							Send(net.ErrorPacket("That name is already in use"))
-							activeGame = nil // Clear the active game
-						} else {
-							// Join and set the active player
-							activePlayer = activeGame.Join(ws, data.Name)
-							// Tell the host they've joined the new game as a player
-							Send(net.JoinGamePacket(false, activeGame.Id, activeGame.Title))
-						}
+						// Join and set the active player
+						activePlayer = activeGame.Join(conn, data.Name)
+						// Tell the host they've joined the new game as a player
+						conn.Send(JoinGamePacket(false, activeGame.Id, activeGame.Title))
 					}
 				}
 			})
-		case net.CAnswer:
-			activePlayer.Net.Send(net.ErrorPacket("Not implemented"))
+		case CAnswer:
+			activePlayer.Net.Send(ErrorPacket("Not implemented"))
 		// TODO: Handle answer submit
-		case net.CKick:
+		case CKick:
 			if hostOf != nil {
-				RequireData(rawPacket, func(data *net.KickData) {
-					p := hostOf.GetPlayer(data.Id)
+				RequireData(rawPacket, func(data *KickData) {
+					p := hostOf.Players.Get(data.Id)
 					if p != nil {
 						hostOf.RemovePlayer(p)
 					}
@@ -181,21 +160,5 @@ func SocketConnect(c *gin.Context) {
 
 	if activePlayer != nil && activeGame != nil {
 		activeGame.RemovePlayer(activePlayer)
-	}
-}
-
-// RequireData wraps around the packet data to create a type safe decoding
-// from the packet data map to the packet struct
-func RequireData[T interface{}](rawPacket net.PacketRaw, action func(data *T)) {
-	d := rawPacket.Data
-	if d != nil {
-		out := new(T)
-		err := mapstructure.Decode(d, out)
-		if err != nil {
-			log.Panic(err)
-		}
-		action(out)
-	} else {
-		log.Printf("Packet with id '%x' expected data but recieved none", rawPacket.Id)
 	}
 }
