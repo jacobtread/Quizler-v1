@@ -10,7 +10,7 @@ import packets, {
 } from "./packets";
 import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 import { useGameStore } from "@store/game";
-import { dialog, events } from "@/events";
+import { dialog, events, toast } from "@/events";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -122,7 +122,7 @@ class SocketApi {
         if (this.ws.readyState != WebSocket.OPEN) return
         this.lastServerKeepAlive = performance.now()
         this.isOpen = true
-        events.emit('state', 'open')
+        events.emit('open', true)
     }
 
     /**
@@ -130,7 +130,7 @@ class SocketApi {
      */
     onClose() {
         this.isOpen = false
-        events.emit('state', 'closed')
+        events.emit('open', false)
         if (this.isRunning) {
             this.retryConnect()
         } else {
@@ -252,7 +252,6 @@ class SocketApi {
         dialog('Disconnected', data.reason)
         events.emit('reset')
         api.setGameCode(null)
-        events.emit('disconnect', data.reason)
     }
 
     /**
@@ -275,6 +274,7 @@ class SocketApi {
      */
     onError(api: SocketApi, data: ErrorData) {
         console.error(`An error occurred ${data.cause}`)
+        dialog('Error occurred', data.cause)
     }
 
     /**
@@ -362,6 +362,10 @@ class SocketApi {
      * @param id The id of the player to kick
      */
     kick(id: string) {
+        const player = this.players[id]
+        if (player) {
+            toast(`Kicked player "${player.name}"`)
+        }
         console.log('Kicked player ' + id)
         delete this.players[id]
         this.send(packets.kick(id))
@@ -417,25 +421,28 @@ export function useApi(): UseApi {
         }
     }
 
-    function updateState(state: string) {
-        open.value = state === 'open';
+    function updateState(state: boolean) {
+        open.value = state;
     }
 
     const gameState = useGameStore()
 
     function handleReset() {
         gameState.$reset()
+        for (let key of Object.keys(players)) {
+            delete players[key]
+        }
     }
 
     onMounted(() => {
-        events.on('state', updateState)
+        events.on('open', updateState)
         events.on('players', updatePlayers)
         events.on('reset', handleReset)
         updatePlayers(socket.players)
     })
 
     onUnmounted(() => {
-        events.off('state', updateState)
+        events.off('open', updateState)
         events.off('players', updatePlayers)
         events.off('reset', handleReset)
     })

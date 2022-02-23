@@ -3,15 +3,14 @@ import { GameState, PlayerMap } from "@/api";
 import mitt from "mitt";
 
 type Events = {
-    state: string;
-    game: JoinGameData | null;
-    players: PlayerMap;
-    disconnect: string;
-    gameState: GameState;
-    nameTaken: boolean;
-    reset: void;
-    toast: Toast;
-    dialog: DialogData;
+    open: boolean;
+    game: JoinGameData | null; // Event for updating the game data
+    players: PlayerMap; // Event for updating the player list
+    gameState: GameState; // Event for the game state check result
+    nameTaken: boolean; // Event for the result of a name taken check
+    reset: void; // Event for resetting the game state
+    toast: Toast; // Event for creating toasts
+    dialog: DialogData; // Event for creating dialogs
 }
 
 export enum ToastType {

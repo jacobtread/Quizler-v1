@@ -23,7 +23,7 @@ events.on('toast', function (toast: Toast) {
            v-for="toast in toasts.reverse()"
            :data-type="toast.type"
            :key="toasts.id">
-        {{ toast.content + toast.id }}
+        {{ toast.content }}
       </div>
     </transition-group>
   </div>

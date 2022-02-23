@@ -99,8 +99,7 @@ func SocketConnect(c *gin.Context) {
 			lastKeepAlive = currentTime
 			Send(net.KeepAlivePacket())
 		case net.CDisconnect:
-			log.Printf("Client disconnected")
-			running = false
+			log.Printf("Player disconnected")
 			if activeGame != nil { // If we are in a game
 				activeGame.RemovePlayer(activePlayer) // Remove the player from the game
 				activePlayer = nil                    // Set the player to nil
@@ -133,7 +132,7 @@ func SocketConnect(c *gin.Context) {
 				log.Printf("Client requested game state for '%s'", data.Id)
 				g := game.Get(data.Id)
 				if g == nil { // If the game doesn't exist
-					Send(net.ErrorPacket("That game code doesn't exist"))
+					Send(net.GameStatePacket(game.DoesNotExist))
 				} else {
 					// Send the current game state
 					Send(net.GameStatePacket(g.State))
@@ -146,6 +145,7 @@ func SocketConnect(c *gin.Context) {
 					Send(net.ErrorPacket("That game code doesn't exist"))
 				} else {
 					if activeGame.State != game.Waiting { // If the game isn't in waiting state
+						log.Printf("%d", activeGame.State)
 						Send(net.ErrorPacket("That game is already started"))
 					} else {
 						if activeGame.IsNameTaken(data.Name) { // If the name is already taken

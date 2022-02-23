@@ -7,7 +7,7 @@ import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
 import { storeToRefs } from "pinia";
-import { events } from "@/events";
+import { dialog, events } from "@/events";
 
 let gameCode = ref('')
 let disabled = ref(true)
@@ -31,7 +31,11 @@ function onGameState(data: GameState) {
   if (data === GameState.WAITING) {
     hasGame.value = true
   } else if (data === GameState.DOES_NOT_EXIST) {
-    console.error('GAME NOT FOUND')
+    dialog('Invalid code', 'The quiz code you entered doesn\'t seem to exist.')
+  } else if (data === GameState.STARTED) {
+    dialog('Cannot Join', 'That game has already started you are unable to join it now.')
+  } else if (data === GameState.STOPPED) {
+    dialog('Cannot Join', 'That game has already finished you are unable to join it now.')
   }
   searching.value = false
 }
@@ -56,13 +60,14 @@ function onGameJoined(data: JoinGameData | null) {
 
 function onNameTaken(taken: boolean) {
   if (taken) {
-    console.error('That name is already taken')
+    dialog('Name taken', 'That name is already in use. Please choose another')
   } else {
     socket.send(packets.requestJoin(gameCode.value, name.value))
     // Add a new join listener
     events.on('game', onGameJoined)
   }
 }
+
 function joinGame() {
   const code = gameCode.value
   socket.send(packets.checkNameTaken(code, name.value))
