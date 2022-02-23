@@ -34,6 +34,7 @@ watch(state, () => {
 function onTimeSync(data: TimeSyncData) {
   timeData = data
   startTime.value = Math.ceil(data.remaining / 1000)
+  lastFrameChange = performance.now()
   requestAnimationFrame(updateTime)
 }
 
