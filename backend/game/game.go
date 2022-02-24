@@ -5,6 +5,7 @@ import (
 	. "backend/tools"
 	. "backend/types"
 	"log"
+	"math"
 	"strings"
 	"time"
 )
@@ -143,11 +144,20 @@ func (game *Game) Start() {
 	game.StartTime = Time()
 }
 
+// Timing for different events
 const (
-	StartDelay   = 10 * time.Second
-	QuestionTime = 10 * time.Second
-	SyncDelay    = 2 * time.Second
-	MarkTime     = 3 * time.Second
+	StartDelay   = 5 * time.Second  // The time to wait before starting the game
+	QuestionTime = 10 * time.Second // The time to display each question for
+	SyncDelay    = 2 * time.Second  // The delay to wait between each time sync
+	MarkTime     = 3 * time.Second  // The time to display the marking screen for
+	BonusTime    = 5 * time.Second  // The time the player can earn a bonus score within
+)
+
+// The minimum and maximum points that can be
+// awarded for each question
+const (
+	Points      uint32  = 100 // The default number of points to award
+	BonusPoints float64 = 500 // The maximum amount of bonus points that can be awarded
 )
 
 // Loop Run the game loop for the provided game
@@ -224,6 +234,24 @@ func (question *ActiveQuestion) IsCorrect(answer AnswerIndex) bool {
 	return false
 }
 
+// GetScore calculates the score that the player should be given based on how
+// long it took them to answer and the bonus that entails
+func GetScore(player *Player, question *ActiveQuestion) uint32 {
+	// Calculate the time passed from the question start till the player answered
+	passed := player.AnswerTime - question.StartTime
+	if passed <= BonusTime { // If the play is within the bonus period
+		// Calculate how far through the bonus they are. This is
+		// inverted because more score is awarded the quicker they go
+		// this value is later cast to an uint32, so we can't let it go below zero
+		percent := math.Max(1-(float64(passed)/float64(BonusTime)), 0)
+		bonus := uint32(math.RoundToEven(percent * BonusPoints)) // Get an even number of points
+		log.Printf("Bonus %d", bonus)
+		return Points + bonus
+	} else {
+		return Points
+	}
+}
+
 // MarkQuestion Marks the question at the end of the
 func (game *Game) MarkQuestion(question *ActiveQuestion) {
 	log.Printf("Marking questions for game '%s' (%s)", game.Title, game.Id)
@@ -234,6 +262,13 @@ func (game *Game) MarkQuestion(question *ActiveQuestion) {
 		correct := answered && question.IsCorrect(answerIndex)
 		// Send the player their marking result
 		player.Net.Send(net.AnswerResultPacket(correct))
+		if correct {
+			// Set the player score
+			player.Score = GetScore(player, question)
+			if player.Score > 0 {
+				log.Printf("Player '%s' scored %d points", player.Name, player.Score)
+			}
+		}
 	})
 	// Set the question as marked
 	question.Marked = true

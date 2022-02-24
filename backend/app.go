@@ -155,6 +155,7 @@ func SocketConnect(c *gin.Context) {
 			} else {
 				RequireData(rawPacket, func(data *AnswerData) {
 					activePlayer.Answer(activeGame, data.Id)
+					activePlayer.AnswerTime = game.Time()
 				})
 			}
 		case CKick:

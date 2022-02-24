@@ -5,15 +5,17 @@ import (
 	. "backend/tools"
 	. "backend/types"
 	"sync"
+	"time"
 )
 
 // Player A structure representing a player in the game
 type Player struct {
-	Net     *net.Connection               // The connection to the player socket
-	Id      Identifier                    // The unique ID of this player
-	Name    string                        // The name of this player
-	Score   uint16                        // The score this player has
-	Answers map[QuestionIndex]AnswerIndex // A map of the question index to the answer chosen
+	Net        *net.Connection               // The connection to the player socket
+	Id         Identifier                    // The unique ID of this player
+	Name       string                        // The name of this player
+	Score      uint32                        // The score this player has
+	Answers    map[QuestionIndex]AnswerIndex // A map of the question index to the answer chosen
+	AnswerTime time.Duration                 // The time of which the player provided its answer
 }
 
 // PlayerStore A structure for storing, retrieving, removing and overall

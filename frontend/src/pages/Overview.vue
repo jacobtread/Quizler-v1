@@ -12,7 +12,7 @@ const {socket, players, state} = useApi()
 const store = useGameStore()
 const router = useRouter()
 
-const startTime = ref(10)
+const startTime = ref(5)
 
 const canPlay = computed(() => Object.keys(players).length > 0)
 
