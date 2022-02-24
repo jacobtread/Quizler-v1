@@ -150,8 +150,13 @@ func SocketConnect(c *gin.Context) {
 				hostOf.Start()
 			}
 		case CAnswer:
-			activePlayer.Net.Send(ErrorPacket("Not implemented"))
-		// TODO: Handle answer submit
+			if activeGame == nil || activePlayer == nil {
+				conn.Send(ErrorPacket("Not in a game"))
+			} else {
+				RequireData(rawPacket, func(data *AnswerData) {
+					activePlayer.Answer(activeGame, data.Id)
+				})
+			}
 		case CKick:
 			if hostOf != nil {
 				RequireData(rawPacket, func(data *KickData) {

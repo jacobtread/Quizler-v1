@@ -21,6 +21,7 @@ watch(gameCode, () => {
 })
 
 const gameState = useGameStore()
+
 const {name} = storeToRefs(gameState)
 const router = useRouter()
 

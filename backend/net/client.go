@@ -42,6 +42,11 @@ type RequestGameStateData struct {
 // RequestJoinData A structure representing a client requesting to join a game with the
 // provided Id using the provided Name
 type RequestJoinData struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
+	Id   string `json:"id"`   // The id of the game (game code)
+	Name string `json:"name"` // The name to join the game with
+}
+
+// AnswerData A structure representing a client answering a question with the index
+type AnswerData struct {
+	Id types.AnswerIndex `json:"id"` // The index of the answer
 }

@@ -432,6 +432,12 @@ export function useApi(): UseApi {
     if (!socket) socket = new SocketApi()
     const players = reactive<PlayerMap>({})
 
+    function clearPlayers() {
+        for (let key of Object.keys(players)) {
+            delete players[key]
+        }
+    }
+
     function updatePlayers(data: PlayerMap) {
         for (let key of Object.keys(players)) {
             if (!data[key]) delete players[key]
@@ -453,9 +459,7 @@ export function useApi(): UseApi {
 
     function handleReset() {
         gameState.$reset()
-        for (let key of Object.keys(players)) {
-            delete players[key]
-        }
+        clearPlayers()
     }
 
     onMounted(() => {

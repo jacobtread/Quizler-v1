@@ -4,10 +4,13 @@ import { useApi } from "@/api";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import { AnswerResult, QuestionData } from "@api/packets";
+import packets, { AnswerResult, QuestionData } from "@api/packets";
 import Loader from "@component/Loader.vue";
 
 const {socket, players, state} = useApi()
+
+const answered = ref(false);
+const result = ref<boolean | null>(null)
 
 const store = useGameStore()
 const router = useRouter()
@@ -26,11 +29,18 @@ watch(state, () => {
 }, {immediate: true})
 
 function onQuestion(data: QuestionData) {
+  answered.value = false
+  result.value = null
   question.value = data
 }
 
 function onAnswerResult(data: AnswerResult) {
+  result.value = data.result
+}
 
+function setAnswer(index: number) {
+  answered.value = true
+  socket.send(packets.answer(index))
 }
 
 onMounted(() => {
@@ -45,13 +55,24 @@ onUnmounted(() => {
 </script>
 <template>
   <div>
-    <div class="content loader-wrapper" v-if="question !== null">
+    <div class="content loader-wrapper" v-if="question === null">
       <Loader/>
     </div>
-    <div v-else>
+    <div v-else-if="!answered">
       <p>{{ question.question }}</p>
-      <div>
-        <button v-for="answer in question.answers">{{ answer }}</button>
+      <div class="answers">
+        <button v-for="(answer, index) in question.answers" @click="setAnswer(index)">{{ answer }}</button>
+      </div>
+    </div>
+    <div v-else-if="result === null">
+      <h1>Waiting...</h1>
+    </div>
+    <div v-else>
+      <div v-if="result">
+        <h1>Correct Answer!</h1>
+      </div>
+      <div v-else>
+        <h1>Incorrect Answer</h1>
       </div>
     </div>
   </div>
