@@ -17,7 +17,8 @@ const (
 	STimeSync                 = 0x07
 	SQuestion                 = 0x08
 	SAnswerResult             = 0x09
-	SGameOver                 = 0x0A
+	SPlayerScore              = 0x0A
+	SGameOver                 = 0x0B
 )
 
 // DisconnectPacket creates a new disconnect packet with the provided reason
@@ -103,4 +104,13 @@ func AnswerResultPacket(result bool) Packet {
 	return Packet{Id: SAnswerResult, Data: struct {
 		Result bool `json:"result"`
 	}{Result: result}}
+}
+
+// PlayerScorePacket creates a new player score packet which informs the client
+// what score a specific player has
+func PlayerScorePacket(score uint32, id string) Packet {
+	return Packet{Id: SPlayerScore, Data: struct {
+		Score uint32 `json:"score"`
+		Id    string `json:"id"`
+	}{Score: score, Id: id}}
 }
