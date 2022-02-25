@@ -14,7 +14,7 @@
 | 0x07 | TIME_SYNC         | total (duration), remaining (duration)                |
 | 0x08 | QUESTION          | image (string), question (string), answers (string[]) |
 | 0x09 | ANSWER_RESULT     | result (bool)                                         |
-| 0x0A | PLAYER_SCORE      | score (number), id (string)                           |
+| 0x0A | SCORES            | scores (map id->string)                               |
 
 ## Client
 

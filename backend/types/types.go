@@ -1,5 +1,7 @@
 package types
 
+import "backend/tools"
+
 // State type for game states represented as an 8-bit integer
 type State = uint8
 
@@ -16,3 +18,5 @@ type QuestionData struct {
 	Answers  []string      // The possible answer values
 	Values   []AnswerIndex // The indexes of the correct answers
 }
+
+type ScoreMap = map[tools.Identifier]uint32

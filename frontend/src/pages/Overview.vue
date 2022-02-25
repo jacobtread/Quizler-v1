@@ -102,6 +102,12 @@ onUnmounted(() => {
       </template>
       <template v-else-if="state === GameState.STARTED">
         <h3 class="status">Game started</h3>
+        <ul class="players">
+          <li v-for="(player, index) of players" :key="index" class="player">
+            <span class="player__name">{{ player.name }}</span>
+            <span></span>
+          </li>
+        </ul>
       </template>
     </div>
   </form>

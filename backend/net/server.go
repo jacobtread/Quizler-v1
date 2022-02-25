@@ -17,7 +17,7 @@ const (
 	STimeSync                 = 0x07
 	SQuestion                 = 0x08
 	SAnswerResult             = 0x09
-	SPlayerScore              = 0x0A
+	SScores                   = 0x0A
 	SGameOver                 = 0x0B
 )
 
@@ -106,11 +106,10 @@ func AnswerResultPacket(result bool) Packet {
 	}{Result: result}}
 }
 
-// PlayerScorePacket creates a new player score packet which informs the client
-// what score a specific player has
-func PlayerScorePacket(score uint32, id string) Packet {
-	return Packet{Id: SPlayerScore, Data: struct {
-		Score uint32 `json:"score"`
-		Id    string `json:"id"`
-	}{Score: score, Id: id}}
+// ScoresPacket creates a new score packet which contains the scores of all the
+// players in the game. This is sent to everyone when scores change
+func ScoresPacket(data ScoreMap) Packet {
+	return Packet{Id: SScores, Data: struct {
+		Scores ScoreMap `json:"scores"`
+	}{Scores: data}}
 }

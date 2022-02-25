@@ -174,3 +174,13 @@ func (store *PlayerStore) RemoveEach(action func(player *Player)) {
 	}
 	store.Lock.Unlock() // Release write lock
 }
+
+// CollectScores collects all the player scores into a map of the player
+// Identifier to the score value. This is used for the score update packet
+func (store *PlayerStore) CollectScores() ScoreMap {
+	out := ScoreMap{}                                   // The store to return
+	store.ForEach(func(id Identifier, player *Player) { // Iterate over the players
+		out[id] = player.Score // Assign all the score values
+	})
+	return out
+}

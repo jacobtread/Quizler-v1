@@ -4,7 +4,7 @@ import { useApi } from "@/api";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import { onMounted, onUnmounted, ref, watch } from "vue";
-import packets, { AnswerResult, QuestionData } from "@api/packets";
+import packets, { AnswerResultData, QuestionData, ScoresData } from "@api/packets";
 import Loader from "@component/Loader.vue";
 
 const {socket, players, state} = useApi()
@@ -34,8 +34,12 @@ function onQuestion(data: QuestionData) {
   question.value = data
 }
 
-function onAnswerResult(data: AnswerResult) {
+function onAnswerResult(data: AnswerResultData) {
   result.value = data.result
+}
+
+function onScores(data: ScoresData) {
+
 }
 
 function setAnswer(index: number) {
@@ -46,11 +50,13 @@ function setAnswer(index: number) {
 onMounted(() => {
   socket.setHandler(0x08, onQuestion)
   socket.setHandler(0x09, onAnswerResult)
+  socket.setHandler(0x0A, onScores)
 })
 
 onUnmounted(() => {
   socket.clearHandler(0x08)
   socket.clearHandler(0x09)
+  socket.clearHandler(0x0A)
 })
 </script>
 <template>

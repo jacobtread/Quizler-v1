@@ -270,6 +270,10 @@ func (game *Game) MarkQuestion(question *ActiveQuestion) {
 			}
 		}
 	})
+	// Create a new scores packet
+	scorePacket := net.ScoresPacket(game.Players.CollectScores())
+	// Broadcast the scores' packet to everyone
+	game.Broadcast(scorePacket, true)
 	// Set the question as marked
 	question.Marked = true
 }
