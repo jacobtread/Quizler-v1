@@ -105,7 +105,7 @@ onUnmounted(() => {
         <ul class="players">
           <li v-for="(player, index) of players" :key="index" class="player">
             <span class="player__name">{{ player.name }}</span>
-            <span></span>
+            <span>{{ player.score ?? 0 }}</span>
           </li>
         </ul>
       </template>

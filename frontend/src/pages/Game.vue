@@ -6,6 +6,7 @@ import { useRouter } from "vue-router";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData, ScoresData } from "@api/packets";
 import Loader from "@component/Loader.vue";
+import Logo from "@asset/logo.svg"
 
 const {socket, players, state} = useApi()
 
@@ -58,16 +59,39 @@ onUnmounted(() => {
   socket.clearHandler(0x09)
   socket.clearHandler(0x0A)
 })
+
+function getFontSize(text: string): string {
+  const fitLength = 100
+  if (text.length > fitLength) return '0.7rem'
+  const percent = (1 - (text.length / fitLength))
+  const size = (percent * 0.8) + 0.7
+  return `${size}rem`
+}
+
 </script>
 <template>
-  <div>
+  <div class="content">
     <div class="content loader-wrapper" v-if="question === null">
       <Loader/>
     </div>
-    <div v-else-if="!answered">
-      <p>{{ question.question }}</p>
+    <div v-else-if="!answered" class="wrapper question">
+      <div class="image-wrapper"
+           style="">
+        <div v-if="question.image">
+
+        </div>
+        <div v-else>
+          <Logo/>
+        </div>
+      </div>
+      <p class="question__text">{{ question.question }}</p>
       <div class="answers">
-        <button v-for="(answer, index) in question.answers" @click="setAnswer(index)">{{ answer }}</button>
+        <button v-for="(answer, index) in question.answers"
+                @click="setAnswer(index)"
+                :style="{fontSize: getFontSize(answer)}"
+                class="answer">
+          {{ answer }}
+        </button>
       </div>
     </div>
     <div v-else-if="result === null">
@@ -86,5 +110,44 @@ onUnmounted(() => {
 <style scoped lang="scss">
 @import "../assets/variables";
 
+.answers {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 0.5rem;
+  padding-bottom: 5rem;
+}
+
+.answer {
+  flex: auto;
+  width: calc(50% - 1rem);
+  padding: 1rem;
+  border: none;
+  text-align: left;
+  background-color: #222;
+  border-radius: 0.25rem;
+  color: white;
+  font-weight: bold;
+  font-size: 1.1rem;
+  white-space: pre-wrap;
+  line-break: loose;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.image-wrapper {
+  flex: auto;
+}
+
+.question {
+  max-width: 1200px;
+  width: 100%;
+}
+
+.question__text {
+  width: 100%;
+  font-size: 1.25rem;
+  background-color: #222;
+  padding: 1rem;
+}
 
 </style>

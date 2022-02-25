@@ -21,6 +21,7 @@ export interface JoinGameData {
 export interface PlayerData {
     id: string;
     name: string;
+    score?: number;
 }
 
 export interface PlayerDataP {
