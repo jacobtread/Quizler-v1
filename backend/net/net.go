@@ -4,6 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/mitchellh/mapstructure"
 	"log"
+	"sync"
 )
 
 // PacketId All packet ids are represented as 16-bit integers
@@ -37,12 +38,13 @@ type PacketRaw struct {
 type Connection struct {
 	Open   bool            // Whether the connection is still open or not
 	Socket *websocket.Conn // The connection to the socket
+	Lock   *sync.RWMutex   // Write lock for the
 }
 
 // NewConnection Creates a new connection struct and sets the close handler
 func NewConnection(ws *websocket.Conn) *Connection {
 	// Create the new connection
-	conn := Connection{Socket: ws, Open: true}
+	conn := Connection{Socket: ws, Open: true, Lock: &sync.RWMutex{}}
 	ws.SetCloseHandler(func(code int, text string) error {
 		// Print to the console that the connection closed
 		log.Printf("Websocket connection closed '%s' (%d)", text, code)
@@ -57,8 +59,10 @@ func NewConnection(ws *websocket.Conn) *Connection {
 // Send will send the provided packet to the connection socket
 func (conn *Connection) Send(packet Packet) {
 	if conn.Open { // Only send the packet if the connection is open
+		conn.Lock.Lock()
 		// Write the packet to the socket as JSON
 		err := conn.Socket.WriteJSON(packet)
+		conn.Lock.Unlock()
 		if err != nil { // If the packet failed to write
 			log.Printf("Failed to send packet '%x'", packet.Id)
 		}
