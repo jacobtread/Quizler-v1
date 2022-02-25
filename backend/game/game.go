@@ -335,6 +335,7 @@ func (game *Game) RemovePlayer(player *Player) {
 // Stop Sets the game state to Stopped and calls RemovePlayer
 // on all the players. Made thread safe with PLock
 func (game *Game) Stop() {
+	game.State = Stopped
 	// Write safe iteration over all the players
 	game.Players.ForEachSafe(func(player *Player) {
 		// Remove the player
