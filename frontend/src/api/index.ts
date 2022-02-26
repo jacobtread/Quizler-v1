@@ -14,7 +14,7 @@ import packets, {
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
 import { dialog, toast } from "@/tools/ui";
-import { APP_HOST } from "@/constants";
+import { APP_HOST, DEBUG } from "@/constants";
 
 export enum GameState {
     UNSET = -1,
@@ -46,7 +46,7 @@ export enum ServerPacketId {
     SCORES
 }
 
-type PacketHandlerFunction = (api: SocketApi, data: any) => void
+type PacketHandlerFunction = (data: any) => void
 type PacketHandlers = Record<ServerPacketId, PacketHandlerFunction>
 
 /**
@@ -58,11 +58,8 @@ class SocketApi {
     // The websocket connection instance
     private ws: WebSocket = this.connect()
 
-    // Whether the main update loop is running
-    private isRunning: boolean = true
-
     // The interval timer handle used to cancel the update interval
-    private updateInterval: any = undefined
+    private keepAliveInterval: any = undefined
 
     // The last time a server keep alive response was received
     private lastServerKeepAlive: number = -1
@@ -95,49 +92,83 @@ class SocketApi {
     }
 
     /**
+     * Binds the "this" keyword for all the packet handlers so that
+     * the "this" keyword doesn't become undefined when used as a
+     * callback function
+     *
+     * Note: Handlers set via usePacketHandler will NOT inherit this
+     * behavior due to them being set after this binding occurs
+     *
+     * @private Shouldn't be accessed outside this function
+     */
+    private bindHandlers() {
+        // @ts-ignore
+        let keys: ServerPacketId[] = Object.keys(this.handlers) as ServerPacketId[]
+        for (let key of keys) {
+            const handler = this.handlers[key] as PacketHandlerFunction
+            this.handlers[key] = handler.bind(this)
+        }
+    }
+
+    constructor() {
+        this.bindHandlers() // Bind the handlers
+    }
+
+    /**
      * Creates a connection to the websocket at APP_HOST and returns the websocket
      * all the listeners are added to the websocket and the update interval is set
      */
     connect(): WebSocket {
-        this.handlers[ServerPacketId.KEEP_ALIVE] = this.onKeepAlive
+        const self = this
 
-        const ws = new WebSocket(APP_HOST)
-        ws.onopen = () => this.onOpened()
-        ws.onmessage = (e) => this.onMessage(e)
-        ws.onclose = () => this.onClose()
-        ws.onerror = (e: Event) => {
-            console.error(e)
+        const ws = new WebSocket(APP_HOST) // Create a new web socket instance
+        // Set the handler for the websocket open event
+        ws.onopen = () => {
+            if (DEBUG) console.debug('Connected to socket server') // Debug logging
+            if (this.ws.readyState != WebSocket.OPEN) return // Ensure we are actually on the open ready state
+            this.lastServerKeepAlive = performance.now() // Set the last keep alive time
+            this.open.value = true // Update the open state
         }
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval)
+        // Set the handler for the websocket message event
+        ws.onmessage = (event: MessageEvent) => {
+            try {
+                const packet = JSON.parse(event.data) as Packet // Parse the packet
+                const id: ServerPacketId = packet.id // Get the packet id
+                const data: any = packet.data
+                if (id in this.handlers) {  // Check to make sure we have a handler for this packet id
+                    debugLogPacket(Direction.IN, packet) // Debug print the packet info
+                    const handler = this.handlers[id] // Retrieve the packet handler
+                    handler(data) // Invoke the packet handler
+                } else {
+                    // Send a warning to the console saying that there's no handler
+                    console.warn(`Don't know how to handle packet with id (${id.toString(16)})`)
+                }
+            } catch (e) {
+                console.error(e)
+            }
         }
-        this.updateInterval = setInterval(() => this.update(), 100)
+        // Set the handler for the websocket close event
+        ws.onclose = () => {
+            this.open.value = false // Update the open state
+            this.retryConnect() // Try and reconnect to the server
+        }
+        ws.onerror = console.error // Directly print all errors to the console
+        // Set an interval so that an updating function will be called every 100ms
+        this.keepAliveInterval = setInterval(/* This function ensures the connection is alive */() => {
+            if (this.open.value) { // If the connection is open
+                const time = performance.now() // Retrieve the current time in milliseconds
+                // If the last time we received a keep alive from the server was over 10s ago
+                if (time - this.lastServerKeepAlive > 10000) {
+                    this.retryConnect() // Try and reconnect
+                    return
+                }
+
+                if (time - this.lastSendKeepAlive > 1000) {
+                    this.keepAlive()
+                }
+            }
+        }, 100)
         return ws
-    }
-
-    /**
-     * Called when the websocket connection is created and open
-     * if the ready state of the web socket is OPEN then isOpen
-     * will be set to true allowing the update loop to start
-     */
-    onOpened() {
-        console.log('Connected')
-        if (this.ws.readyState != WebSocket.OPEN) return
-        this.lastServerKeepAlive = performance.now()
-        this.open.value = true
-    }
-
-    /**
-     * Called when the web socket connection is closed
-     */
-    onClose() {
-        this.open.value = false
-        if (this.isRunning) {
-            this.retryConnect()
-        } else {
-            console.log('Disconnected')
-            this.disconnect()
-        }
     }
 
     /**
@@ -145,54 +176,30 @@ class SocketApi {
      * game state
      */
     retryConnect() {
-        this.open.value = false
-        console.log('Lost connection. Attempting reconnect in 2 seconds')
-        const api = this
-        if (this.updateInterval) {
-            clearInterval(this.updateInterval)
+        if (this.open.value) { // If the connection is open
+            this.ws.close() // Close the connection
+            this.open.value = false // Set the open state
         }
-        setTimeout(() => api.ws = api.connect(), 2000)
+        // Print a debug message saying the connection was lost
+        if (DEBUG) console.debug('Lost connection. Attempting reconnect in 2 seconds')
+        // Clear any existing keep alive interval
+        if (this.keepAliveInterval) clearInterval(this.keepAliveInterval)
+        // Set a timeout to try and connect again in 2s
+        setTimeout(() => this.ws = this.connect(), 2000)
     }
-
-    /**
-     * Called when a websocket message is received this function handles the
-     * mapping of packets to packet handlers as well as parsing and error checking
-     *
-     * @param event The message event
-     */
-    onMessage(event: MessageEvent) {
-        try {
-            const packet = JSON.parse(event.data) as Packet
-            const id: ServerPacketId = packet.id
-            const data: any = packet.data
-            // Check to make sure we have a handler for this packet id
-            if (id in this.handlers) {
-                debugLogPacket(Direction.IN, packet)
-                const handler = this.handlers[id]
-                // Call the packet handler with this and the packet data
-                handler(this, data)
-            } else {
-                console.warn(`Don't know how to handle packet with id (${id.toString(16)})`)
-            }
-        } catch (e) {
-            console.error(e)
-        }
-    }
-
 
     /**
      * Packet handler for PlayerData packet (0x07) handles data about other
      * players in the game such as username and id's
      *
-     * @param api The current connection instance
      * @param data The player data of the other player
      */
-    onPlayerData(api: SocketApi, data: PlayerDataWithMode) {
+    onPlayerData(data: PlayerDataWithMode) {
         const elm = {id: data.id, name: data.name}
         if (data.mode === PlayerDataMode.ADD) {
-            api.players[data.id] = elm
+            this.players[data.id] = elm
         } else if (data.mode === PlayerDataMode.REMOVE) {
-            delete api.players[data.id]
+            delete this.players[data.id]
         }
     }
 
@@ -200,22 +207,20 @@ class SocketApi {
      * Packet handler for GameState packet (0x05) handles keeping track
      * of the games state
      *
-     * @param api The current connection instance
      * @param data The current game state
      */
-    onGameState(api: SocketApi, data: GameStateData) {
-        api.gameState.value = SocketApi.getGameState(data.state)
+    onGameState(data: GameStateData) {
+        this.gameState.value = SocketApi.getGameState(data.state)
     }
 
     /**
      * Packet handler for Question packet (0x08) which provides each
      * client with the current question to answer
      *
-     * @param api The current connection instance
      * @param question The current question
      */
-    onQuestion(api: SocketApi, question: QuestionData) {
-        api.question.value = question
+    onQuestion(question: QuestionData) {
+        this.question.value = question
     }
 
     /**
@@ -226,16 +231,17 @@ class SocketApi {
      * @return The game state enum
      */
     static getGameState(id: number): GameState {
-        if (id == 0) {
-            return GameState.WAITING
-        } else if (id == 1) {
-            return GameState.STARTING
-        } else if (id == 2) {
-            return GameState.STARTED
-        } else if (id == 3) {
-            return GameState.STOPPED
-        } else {
-            return GameState.DOES_NOT_EXIST
+        switch (id) {
+            case 0:
+                return GameState.WAITING
+            case 1:
+                return GameState.STARTING
+            case 2:
+                return GameState.STARTED
+            case 3:
+                return GameState.STOPPED
+            default:
+                return GameState.DOES_NOT_EXIST
         }
     }
 
@@ -243,32 +249,28 @@ class SocketApi {
      * Packet handler for the Disconnect packet (0x02) handles the player
      * being disconnected from the game
      *
-     * @param api The current connection instance
      * @param data The disconnect data contains the reason for disconnect
      */
-    onDisconnect(api: SocketApi, data: DisconnectData) {
+    onDisconnect(data: DisconnectData) {
         dialog('Disconnected', data.reason)
-        api.setGameData(null)
+        this.gameData.value = null
     }
 
     /**
      * Packet handler for the KeepAlive packet (0x01) handles updating the
      * lastServerKeepAlive time ensuring that the server is still alive
-     *
-     * @param api The current connection instance
      */
-    onKeepAlive(api: SocketApi) {
-        api.lastServerKeepAlive = performance.now()
+    onKeepAlive() {
+        this.lastServerKeepAlive = performance.now()
     }
 
     /**
      * Packet handler for the Error packet (0x03) handles errors that should
      * be displayed to the client. TODO: Display this to the client
      *
-     * @param api The current connection instance
      * @param data The data for the error packet contains the error cause
      */
-    onError(api: SocketApi, data: ErrorData) {
+    onError(data: ErrorData) {
         console.error(`An error occurred ${data.cause}`)
         dialog('Error occurred', data.cause)
     }
@@ -277,11 +279,10 @@ class SocketApi {
      * Packet handler for the Join Game packet (0x06) handles the player
      * joining the game. Sets the game code and emits relevant events
      *
-     * @param api The current connection instance
      * @param data The data for the game contains the id and title
      */
-    onJoinGame(api: SocketApi, data: GameData) {
-        api.setGameData(data)
+    onJoinGame(data: GameData) {
+        this.gameData.value = data
     }
 
     /**
@@ -296,32 +297,23 @@ class SocketApi {
     }
 
     /**
-     * Keeps alive the connection by sending a Keep Alive packet to
-     * the server. This is called every 1000ms
-     */
-    keepAlive() {
-        this.lastSendKeepAlive = performance.now()
-        this.send(packets.keepAlive)
-    }
-
-    /**
-     * Set's the current game code
-     *
-     * @param data The data or null to clear the game code .
-     */
-    setGameData(data: GameData | null) {
-        this.gameData.value = data
-    }
-
-    /**
      * Called when the client should disconnect from the server. Clears the
      * update interval along with stopping the running loop and if the ws
      * connection is open according to isOpen then it will be closed as well
      */
     disconnect() {
         console.log('Disconnected from game')
-        this.setGameData(null)
+        this.gameData.value = null
         this.send(packets.disconnect)
+    }
+
+    /**
+     * Keeps alive the connection by sending a Keep Alive packet to
+     * the server. This is called every 1000ms
+     */
+    keepAlive() {
+        this.lastSendKeepAlive = performance.now()
+        this.send(packets.keepAlive)
     }
 
     /**
@@ -337,25 +329,6 @@ class SocketApi {
         console.log('Kicked player ' + id)
         delete this.players[id]
         this.send(packets.kick(id))
-    }
-
-    /**
-     * An update loop. This runs constantly as long as disconnect is not
-     * called. Currently, this just handles keeping the connection alive
-     * and checking if the connection has timed out
-     */
-    update() {
-        if (this.isRunning && this.open.value) {
-            const time = performance.now()
-            if (time - this.lastServerKeepAlive > 10000) {
-                this.retryConnect()
-                return
-            }
-
-            if (time - this.lastSendKeepAlive > 1000) {
-                this.keepAlive()
-            }
-        }
     }
 }
 
@@ -382,7 +355,7 @@ export function useSocket(): SocketApi {
  */
 export function usePacketHandler<D>(socket: SocketApi, id: ServerPacketId, handler: (data: D) => any) {
     // Set the packet handler to the provided handler
-    socket.handlers[id] = (api: SocketApi, data: D) => handler(data)
+    socket.handlers[id] = handler
     // Reset the handler on unmount
     onUnmounted(() => socket.handlers[id] = EMPTY_HANDLER)
 }
