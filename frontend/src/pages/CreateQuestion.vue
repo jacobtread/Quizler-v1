@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useCreateStore } from "@store/create";
+import { store } from "@store/create";
 import { reactive } from "vue";
 import { QuestionData } from "@api/packets";
 import { useRoute, useRouter } from "vue-router"
@@ -7,7 +7,6 @@ import Nav from "@component/Nav.vue";
 import ImageSelector from "@component/create/ImageSelector.vue";
 import Answers from "@component/create/Answers.vue";
 
-const store = useCreateStore()
 const router = useRouter()
 const route = useRoute();
 

@@ -1,14 +1,12 @@
-import { defineStore } from "pinia";
 import { QuestionData } from "@api/packets";
+import { reactive } from "vue";
 
 interface State {
     questions: QuestionData[];
     title: string
 }
 
-export const useCreateStore = defineStore('create', {
-    state: (): State => ({
-        questions: [],
-        title: ''
-    })
+export const store = reactive<State>({
+    questions: [],
+    title: '',
 })

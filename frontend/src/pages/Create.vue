@@ -7,8 +7,7 @@
 import Add from "@asset/add.svg?inline"
 import Cross from "@asset/cross.svg?inline"
 import Edit from "@asset/edit.svg?inline"
-import { useCreateStore } from "@store/create";
-import { storeToRefs } from "pinia";
+import { store } from "@store/create";
 import { useSocket } from "@/api";
 import { useRouter } from "vue-router";
 import packets, { GameData } from "@api/packets";
@@ -17,11 +16,9 @@ import { computed, watch } from "vue";
 
 const router = useRouter()
 const socket = useSocket()
-const createState = useCreateStore()
-const {questions, title} = storeToRefs(createState)
 
 // Simple computed function to ensure there is at least 1 question
-const hasQuestions = computed(() => questions.value.length > 0)
+const hasQuestions = computed(() => store.questions.length > 0)
 
 /**
  * Delete the question at the provided index. Filters
@@ -31,7 +28,7 @@ const hasQuestions = computed(() => questions.value.length > 0)
  * @param index The index to remove
  */
 function deleteQuestion(index: number) {
-    questions.value = questions.value.filter((_, i) => i != index)
+    store.questions = store.questions.filter((_, i) => i != index)
 }
 
 /**
@@ -41,7 +38,7 @@ function deleteQuestion(index: number) {
  */
 function createQuiz() {
     // Send the creation game packet
-    socket.send(packets.createGame(title.value, questions.value))
+    socket.send(packets.createGame(store.title, store.questions))
 }
 
 // Watch the game data for changes
@@ -70,7 +67,7 @@ watch(socket.gameData, (data: GameData | null) => {
                     </p>
                     <label class="input">
                         <span class="input__label">Title</span>
-                        <input type="text" class="input__value" placeholder="Title" v-model="title" required
+                        <input type="text" class="input__value" placeholder="Title" v-model="store.title" required
                                minlength="1"
                                maxlength="30">
                     </label>
@@ -78,8 +75,8 @@ watch(socket.gameData, (data: GameData | null) => {
                 <div class="box">
                     <h2 class="box__title">Questions</h2>
                     <transition-group name="slide-fade">
-                        <div class="questions" v-if="questions.length > 0">
-                            <div v-for="(question, index) of questions" :key="index" class="question">
+                        <div class="questions" v-if="store.questions.length > 0">
+                            <div v-for="(question, index) of store.questions" :key="index" class="question">
                                 <div class="question__head">
                                     <h2 class="question__head__title">{{ question.question }}</h2>
                                     <div class="question__head__buttons">
