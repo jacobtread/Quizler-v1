@@ -91,7 +91,7 @@ class SocketApi {
      * A mapping to convert the packet ids into handler functions so that
      * they can be handled separately instead of a large switch statement
      */
-    private handlers: PacketHandlers = {
+    handlers: PacketHandlers = {
         0x00: this.onKeepAlive,
         0x01: this.onDisconnect,
         0x02: this.onError,
@@ -103,14 +103,6 @@ class SocketApi {
         0x08: this.onQuestion,
         0x09: EMPTY_HANDLER, // ANSWER RESULT PACKET
         0x0A: EMPTY_HANDLER, // SCORES PACKET
-    }
-
-    setHandler<V>(id: number, handle: (data: V) => any) {
-        this.handlers[id] = (api: SocketApi, data: V) => handle(data)
-    }
-
-    clearHandler(id: number) {
-        this.handlers[id] = EMPTY_HANDLER
     }
 
     /**
@@ -414,6 +406,21 @@ export function useSocket(): SocketApi {
 }
 
 /**
+ * "Composable" function for adding a new packet listening handler to listen
+ * for packets and invoked the provided handler function
+ *
+ * @param socket The socket instance to listen on
+ * @param id The id of the packets to listen for
+ * @param handler The listener packet handling function
+ */
+export function usePacketHandler<D>(socket: SocketApi, id: number, handler: (data: D) => any) {
+    // Set the packet handler to the provided handler
+    socket.handlers[id] = (api: SocketApi, data: D) => handler(data)
+    // Reset the handler on unmount
+    onUnmounted(() => socket.handlers[id] = EMPTY_HANDLER)
+}
+
+/**
  * Creates a timer reactive reference value which is linked to and updated by
  * the server synced time packets. This time will count down on its own
  * automatically but will always trust server time sync over its own time
@@ -465,10 +472,7 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
 
     update() // Trigger the update function to start the animation loop
 
-    // Use onTimeSync as the packet handler for time sync packets
-    socket.setHandler(0x07, onTimeSync);
-
-    // Clear the time sync packet handler on unmount
-    onUnmounted(() => socket.clearHandler(0x07))
+    // Listen for time sync packets with onTimeSync
+    usePacketHandler(socket, 0x07, onTimeSync)
     return value
 }

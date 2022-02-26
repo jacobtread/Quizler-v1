@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { onUnmounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import Play from "@asset/play.svg?inline";
-import { GameState, useSocket } from "@/api";
+import { GameState, usePacketHandler, useSocket } from "@/api";
 import packets, { GameData, NameTakenResultData } from "@api/packets";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
@@ -63,10 +63,9 @@ function onNameTakenResult(data: NameTakenResultData) {
 function joinGame() {
     const code = gameCode.value
     socket.send(packets.checkNameTaken(code, name.value))
-    socket.setHandler(0x04, onNameTakenResult)
 }
 
-onUnmounted(() => socket.clearHandler(0x04))
+usePacketHandler(socket, 0x04, onNameTakenResult)
 </script>
 
 <template>

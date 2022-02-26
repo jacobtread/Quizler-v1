@@ -1,8 +1,8 @@
 <script setup lang="ts">
 
-import { GameState, useSocket } from "@/api";
+import { GameState, usePacketHandler, useSocket } from "@/api";
 import { useRouter } from "vue-router";
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData, ScoresData } from "@api/packets";
 import Loader from "@component/Loader.vue";
 import Logo from "@asset/logo.svg?inline"
@@ -42,15 +42,8 @@ function setAnswer(index: number) {
     socket.send(packets.answer(index))
 }
 
-onMounted(() => {
-    socket.setHandler(0x09, onAnswerResult)
-    socket.setHandler(0x0A, onScores)
-})
-
-onUnmounted(() => {
-    socket.clearHandler(0x09)
-    socket.clearHandler(0x0A)
-})
+usePacketHandler(socket, 0x09, onAnswerResult)
+usePacketHandler(socket, 0x0A, onScores)
 
 function getFontSize(text: string): string {
     const fitLength = 100
