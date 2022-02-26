@@ -14,7 +14,7 @@ import packets, {
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
 import { dialog, toast } from "@/tools/ui";
-import { APP_HOST, DEBUG } from "@/constants";
+import { DEBUG, HOST } from "@/constants";
 
 // An enum for all the different possible game states
 export enum GameState {
@@ -99,7 +99,7 @@ class SocketApi {
      * all the listeners are added to the websocket and the update interval is set
      */
     connect(): WebSocket {
-        const ws = new WebSocket(APP_HOST) // Create a new web socket instance
+        const ws = new WebSocket(HOST) // Create a new web socket instance
         // Set the handler for the websocket open event
         ws.onopen = () => {
             if (DEBUG) console.debug('Connected to socket server') // Debug logging

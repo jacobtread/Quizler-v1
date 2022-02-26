@@ -1,6 +1,5 @@
 import { Ref, ref } from "vue";
 
-
 export enum ToastMode {
     INFO,
     ERROR,

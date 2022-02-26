@@ -19,8 +19,8 @@ const backgroundStyle = computed(() => ({backgroundImage: `url(${modelValue})`})
  * after it's been uploaded and will clear the active image.
  */
 function removeImage() {
-  // Emit the update event with undefined as its value
-  emit('update:modelValue', undefined)
+    // Emit the update event with undefined as its value
+    emit('update:modelValue', undefined)
 }
 
 /**
@@ -29,37 +29,37 @@ function removeImage() {
  * display the image and for later use.
  */
 function onFileChange() {
-  const input: HTMLInputElement = fileInput.value!
-  // Ensure that there is actually at least 1 file selected
-  if (input.files && input.files.length > 0) {
-    // Create a new file reader
-    const reader = new FileReader()
-    reader.onload = () => {
-      // Ensure the result is present
-      if (reader.result) {
-        // Emit the update event
-        const dataURL: string = reader.result as string
-        emit('update:modelValue', dataURL)
-      }
+    const input: HTMLInputElement = fileInput.value!
+    // Ensure that there is actually at least 1 file selected
+    if (input.files && input.files.length > 0) {
+        // Create a new file reader
+        const reader = new FileReader()
+        reader.onload = () => {
+            // Ensure the result is present
+            if (reader.result) {
+                // Emit the update event
+                const dataURL: string = reader.result as string
+                emit('update:modelValue', dataURL)
+            }
+        }
+        // Read the file as a data url (so we can get the base64 data url)
+        reader.readAsDataURL(input.files[0] /* The first file */)
     }
-    // Read the file as a data url (so we can get the base64 data url)
-    reader.readAsDataURL(input.files[0] /* The first file */)
-  }
 }
 </script>
 <template>
-  <div class="image-wrapper" v-if="modelValue"> <!-- If we already have an image present -->
-    <div class="image"
-         @click="removeImage"
-         :style="backgroundStyle">
-      <span class="image__text">Click to remove</span>
+    <div class="image-wrapper" v-if="modelValue"> <!-- If we already have an image present -->
+        <div class="image"
+             @click="removeImage"
+             :style="backgroundStyle">
+            <span class="image__text">Click to remove</span>
+        </div>
     </div>
-  </div>
-  <label class="input input--image" v-else>
-    <ImageIcon class="input__image"/>
-    <span>Click to add image</span>
-    <input ref="fileInput" class="input__file" type="file" accept="image/*" @change="onFileChange">
-  </label>
+    <label class="input input--image" v-else>
+        <ImageIcon class="input__image"/>
+        <span>Click to add image</span>
+        <input ref="fileInput" class="input__file" type="file" accept="image/*" @change="onFileChange">
+    </label>
 </template>
 
 <style scoped lang="scss">

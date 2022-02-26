@@ -6,8 +6,8 @@ import AddIcon from "@asset/add.svg?inline"
 
 // Structure for representing the properties of this component
 interface Props {
-  // The question this set of answers is for
-  question: QuestionData
+    // The question this set of answers is for
+    question: QuestionData
 }
 
 // Retrieving the property reference for the question
@@ -17,8 +17,8 @@ const {question} = defineProps<Props>()
  * Adds a new empty question
  */
 function add() {
-  // Push a new empty answer to the answers
-  question.answers.push('')
+    // Push a new empty answer to the answers
+    question.answers.push('')
 }
 
 /**
@@ -28,34 +28,34 @@ function add() {
  * @param index The index to remove
  */
 function removeAt(index: number) {
-  // Sets the question answers to the answers excluding the answer at index
-  question.answers = question.answers.filter((_, i) => i != index)
-  // If the selected values contains the index
-  if (question.values.indexOf(index) != -1) {
-    // Filter the values to remove the index
-    question.values = question.values.filter(value => value != index)
-  }
+    // Sets the question answers to the answers excluding the answer at index
+    question.answers = question.answers.filter((_, i) => i != index)
+    // If the selected values contains the index
+    if (question.values!.indexOf(index) != -1) {
+        // Filter the values to remove the index
+        question.values = question.values!.filter(value => value != index)
+    }
 }
 </script>
 <template>
-  <div class="wrapper">
-    <ul class="answers" role="list">
-      <li v-for="(_, index) of question.answers"
-          class="answer"
-          :key="index"
-          :class="{'answer--selected': question.values.indexOf(index) !== -1}"
-      >
-        <label class="answer__select">
-          <input class="answer__select__value" type="checkbox" v-model="question.values" :value="index">
-        </label>
-        <input class="answer__value" type="text" v-model="question.answers[index]">
-        <CrossIcon class="answer__button" v-if="index !== 0" @click="removeAt(index)"/>
-      </li>
-    </ul>
-    <button class="button button--icon button--block" @click="add" type="button">
-      <AddIcon class="button__icon"/>
-    </button>
-  </div>
+    <div class="wrapper">
+        <ul class="answers" role="list">
+            <li v-for="(_, index) of question.answers"
+                class="answer"
+                :key="index"
+                :class="{'answer--selected': question.values.indexOf(index) !== -1}"
+            >
+                <label class="answer__select">
+                    <input class="answer__select__value" type="checkbox" v-model="question.values" :value="index">
+                </label>
+                <input class="answer__value" type="text" v-model="question.answers[index]">
+                <CrossIcon class="answer__button" v-if="index !== 0" @click="removeAt(index)"/>
+            </li>
+        </ul>
+        <button class="button button--icon button--block" @click="add" type="button">
+            <AddIcon class="button__icon"/>
+        </button>
+    </div>
 </template>
 
 <style scoped lang="scss">

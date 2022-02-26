@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import Logo from "@asset/logo.svg?inline"</script>
 <template>
-  <div class="loader">
-    <div class="loader__ring"><span class="loader__ring__qu">?</span></div>
-    <Logo class="loader__logo"/>
-    <p class="loader__text">Loading...</p>
-  </div>
+    <div class="loader">
+        <div class="loader__ring"><span class="loader__ring__qu">?</span></div>
+        <Logo class="loader__logo"/>
+        <p class="loader__text">Loading...</p>
+    </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
@@ -31,7 +31,7 @@ import Logo from "@asset/logo.svg?inline"</script>
     border-radius: 100%;
     border: 5px solid #222;
     border-top-color: $primary;
-    animation: rotate 2s cubic-bezier(0.25, 0.46, 0.69,-0.16) infinite;
+    animation: rotate 2s cubic-bezier(0.25, 0.46, 0.69, -0.16) infinite;
     z-index: -1;
 
     &__qu {

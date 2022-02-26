@@ -168,7 +168,7 @@ const constructors = {
      * @param title The new game title
      * @param questions The questions for the game
      */
-    createGame: (title: string, questions: QuestionData) => ({id: 0x02, data: {title, questions}}),
+    createGame: (title: string, questions: QuestionData[]) => ({id: 0x02, data: {title, questions}}),
     /**
      * Checks if the provided name is already in use
      *

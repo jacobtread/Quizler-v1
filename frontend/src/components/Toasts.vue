@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToastData } from "@/tools/ui";
 
-const toasts = useToastData()
+const toasts = useToastData() // Retrieve the toast data
 </script>
 <template>
     <div class="toasts">

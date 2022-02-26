@@ -4,30 +4,29 @@ import BackIcon from "@asset/back.svg?inline"
 
 // Define the properties
 defineProps({
-  // Property for the name of this page
-  title: {
-    type: String,
-    required: true
-  },
-  // Property for the target page for the back button
-  back: {
-    type: String,
-    default: 'Home'
-  },
-  backFunction: {
-    type: Function,
-    default: () => {
+    // Property for the name of this page
+    title: {
+        type: String,
+        required: true
+    },
+    // Property for the target page for the back button
+    back: {
+        type: String,
+        default: 'Home'
+    },
+    backFunction: {
+        type: Function,
+        default: () => null
     }
-  }
 });
 </script>
 <template>
-  <div class="nav" role="navigation">
-    <router-link class="back-button" :to="{name: back}" @click="backFunction">
-      <BackIcon/>
-    </router-link>
-    <h1 class="title">{{ title }}</h1>
-  </div>
+    <div class="nav" role="navigation">
+        <router-link class="back-button" :to="{name: back}" @click="backFunction">
+            <BackIcon/>
+        </router-link>
+        <h1 class="title">{{ title }}</h1>
+    </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";

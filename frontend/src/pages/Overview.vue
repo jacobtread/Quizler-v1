@@ -38,7 +38,7 @@ function disconnect() {
 
 function startGame() {
     // Send the start game packet
-    socket.send(packets.start())
+    socket.send(packets.start)
 }
 
 </script>
