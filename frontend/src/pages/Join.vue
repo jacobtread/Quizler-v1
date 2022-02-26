@@ -5,7 +5,7 @@ import { GameState, useSocket } from "@/api";
 import packets, { GameData, NameTakenResultData } from "@api/packets";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
-import { dialog, events } from "@/events";
+import { dialog } from "@/tools/ui";
 
 const router = useRouter()
 const socket = useSocket()
@@ -37,10 +37,10 @@ watch(gameState, (data: GameState) => {
         hasGame.value = true
     } else if (data === GameState.DOES_NOT_EXIST) {
         dialog('Invalid code', 'The quiz code you entered doesn\'t seem to exist.')
-    } else if (data === GameState.STARTED) {
-        dialog('Cannot Join', 'That game has already started you are unable to join it now.')
-    } else if (data === GameState.STOPPED) {
-        dialog('Cannot Join', 'That game has already finished you are unable to join it now.')
+        gameState.value = GameState.UNSET
+    } else if (data === GameState.STARTED || data === GameState.STOPPED) {
+        const reason = data === GameState.STARTED ? 'started' : 'finished'
+        dialog('Cannot Join', `That game has already ${reason} you are unable to join it now.`)
     }
     searching.value = false
 }, {immediate: true})

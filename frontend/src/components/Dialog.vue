@@ -1,37 +1,29 @@
 <script setup lang="ts">
 
-import { onUnmounted, ref } from "vue";
-import { DialogData, events } from "@/events";
+import { ref, watch } from "vue";
+import { DialogData, useDialogData } from "@/tools/ui";
 
 const open = ref(false)
-const title = ref('')
-const message = ref('')
+const dialog = useDialogData()
 
-function onDialog(data: DialogData) {
-  open.value = true
-  title.value = data.title
-  message.value = data.content
-}
-
-events.on('dialog', onDialog)
-
-onUnmounted(() => events.off('dialog', onDialog))
+watch(dialog, function (data: DialogData | null) {
+    open.value = data !== null
+})
 
 function close() {
-  open.value = false
+    open.value = false
 }
-
 </script>
 <template>
-  <transition appear name="fade">
-    <div class="dialog-wrapper" v-if="open">
-      <div class="dialog">
-        <h2 class="dialog__title">{{ title }}</h2>
-        <p class="dialog__message">{{ message }}</p>
-        <button class="button button--text button--block" @click="close">Close</button>
-      </div>
-    </div>
-  </transition>
+    <transition appear name="fade">
+        <div class="dialog-wrapper" v-if="open">
+            <div class="dialog">
+                <h2 class="dialog__title">{{ dialog.title }}</h2>
+                <p class="dialog__message">{{ dialog.content }}</p>
+                <button class="button button--text button--block" @click="close">Close</button>
+            </div>
+        </div>
+    </transition>
 </template>
 <style scoped lang="scss">
 .fade-enter-active,

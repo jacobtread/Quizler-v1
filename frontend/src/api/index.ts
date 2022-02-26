@@ -10,7 +10,7 @@ import packets, {
     TimeSyncData
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
-import { dialog, toast } from "@/events";
+import { dialog, toast } from "@/tools/ui";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -40,7 +40,6 @@ export enum GameState {
     STARTED,
     STOPPED,
     DOES_NOT_EXIST,
-
 }
 
 export interface PlayerMap {

@@ -2,7 +2,7 @@
 import "@/assets/global.scss"
 import { useSocket } from "@/api";
 import Loader from "@/components/Loader.vue";
-import ToastSystem from "@component/ToastSystem.vue";
+import ToastSystem from "@component/Toasts.vue";
 import Dialog from "@component/Dialog.vue";
 
 const {open} = useSocket()
