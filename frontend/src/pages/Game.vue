@@ -16,7 +16,7 @@ const result = ref<boolean | null>(null)
 
 watch(gameState, () => {
     console.log('State Changed to ' + gameState.value)
-    if (gameState.value === GameState.DOES_NOT_EXIST) { // If we are no longer in a game
+    if (gameState.value === GameState.UNSET) { // If we are no longer in a game
         router.push({name: 'Home'}) // Return to the home screen
     }
 }, {immediate: true})
@@ -33,17 +33,12 @@ function onAnswerResult(data: AnswerResultData) {
     result.value = data.result
 }
 
-function onScores(data: ScoresData) {
-
-}
-
 function setAnswer(index: number) {
     answered.value = true
     socket.send(packets.answer(index))
 }
 
 usePacketHandler(socket, ServerPacketId.ANSWER_RESULT, onAnswerResult)
-usePacketHandler(socket, ServerPacketId.SCORES, onScores)
 
 function getFontSize(text: string): string {
     const fitLength = 100

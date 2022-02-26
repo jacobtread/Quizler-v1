@@ -1,9 +1,9 @@
 <script setup lang="ts">
 
-import { GameState, useSocket, useSyncedTimer } from "@/api";
+import { GameState, ServerPacketId, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets from "@api/packets";
+import packets, { ScoresData } from "@api/packets";
 import { computed, watch } from "vue";
 
 const socket = useSocket()
@@ -23,6 +23,7 @@ watch(gameState, () => {
 
     if (gameState.value === GameState.STARTED && !gameData.value.owner) {
         router.push({name: 'Game'})
+        syncedTime.value = 10
     }
 }, {immediate: true})
 
@@ -40,6 +41,7 @@ function startGame() {
     // Send the start game packet
     socket.send(packets.start)
 }
+
 
 </script>
 <template>
@@ -70,6 +72,8 @@ function startGame() {
             </template>
             <template v-else-if="gameState === GameState.STARTED">
                 <h3 class="status">Game started</h3>
+                <h2>Time remaining</h2>
+                <h2 class="countdown">{{ syncedTime.toFixed(0) }}s</h2>
                 <ul class="players">
                     <li v-for="(player, index) of players" :key="index" class="player">
                         <span class="player__name">{{ player.name }}</span>

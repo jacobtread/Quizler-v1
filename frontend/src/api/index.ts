@@ -10,6 +10,7 @@ import packets, {
     PlayerDataMode,
     PlayerDataWithMode,
     QuestionData,
+    ScoresData,
     TimeSyncData
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
@@ -91,7 +92,7 @@ class SocketApi {
         [ServerPacketId.TIME_SYNC]: EMPTY_HANDLER, // TIME SYNC PACKET
         [ServerPacketId.QUESTION]: this.onQuestion.bind(this),
         [ServerPacketId.ANSWER_RESULT]: EMPTY_HANDLER, // ANSWER RESULT PACKET
-        [ServerPacketId.SCORES]: EMPTY_HANDLER, // SCORES PACKET
+        [ServerPacketId.SCORES]: this.onScores.bind(this), // SCORES PACKET
     }
 
     /**
@@ -181,6 +182,23 @@ class SocketApi {
             delete this.players[data.id] // Remove the ID from the player map
         }
     }
+
+
+    /**
+     * Packet handler for Scores packet (0x0A) handles the data about
+     * the scores of each player in the game.
+     * *
+     * @param data The score data
+     */
+    onScores(data: ScoresData) {
+        for (let dataKey in data.scores) {
+            const player = this.players[dataKey]
+            if (player) {
+                player.score = data.scores[dataKey]
+            }
+        }
+    }
+
 
     /**
      * Packet handler for GameState packet (0x05) handles keeping track
@@ -346,6 +364,7 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
         // Set the last update time = now to prevent it updating again
         // and causing an accidental out of sync
         lastUpdateTime = performance.now()
+        update()
     }
 
     /**
@@ -364,12 +383,10 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
                 lastUpdateTime = time // Set the last update time
                 value.value-- // Decrease the countdown value
             }
+            // Request the next animation frame
+            requestAnimationFrame(update)
         }
-        // Request the next animation frame
-        requestAnimationFrame(update)
     }
-
-    update() // Trigger the update function to start the animation loop
 
     // Listen for time sync packets with onTimeSync
     usePacketHandler(socket, ServerPacketId.TIME_SYNC, onTimeSync)
