@@ -15,11 +15,11 @@ const router = useRouter()
 const canPlay = computed(() => Object.keys(players).length > 0)
 
 watch(gameState, () => {
-    if (gameState.value === GameState.DOES_NOT_EXIST || gameData.value == null) {
-        router.push({name: 'Home'}) // Return to the home screen
-        return
-    }
-    if (gameState.value === GameState.STARTED) {
+    if (gameData.value === null || gameState.value === GameState.UNSET || gameState.value === GameState.DOES_NOT_EXIST) {
+        router.push({name: 'Home'})
+    } else if (gameState.value === GameState.STOPPED) {
+        router.push({name: 'GameOver'})
+    } else if (gameState.value === GameState.STARTED) {
         if (!gameData.value.owner) {
             router.push({name: 'Game'})
         }
@@ -46,7 +46,7 @@ function startGame() {
 }
 </script>
 <template>
-    <form @submit.prevent="startGame" v-if="gameData">
+    <form @submit.prevent="startGame" v-if="gameData != null">
         <Nav title="Waiting Room" :back-function="disconnect"/>
         <div class="wrapper">
             <h1 class="code">{{ gameData.id }}</h1>

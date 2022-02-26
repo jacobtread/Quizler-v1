@@ -327,8 +327,6 @@ func (game *Game) RemovePlayer(player *Player) {
 		// Broadcast the packet to all the other players and the host
 		game.BroadcastExcluding(player.Id, dataPacket, true)
 	}
-	// Send a disconnect packet to the player
-	player.Net.Send(net.DisconnectPacket("Removed from game"))
 	// Remove the player from the player list
 	game.Players.Remove(player.Id)
 	// Log a debug message saying who was disconnected
@@ -338,11 +336,14 @@ func (game *Game) RemovePlayer(player *Player) {
 // Stop Sets the game state to Stopped and calls RemovePlayer
 // on all the players. Made thread safe with PLock
 func (game *Game) Stop() {
-	game.State = Stopped
+	game.State = Stopped // Set the game state to stopped
+	packet := net.DisconnectPacket("Removed from game")
 	// Write safe iteration over all the players
 	game.Players.ForEachSafe(func(player *Player) {
 		// Remove the player
 		game.RemovePlayer(player)
+		// Send a disconnect packet to the player
+		player.Net.Send(packet)
 	})
 	// Log a debug messaging saying the game was stopped
 	log.Printf("Stopping game '%s' (%s)", game.Title, game.Id)

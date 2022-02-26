@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import { GameState, ServerPacketId, usePacketHandler, useSocket } from "@/api";
+import { GameState, ServerPacketId, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import { computed, ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData } from "@api/packets";
@@ -41,6 +41,7 @@ function setAnswer(index: number) {
 }
 
 usePacketHandler(socket, ServerPacketId.ANSWER_RESULT, onAnswerResult)
+const syncedTime = useSyncedTimer(socket, 10)
 
 function getFontSize(text: string): string {
     const fitLength = 100
@@ -63,17 +64,31 @@ function getRandomText() {
     }
 }
 
-
 </script>
 <template>
     <div class="content">
         <div class="content loader-wrapper" v-if="question === null">
             <Loader/>
         </div>
+        <div v-else-if="result" class="result" :class="{'result--correct': result}">
+            <template v-if="result">
+                <h1 class="result__text">Correct Answer!</h1>
+            </template>
+            <template v-else>
+                <h1 class="result__text">Incorrect Answer</h1>
+            </template>
+            <p class="result__subtext">{{ getRandomText() }}</p>
+            <ul class="players">
+                <li class="player" v-for="player of sortedPlayers" :key="player.id">
+                    <span class="player__name">{{ player.name }}</span>
+                    <span class="player__score">{{ player.score }}</span>
+                </li>
+            </ul>
+        </div>
         <div v-else-if="!answered" class="wrapper question">
-            <header>
+            <header class="header">
                 <h1 class="title">{{ gameData.title }}</h1>
-                <div></div>
+                <span class="time">{{ syncedTime.toFixed(0) }}s</span>
             </header>
             <div class="image-wrapper">
                 <div
@@ -95,23 +110,8 @@ function getRandomText() {
                 </button>
             </div>
         </div>
-        <div v-else-if="result === null">
+        <div v-else-if="answered">
             <h1>Waiting...</h1>
-        </div>
-        <div v-else class="result" :class="{'result--correct': result}">
-            <template v-if="result">
-                <h1 class="result__text">Correct Answer!</h1>
-            </template>
-            <template v-else>
-                <h1 class="result__text">Incorrect Answer</h1>
-            </template>
-            <p class="result__subtext">{{ getRandomText() }}</p>
-            <ul class="players">
-                <li class="player" v-for="player of sortedPlayers" :key="player.id">
-                    <span class="player__name">{{ player.name }}</span>
-                    <span class="player__score">{{ player.score }}</span>
-                </li>
-            </ul>
         </div>
     </div>
 </template>

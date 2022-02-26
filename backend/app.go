@@ -164,6 +164,8 @@ func SocketConnect(c *gin.Context) {
 					p := hostOf.Players.Get(data.Id)
 					if p != nil {
 						hostOf.RemovePlayer(p)
+						// Send a disconnect packet to the player
+						p.Net.Send(DisconnectPacket("Removed from game"))
 					}
 				})
 			}

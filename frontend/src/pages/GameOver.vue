@@ -2,8 +2,8 @@
 
 import { GameState, useSocket } from "@/api";
 import { useRouter } from "vue-router";
-import { ref } from "vue";
-import { PlayerData } from "@api/packets";
+import { ref, watch } from "vue";
+import { GameData, PlayerData } from "@api/packets";
 import CrownIcon from "@asset/crown.svg?inline"
 import Nav from "@component/Nav.vue";
 
@@ -15,9 +15,11 @@ const firstPlace = ref<PlayerData | null>(null)
 const secondPlace = ref<PlayerData | null>(null)
 const thirdPlace = ref<PlayerData | null>(null)
 
-function setPlayers() {
+if (gameData.value === null || gameState.value !== GameState.STOPPED) {
+    router.push({name: 'Home'}) // Return to the home screen
+} else {
     const p = Object.values(players).sort((a, b) => b.score - a.score)
-    firstPlace.value = p[0]
+    if (p.length > 0) firstPlace.value = p[0]
     if (p.length > 1) secondPlace.value = p[1]
     if (p.length > 2) thirdPlace.value = p[2]
 }
@@ -31,31 +33,29 @@ function disconnect() {
         socket.disconnect() // Disconnect from the game
     }
 }
-
-
-setPlayers()
-
 </script>
 <template>
-    <Nav title="Game Over" :back-function="disconnect"/>
     <div class="content">
-        <h1 class="title">{{ gameData.title }}</h1>
-        <div class="players">
-            <div class="player-slot player-slot--second" v-if="secondPlace">
-                <h1 class="player-slot__place">2<span>nd</span></h1>
-                <h2 class="player-slot__score">{{ secondPlace.score }}</h2>
-                <h3 class="player-slot__name">{{ secondPlace.name }}</h3>
-            </div>
-            <div class="player-slot player-slot--first" v-if="firstPlace != null">
-                <CrownIcon class="player-slot__crown"/>
-                <h1 class="player-slot__place">1<span>st</span></h1>
-                <h2 class="player-slot__score">{{ firstPlace.score }}</h2>
-                <h3 class="player-slot__name">{{ firstPlace.name }}</h3>
-            </div>
-            <div class="player-slot player-slot--third" v-if="thirdPlace">
-                <h1 class="player-slot__place">3<span>rd</span></h1>
-                <h2 class="player-slot__score">{{ thirdPlace.score }}</h2>
-                <h3 class="player-slot__name">{{ thirdPlace.name }}</h3>
+        <Nav title="Game Over" :back-function="disconnect"/>
+        <div class="wrapper" v-if="gameData">
+            <h1 class="title">{{ gameData.title }}</h1>
+            <div class="players">
+                <div class="player-slot player-slot--second" v-if="secondPlace!= null">
+                    <h1 class="player-slot__place">2<span>nd</span></h1>
+                    <h2 class="player-slot__score">{{ secondPlace.score }}</h2>
+                    <h3 class="player-slot__name">{{ secondPlace.name }}</h3>
+                </div>
+                <div class="player-slot player-slot--first" v-if="firstPlace != null">
+                    <CrownIcon class="player-slot__crown"/>
+                    <h1 class="player-slot__place">1<span>st</span></h1>
+                    <h2 class="player-slot__score">{{ firstPlace.score }}</h2>
+                    <h3 class="player-slot__name">{{ firstPlace.name }}</h3>
+                </div>
+                <div class="player-slot player-slot--third" v-if="thirdPlace != null">
+                    <h1 class="player-slot__place">3<span>rd</span></h1>
+                    <h2 class="player-slot__score">{{ thirdPlace.score }}</h2>
+                    <h3 class="player-slot__name">{{ thirdPlace.name }}</h3>
+                </div>
             </div>
         </div>
     </div>
@@ -65,6 +65,9 @@ setPlayers()
 .title {
   margin-bottom: 5rem;
 }
+.wrapper {
+  overflow: hidden;
+}
 
 .players {
   display: flex;
@@ -72,6 +75,7 @@ setPlayers()
   width: 100%;
   gap: 1rem;
   max-width: 1000px;
+  padding: 3rem;
 }
 
 .player-slot {
@@ -141,7 +145,6 @@ setPlayers()
     justify-content: center;
     align-items: center;
     width: 100%;
-    padding: 3rem;
   }
 
   .player-slot {

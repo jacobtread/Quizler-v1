@@ -147,7 +147,7 @@ class SocketApi {
                     this.keepAlive()
                 }
             }
-        }, 100)
+        }, 1000)
         return ws
     }
 
@@ -274,6 +274,7 @@ class SocketApi {
     onJoinGame(data: GameData) {
         // Set the game data to the provided value
         this.gameData.value = data
+        this.gameState.value = GameState.WAITING
     }
 
     /**
@@ -294,8 +295,8 @@ class SocketApi {
      */
     disconnect() {
         if (DEBUG) console.debug('Disconnected from game') // Print debug disconnected message
-        this.resetState()
         this.send(packets.disconnect) // Send a disconnect packet
+        this.resetState()
     }
 
     /**
@@ -349,7 +350,13 @@ export function usePacketHandler<D>(socket: SocketApi, id: ServerPacketId, handl
     // Set the packet handler to the provided handler
     socket.handlers[id] = handler
     // Reset the handler on unmount
-    onUnmounted(() => socket.handlers[id] = EMPTY_HANDLER)
+    onUnmounted(() => {
+        const current = socket.handlers[id];
+        if (current === handler) {
+            console.log('Unhooked '+ id)
+            socket.handlers[id] = EMPTY_HANDLER
+        }
+    })
 }
 
 /**
