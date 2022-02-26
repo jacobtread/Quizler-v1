@@ -1,4 +1,5 @@
 import { DEBUG, DEBUG_IGNORE_KEEP_ALIVE } from "@/constants";
+import { GameState } from "@api/index";
 
 export interface Packet {
     id: number;
@@ -33,7 +34,7 @@ export enum PlayerDataMode {
 }
 
 export interface GameStateData {
-    state: number
+    state: GameState
 }
 
 export interface QuestionData {

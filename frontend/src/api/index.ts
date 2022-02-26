@@ -173,11 +173,12 @@ class SocketApi {
      * @param data The player data of the other player
      */
     onPlayerData(data: PlayerDataWithMode) {
-        const elm = {id: data.id, name: data.name}
-        if (data.mode === PlayerDataMode.ADD) {
-            this.players[data.id] = elm
-        } else if (data.mode === PlayerDataMode.REMOVE) {
-            delete this.players[data.id]
+        // Create a copy of the player data without the mode and a score of 0
+        const elm: PlayerData = {id: data.id, name: data.name, score: 0}
+        if (data.mode === PlayerDataMode.ADD) { // If the mode is ADD
+            this.players[data.id] = elm // Assign the ID in the player map
+        } else if (data.mode === PlayerDataMode.REMOVE) { // if the mode is REMOVE
+            delete this.players[data.id] // Remove the ID from the player map
         }
     }
 
@@ -188,7 +189,7 @@ class SocketApi {
      * @param data The current game state
      */
     onGameState(data: GameStateData) {
-        this.gameState.value = SocketApi.getGameState(data.state)
+        this.gameState.value = data.state // Set the game state
     }
 
     /**
@@ -198,29 +199,7 @@ class SocketApi {
      * @param question The current question
      */
     onQuestion(question: QuestionData) {
-        this.question.value = question
-    }
-
-    /**
-     * Converts the game state id into the game
-     * state enum value
-     *
-     * @param id The id of the game state
-     * @return The game state enum
-     */
-    static getGameState(id: number): GameState {
-        switch (id) {
-            case 0:
-                return GameState.WAITING
-            case 1:
-                return GameState.STARTING
-            case 2:
-                return GameState.STARTED
-            case 3:
-                return GameState.STOPPED
-            default:
-                return GameState.DOES_NOT_EXIST
-        }
+        this.question.value = question // Set the question value
     }
 
     /**
@@ -230,8 +209,8 @@ class SocketApi {
      * @param data The disconnect data contains the reason for disconnect
      */
     onDisconnect(data: DisconnectData) {
-        dialog('Disconnected', data.reason)
-        this.gameData.value = null
+        dialog('Disconnected', data.reason) // Display a disconnected dialog with the reason
+        this.gameData.value = null // Clear the game data value
     }
 
     /**
@@ -239,18 +218,18 @@ class SocketApi {
      * lastServerKeepAlive time ensuring that the server is still alive
      */
     onKeepAlive() {
-        this.lastServerKeepAlive = performance.now()
+        this.lastServerKeepAlive = performance.now() // Update the last server keep alive time
     }
 
     /**
      * Packet handler for the Error packet (0x03) handles errors that should
-     * be displayed to the client. TODO: Display this to the client
+     * be displayed to the client.
      *
      * @param data The data for the error packet contains the error cause
      */
     onError(data: ErrorData) {
-        console.error(`An error occurred ${data.cause}`)
-        dialog('Error occurred', data.cause)
+        console.error(`An error occurred ${data.cause}`) // Print the error to the console
+        dialog('Error occurred', data.cause) // Display an error dialog
     }
 
     /**
@@ -260,6 +239,7 @@ class SocketApi {
      * @param data The data for the game contains the id and title
      */
     onJoinGame(data: GameData) {
+        // Set the game data to the provided value
         this.gameData.value = data
     }
 
@@ -270,8 +250,8 @@ class SocketApi {
      * @param packet The packet to send
      */
     send(packet: Packet) {
-        debugLogPacket(Direction.OUT, packet)
-        this.ws.send(JSON.stringify(packet))
+        debugLogPacket(Direction.OUT, packet) // Debug log the packet
+        this.ws.send(JSON.stringify(packet)) // Send json encoded packet data
     }
 
     /**
@@ -280,9 +260,9 @@ class SocketApi {
      * connection is open according to isOpen then it will be closed as well
      */
     disconnect() {
-        console.log('Disconnected from game')
-        this.gameData.value = null
-        this.send(packets.disconnect)
+        if (DEBUG) console.debug('Disconnected from game') // Print debug disconnected message
+        this.gameData.value = null // Clear the current game data
+        this.send(packets.disconnect) // Send a disconnect packet
     }
 
     /**
@@ -290,8 +270,8 @@ class SocketApi {
      * the server. This is called every 1000ms
      */
     keepAlive() {
-        this.lastSendKeepAlive = performance.now()
-        this.send(packets.keepAlive)
+        this.lastSendKeepAlive = performance.now() // Update the last keep alive time
+        this.send(packets.keepAlive) // Send a keep alive packet
     }
 
     /**
@@ -301,12 +281,13 @@ class SocketApi {
      */
     kick(id: string) {
         const player = this.players[id]
-        if (player) {
+        if (player) { // If the player exists
+            // Displayed a toast with the kicked message
             toast(`Kicked player "${player.name}"`)
         }
-        console.log('Kicked player ' + id)
-        delete this.players[id]
-        this.send(packets.kick(id))
+        if (DEBUG) console.debug('Kicked player ' + id) // Print debug kicked message
+        delete this.players[id] // Remove the player for the map
+        this.send(packets.kick(id)) // Send a kick player packet
     }
 }
 
