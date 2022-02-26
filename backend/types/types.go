@@ -19,4 +19,11 @@ type QuestionData struct {
 	Values   []AnswerIndex // The indexes of the correct answers
 }
 
+// FreeMemory Used to free up memory from questions that have already been
+// served to the user. (This is done by setting the image to a blank string)
+// as most images will take up a few MB or so while in use
+func (question *QuestionData) FreeMemory() {
+	question.Image = ""
+}
+
 type ScoreMap = map[tools.Identifier]uint32

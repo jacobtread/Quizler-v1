@@ -286,6 +286,8 @@ func (game *Game) NextQuestion() {
 	if game.ActiveQuestion == nil { // If there isn't already an active question
 		nextIndex = 0 // Set the next index to the first index
 	} else { // Else
+		game.ActiveQuestion.Question.FreeMemory() // Free memory for the last question
+
 		nextIndex = game.ActiveQuestion.Index + 1 // Increase the index by 1
 	}
 	if nextIndex >= len(game.Questions) { // If the next index is higher than the amount of questions
