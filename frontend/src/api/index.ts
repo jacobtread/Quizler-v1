@@ -96,8 +96,6 @@ class SocketApi {
      * all the listeners are added to the websocket and the update interval is set
      */
     connect(): WebSocket {
-        const self = this
-
         const ws = new WebSocket(APP_HOST) // Create a new web socket instance
         // Set the handler for the websocket open event
         ws.onopen = () => {
