@@ -78,40 +78,17 @@ class SocketApi {
      * they can be handled separately instead of a large switch statement
      */
     handlers: PacketHandlers = {
-        [ServerPacketId.KEEP_ALIVE]: this.onKeepAlive,
-        [ServerPacketId.DISCONNECT]: this.onDisconnect,
-        [ServerPacketId.ERROR]: this.onError,
-        [ServerPacketId.JOIN_GAME]: this.onJoinGame,
+        [ServerPacketId.KEEP_ALIVE]: this.onKeepAlive.bind(this),
+        [ServerPacketId.DISCONNECT]: this.onDisconnect.bind(this),
+        [ServerPacketId.ERROR]: this.onError.bind(this),
+        [ServerPacketId.JOIN_GAME]: this.onJoinGame.bind(this),
         [ServerPacketId.NAME_TAKEN_RESULT]: EMPTY_HANDLER, // NAME TAKEN RESULT PACKET
-        [ServerPacketId.GAME_STATE]: this.onGameState,
-        [ServerPacketId.PLAYER_DATA]: this.onPlayerData,
+        [ServerPacketId.GAME_STATE]: this.onGameState.bind(this),
+        [ServerPacketId.PLAYER_DATA]: this.onPlayerData.bind(this),
         [ServerPacketId.TIME_SYNC]: EMPTY_HANDLER, // TIME SYNC PACKET
-        [ServerPacketId.QUESTION]: this.onQuestion,
+        [ServerPacketId.QUESTION]: this.onQuestion.bind(this),
         [ServerPacketId.ANSWER_RESULT]: EMPTY_HANDLER, // ANSWER RESULT PACKET
         [ServerPacketId.SCORES]: EMPTY_HANDLER, // SCORES PACKET
-    }
-
-    /**
-     * Binds the "this" keyword for all the packet handlers so that
-     * the "this" keyword doesn't become undefined when used as a
-     * callback function
-     *
-     * Note: Handlers set via usePacketHandler will NOT inherit this
-     * behavior due to them being set after this binding occurs
-     *
-     * @private Shouldn't be accessed outside this function
-     */
-    private bindHandlers() {
-        // @ts-ignore
-        let keys: ServerPacketId[] = Object.keys(this.handlers) as ServerPacketId[]
-        for (let key of keys) {
-            const handler = this.handlers[key] as PacketHandlerFunction
-            this.handlers[key] = handler.bind(this)
-        }
-    }
-
-    constructor() {
-        this.bindHandlers() // Bind the handlers
     }
 
     /**
