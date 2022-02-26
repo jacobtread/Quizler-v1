@@ -6,7 +6,7 @@ import { useRouter } from "vue-router";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData, ScoresData } from "@api/packets";
 import Loader from "@component/Loader.vue";
-import Logo from "@asset/logo.svg"
+import Logo from "@asset/logo.svg?inline"
 
 const {socket, players, state} = useApi()
 
@@ -74,20 +74,19 @@ function getFontSize(text: string): string {
     <div class="content loader-wrapper" v-if="question === null">
       <Loader/>
     </div>
-    <div v-else-if="!answered" class="wrapper question">
+    <div v-else-if="!result" class="wrapper question">
       <header>
       <h1>{{store.data.title}}</h1>
       <div></div>
       </header>
-      <div class="image-wrapper"
-           style="">
+      <div class="image-wrapper">
         <div
-            v-if="question.image"
+            v-if="!question.image"
             class="image"
             :style="{backgroundImage: `url(${question.image})`}"
         ></div>
         <div v-else>
-          <Logo/>
+          <Logo class="logo"/>
         </div>
       </div>
       <p class="question__text">{{ question.question }}</p>
