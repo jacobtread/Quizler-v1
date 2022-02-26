@@ -36,8 +36,9 @@ func KeepAlivePacket() Packet {
 type PlayerDataMode = uint8
 
 const (
-	AddMode PlayerDataMode = iota
-	RemoveMode
+	AddMode    PlayerDataMode = iota // Add the player to player lists
+	RemoveMode                       // Remove the player from player lists
+	SelfMode                         // Set this as the player for whoever this is sent to
 )
 
 // ErrorPacket creates a new error packet with the provided cause

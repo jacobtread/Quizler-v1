@@ -94,6 +94,8 @@ func (game *Game) Join(conn *net.Connection, name string) *Player {
 	player := game.Players.Create(conn, name) // Create a new player
 	// Send the initial state of the game
 	player.Net.Send(net.GameStatePacket(game.State))
+	// Send the player their self player data
+	player.Net.Send(net.PlayerDataPacket(player.Id, player.Name, net.SelfMode))
 	// Information all other connections that this new player was added
 	game.BroadcastExcluding(player.Id, net.PlayerDataPacket(player.Id, name, net.AddMode), true)
 	log.Printf("Player '%s' has joined '%s' (%s) given id '%s'", name, game.Title, game.Id, player.Id)
@@ -245,7 +247,6 @@ func GetScore(player *Player, question *ActiveQuestion) uint32 {
 		// this value is later cast to an uint32, so we can't let it go below zero
 		percent := math.Max(1-(float64(passed)/float64(BonusTime)), 0)
 		bonus := uint32(math.RoundToEven(percent * BonusPoints)) // Get an even number of points
-		log.Printf("Bonus %d", bonus)
 		return Points + bonus
 	} else {
 		return Points

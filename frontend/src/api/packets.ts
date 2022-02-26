@@ -23,14 +23,15 @@ export interface GameData {
 export interface PlayerData {
     id: string;
     name: string;
-    score?: number;
+    score: number;
 }
 
-export type PlayerDataWithMode = PlayerData & { mode: number }
+export type PlayerDataWithMode = PlayerData & { mode: PlayerDataMode }
 
 export enum PlayerDataMode {
     ADD,
-    REMOVE
+    REMOVE,
+    SELF
 }
 
 export interface GameStateData {

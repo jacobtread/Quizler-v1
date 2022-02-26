@@ -76,6 +76,7 @@ class SocketApi {
     question = ref<QuestionData | null>(null) // The active question in the game (store here to persist)
     gameState = ref<GameState>(GameState.UNSET) // The current game state
 
+    self = ref<PlayerData | null>(null)
 
     /**
      * A mapping to convert the packet ids into handler functions so that
@@ -176,13 +177,15 @@ class SocketApi {
     onPlayerData(data: PlayerDataWithMode) {
         // Create a copy of the player data without the mode and a score of 0
         const elm: PlayerData = {id: data.id, name: data.name, score: 0}
-        if (data.mode === PlayerDataMode.ADD) { // If the mode is ADD
+        if (data.mode === PlayerDataMode.ADD || data.mode === PlayerDataMode.SELF) { // If the mode is ADD or SELF
             this.players[data.id] = elm // Assign the ID in the player map
+            if (data.mode === PlayerDataMode.SELF) { // If the mode is SELF
+                this.self.value = elm // Set the self player to the player data
+            }
         } else if (data.mode === PlayerDataMode.REMOVE) { // if the mode is REMOVE
             delete this.players[data.id] // Remove the ID from the player map
         }
     }
-
 
     /**
      * Packet handler for Scores packet (0x0A) handles the data about
@@ -228,7 +231,19 @@ class SocketApi {
      */
     onDisconnect(data: DisconnectData) {
         dialog('Disconnected', data.reason) // Display a disconnected dialog with the reason
-        this.gameData.value = null // Clear the game data value
+        this.resetState()
+    }
+
+    /**
+     * Clears the associated persisted state for this socket
+     */
+    resetState() {
+        this.gameData.value = null
+        this.question.value = null
+        this.gameState.value = GameState.UNSET
+        for (let key of Object.keys(this.players)) {
+            delete this.players[key]
+        }
     }
 
     /**
@@ -279,7 +294,7 @@ class SocketApi {
      */
     disconnect() {
         if (DEBUG) console.debug('Disconnected from game') // Print debug disconnected message
-        this.gameData.value = null // Clear the current game data
+        this.resetState()
         this.send(packets.disconnect) // Send a disconnect packet
     }
 

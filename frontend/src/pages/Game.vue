@@ -2,14 +2,16 @@
 
 import { GameState, ServerPacketId, usePacketHandler, useSocket } from "@/api";
 import { useRouter } from "vue-router";
-import { ref, watch } from "vue";
-import packets, { AnswerResultData, QuestionData, ScoresData } from "@api/packets";
+import { computed, ref, watch } from "vue";
+import packets, { AnswerResultData, QuestionData } from "@api/packets";
 import Loader from "@component/Loader.vue";
 import Logo from "@asset/logo.svg?inline"
 
 const router = useRouter()
 const socket = useSocket()
-const {gameState, gameData, question} = socket
+const {gameState, gameData, question, players} = socket
+
+const sortedPlayers = computed(() => Object.values(players).sort((a, b) => a.score - b.score).slice(0, 5))
 
 const answered = ref(false);
 const result = ref<boolean | null>(null)
@@ -27,7 +29,6 @@ watch(question, (data: QuestionData | null) => {
         result.value = null
     }
 })
-
 
 function onAnswerResult(data: AnswerResultData) {
     result.value = data.result
@@ -47,6 +48,20 @@ function getFontSize(text: string): string {
     const size = (percent * 0.8) + 0.7
     return `${size}rem`
 }
+
+function randomOf(values: string[]) {
+    const index = Math.floor(Math.random() * values.length)
+    return values[index]
+}
+
+function getRandomText() {
+    if (result.value) {
+        return randomOf(['You did it!', 'That one was right!', 'Good job!', 'Yup that was it!'])
+    } else {
+        return randomOf(['Ooops..', 'Yeah not that one...', 'Better luck next time', 'Noooo your other left'])
+    }
+}
+
 
 </script>
 <template>
@@ -82,18 +97,96 @@ function getFontSize(text: string): string {
         <div v-else-if="result === null">
             <h1>Waiting...</h1>
         </div>
-        <div v-else>
-            <div v-if="result">
-                <h1>Correct Answer!</h1>
-            </div>
-            <div v-else>
-                <h1>Incorrect Answer</h1>
-            </div>
+        <div v-else class="result" :class="{'result--correct': result}">
+            <template v-if="result">
+                <h1 class="result__text">Correct Answer!</h1>
+            </template>
+            <template v-else>
+                <h1 class="result__text">Incorrect Answer</h1>
+            </template>
+            <p class="result__subtext">{{ getRandomText() }}</p>
+            <ul class="players">
+                <li class="player" v-for="player of sortedPlayers" :key="player.id">
+                    <span class="player__name">{{ player.name }}</span>
+                    <span class="player__score">{{ player.score }}</span>
+                </li>
+            </ul>
         </div>
     </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
+
+.result {
+  flex: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  background: linear-gradient(to bottom right, #f35f5f, #933030);
+  flex-flow: column;
+
+  &__text {
+    margin-bottom: 1rem;
+    font-size: 3rem;
+    text-shadow: 0 4px 0 #933030;
+  }
+
+  &__subtext {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: #DDD;
+    text-shadow: 0 2px 0 #a83939;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  &--correct {
+    background: linear-gradient(to bottom right, #80ff80, #359235);
+
+    .result__text {
+      text-shadow: 0 4px 0 #359235;
+    }
+
+    .result__subtext {
+      text-shadow: 0 2px 0 #5b8e5b;
+    }
+  }
+}
+
+.players {
+  list-style: none;
+  width: 100%;
+  max-width: 400px;
+}
+
+.player {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 0.25rem;
+  font-size: 1.3rem;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+
+  &__name {
+    flex: auto;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__score {
+    color: white;
+    font-weight: bold;
+    padding: 0.5rem;
+    background-color: rgba(0, 0, 0, 0.25);
+
+  }
+}
 
 .answers {
   display: flex;
