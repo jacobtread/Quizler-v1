@@ -69,4 +69,14 @@ defineProps({
     background: $primary;
   }
 }
+
+@media screen and (max-width: 300px) {
+  .title {
+    display: none;
+  }
+
+  .back-button {
+    width: 100%;
+  }
+}
 </style>

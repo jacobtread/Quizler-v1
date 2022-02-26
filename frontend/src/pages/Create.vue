@@ -86,7 +86,7 @@ function createQuiz() {
             <div class="questions" v-if="questions.length > 0">
               <div v-for="(question, index) of questions" :key="index" class="question">
                 <div class="question__head">
-                  <h2 class="question__head__title">{{ question.title }}</h2>
+                  <h2 class="question__head__title">{{ question.question }}</h2>
                   <div class="question__head__buttons">
                     <router-link :to="{name: 'Modify', params: {edit: index}}"
                                  class="question__head__button question__head__button--edit">
@@ -101,7 +101,6 @@ function createQuiz() {
                     </button>
                   </div>
                 </div>
-                <p class="question__value">{{ question.question }}</p>
                 <ul class="question__answers">
                   <li v-for="(answer, index) of question.answers"
                       class="question__answers__item"
@@ -173,9 +172,8 @@ function createQuiz() {
 
 
 .questions {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-auto-flow: dense;
+  display: flex;
+  flex-flow: row wrap;
   width: 100%;
   gap: 1rem;
 }
@@ -193,6 +191,8 @@ function createQuiz() {
   &__head {
     display: flex;
     align-items: center;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
 
     &__title {
       flex: auto;
@@ -231,10 +231,11 @@ function createQuiz() {
     list-style: none;
     text-align: left;
     display: flex;
-    flex-flow: column;
+    flex-flow: row wrap;
     gap: 1rem;
 
     &__item {
+      flex: auto;
       display: block;
       color: #CCCCCC;
       background-color: #1a1a1a;

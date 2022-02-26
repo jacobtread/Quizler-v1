@@ -87,6 +87,8 @@ html, body {
     padding: 0.8rem;
     color: #CCC;
     outline: none;
+    min-width: 0;
+    width: 100%;
 
     &:focus {
       border-bottom-color: $primary;
