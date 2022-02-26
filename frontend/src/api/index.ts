@@ -140,6 +140,7 @@ class SocketApi {
                 const time = performance.now() // Retrieve the current time in milliseconds
                 // If the last time we received a keep alive from the server was over 10s ago
                 if (time - this.lastServerKeepAlive > 10000) {
+                    if (DEBUG) console.warn('Lost connection with server')
                     this.retryConnect() // Try and reconnect
                     return
                 }
@@ -148,7 +149,7 @@ class SocketApi {
                     this.keepAlive()
                 }
             }
-        }, 1000)
+        }, 500)
         return ws
     }
 

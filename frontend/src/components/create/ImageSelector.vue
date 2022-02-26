@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import ImageIcon from "@asset/image.svg?inline"
+import imageCompression from "browser-image-compression"
 
 // Defining properties and emits for model value so v-model can be used
 const {modelValue} = defineProps(['modelValue'])
@@ -42,8 +43,16 @@ function onFileChange() {
                 emit('update:modelValue', dataURL)
             }
         }
-        // Read the file as a data url (so we can get the base64 data url)
-        reader.readAsDataURL(input.files[0] /* The first file */)
+        try {
+            imageCompression(input.files[0], {
+                maxSizeMB: 0.4
+            }).then(out => {
+                // Read the file as a data url (so we can get the base64 data url)
+                reader.readAsDataURL(out) /* The first file */
+            }).catch()
+        } catch (e) {
+            console.error('Failed to compress image')
+        }
     }
 }
 </script>

@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@vuetter/vite-plugin-vue-svg": "^0.1.2",
+    "browser-image-compression": "^1.0.17",
     "sass": "^1.49.7",
     "vue": "^3.2.25",
     "vue-router": "4",
