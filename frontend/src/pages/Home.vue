@@ -1,16 +1,7 @@
 <script setup lang="ts">
 import Play from "@asset/play.svg?inline";
 import Logo from "@asset/logo.svg?inline";
-import Create from "@asset/create.svg?inline";
-import { useGameStore } from "@store/game";
-
-const gameStore = useGameStore()
-/**
- * The game state data needs to be reset whenever the home page is
- * visited to prevent game state from persisting
- */
-gameStore.$reset()
-</script>
+import Create from "@asset/create.svg?inline";</script>
 <template>
     <div>
         <main class="main">

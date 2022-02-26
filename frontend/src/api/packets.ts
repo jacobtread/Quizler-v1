@@ -12,7 +12,7 @@ export interface DisconnectData {
 }
 
 
-export interface JoinGameData {
+export interface GameData {
     owner: boolean;
     id: string;
     title: string;

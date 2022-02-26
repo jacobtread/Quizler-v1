@@ -1,17 +1,16 @@
 import packets, {
     DisconnectData,
     ErrorData,
+    GameData,
     GameStateData,
-    JoinGameData,
-    NameTakenResultData,
     Packet,
     PlayerData,
     PlayerDataP,
+    QuestionData,
     TimeSyncData
 } from "./packets";
-import { onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
-import { dialog, events, toast } from "@/events";
-import { clearObject, replaceObject } from "@/tools";
+import { onUnmounted, reactive, ref, Ref } from "vue";
+import { dialog, toast } from "@/events";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -35,11 +34,13 @@ interface PacketHandlers {
 }
 
 export enum GameState {
+    UNSET = -1,
     WAITING,
     STARTING,
     STARTED,
     STOPPED,
-    DOES_NOT_EXIST
+    DOES_NOT_EXIST,
+
 }
 
 export interface PlayerMap {
@@ -64,8 +65,6 @@ class SocketApi {
     // The websocket connection instance
     private ws: WebSocket = this.connect()
 
-    // Whether the web socket connection is open
-    private isOpen: boolean = false
     // Whether the main update loop is running
     private isRunning: boolean = true
     // Whether debug logging should be enabled
@@ -82,9 +81,12 @@ class SocketApi {
     // The last time that this client sent a keep alive at
     private lastSendKeepAlive: number = -1
 
-    gameCode: string | null = null // The current game code or null
-    players: PlayerMap = {} // The map of players to their names
-    state: GameState = GameState.DOES_NOT_EXIST // The current game state
+    open = ref(false) // The open state of the web socket connection
+    gameData = ref<GameData | null>(null) // The current game data
+    players = reactive<PlayerMap>({}) // The map of players to their names
+    question = ref<QuestionData | null>(null) // The active question in the game (store here to persist)
+    gameState = ref<GameState>(GameState.UNSET) // The current game state
+
 
     /**
      * A mapping to convert the packet ids into handler functions so that
@@ -95,11 +97,11 @@ class SocketApi {
         0x01: this.onDisconnect,
         0x02: this.onError,
         0x03: this.onJoinGame,
-        0x04: this.onNameTakenResult,
+        0x04: EMPTY_HANDLER, // NAME TAKEN RESULT PACKET
         0x05: this.onGameState,
         0x06: this.onPlayerData,
         0x07: EMPTY_HANDLER, // TIME SYNC PACKET
-        0x08: EMPTY_HANDLER, // QUESTION PACKET
+        0x08: this.onQuestion,
         0x09: EMPTY_HANDLER, // ANSWER RESULT PACKET
         0x0A: EMPTY_HANDLER, // SCORES PACKET
     }
@@ -140,16 +142,14 @@ class SocketApi {
         console.log('Connected')
         if (this.ws.readyState != WebSocket.OPEN) return
         this.lastServerKeepAlive = performance.now()
-        this.isOpen = true
-        events.emit('open', true)
+        this.open.value = true
     }
 
     /**
      * Called when the web socket connection is closed
      */
     onClose() {
-        this.isOpen = false
-        events.emit('open', false)
+        this.open.value = false
         if (this.isRunning) {
             this.retryConnect()
         } else {
@@ -163,8 +163,7 @@ class SocketApi {
      * game state
      */
     retryConnect() {
-        this.isOpen = false
-        events.emit('reset')
+        this.open.value = false
         console.log('Lost connection. Attempting reconnect in 2 seconds')
         const api = this
         if (this.updateInterval) {
@@ -212,31 +211,28 @@ class SocketApi {
         } else if (data.mode === 1) {
             delete api.players[data.id]
         }
-        events.emit('players', api.players)
     }
 
     /**
-     * Packet handler for GameState packet (0x08) handles keeping track
+     * Packet handler for GameState packet (0x05) handles keeping track
      * of the games state
      *
      * @param api The current connection instance
      * @param data The current game state
      */
     onGameState(api: SocketApi, data: GameStateData) {
-        const state = SocketApi.getGameState(data.state)
-        api.state = state
-        events.emit('gameState', state)
+        api.gameState.value = SocketApi.getGameState(data.state)
     }
 
     /**
-     * Packet handler for NameTakenResult packet (0x11) handles the result
-     * of the name taken check
+     * Packet handler for Question packet (0x08) which provides each
+     * client with the current question to answer
      *
      * @param api The current connection instance
-     * @param data Contains whether the name is token
+     * @param question The current question
      */
-    onNameTakenResult(api: SocketApi, data: NameTakenResultData) {
-        events.emit('nameTaken', data.result)
+    onQuestion(api: SocketApi, question: QuestionData) {
+        api.question.value = question
     }
 
     /**
@@ -269,8 +265,7 @@ class SocketApi {
      */
     onDisconnect(api: SocketApi, data: DisconnectData) {
         dialog('Disconnected', data.reason)
-        events.emit('reset')
-        api.setGameCode(null)
+        api.setGameData(null)
     }
 
     /**
@@ -302,8 +297,8 @@ class SocketApi {
      * @param api The current connection instance
      * @param data The data for the game contains the id and title
      */
-    onJoinGame(api: SocketApi, data: JoinGameData) {
-        api.setGameCode(data)
+    onJoinGame(api: SocketApi, data: GameData) {
+        api.setGameData(data)
     }
 
     /**
@@ -352,14 +347,12 @@ class SocketApi {
     }
 
     /**
-     * Set's the current game code and emit the game
-     * event
+     * Set's the current game code
      *
      * @param data The data or null to clear the game code .
      */
-    setGameCode(data: JoinGameData | null) {
-        this.gameCode = data ? data.id : null
-        events.emit('game', data)
+    setGameData(data: GameData | null) {
+        this.gameData.value = data
     }
 
     /**
@@ -369,11 +362,8 @@ class SocketApi {
      */
     disconnect() {
         console.log('Disconnected from game')
-        this.setGameCode(null)
+        this.setGameData(null)
         this.send(packets.disconnect())
-        if (this.isRunning) {
-
-        }
     }
 
     /**
@@ -389,7 +379,6 @@ class SocketApi {
         console.log('Kicked player ' + id)
         delete this.players[id]
         this.send(packets.kick(id))
-        events.emit('players', this.players)
     }
 
     /**
@@ -398,7 +387,7 @@ class SocketApi {
      * and checking if the connection has timed out
      */
     update() {
-        if (this.isRunning && this.isOpen) {
+        if (this.isRunning && this.open.value) {
             const time = performance.now()
             if (time - this.lastServerKeepAlive > 10000) {
                 this.retryConnect()
@@ -426,71 +415,6 @@ export function useSocket(): SocketApi {
 }
 
 /**
- * "Composable" function to use the state of the current game
- * within vue js. Creates a reactive reference to the game state
- * which is updated by the server using listeners
- */
-export function useGameState(socket: SocketApi): Ref<GameState> {
-    // Reactive reference for the game state value
-    const state = ref<GameState>(socket.state)
-    // Function for handling the game state data
-    const updateGameState = (data: GameState) => state.value = data
-    events.on('gameState', updateGameState) // Hook the game state socket event
-    // Hook the unmounted event to remove the game state listener
-    onUnmounted(() => {
-        // Remove the game state listener
-        events.off('gameState', updateGameState)
-    })
-    return state
-}
-
-/**
- * "Composable" function used to determine whether the socket has
- * an open connection with the web socket server
- */
-export function useSocketOpen(): Ref<boolean> {
-    // Reactive reference for the open state of the socket
-    const open = ref(false)
-    // Function for handling state updates
-    const updateState = (state: boolean) => open.value = state
-    // Hook the open socket event
-    events.on('open', updateState)
-    // Hook the unmounted event to remove the open state listener
-    onUnmounted(() => {
-        // Remove the open state listener
-        events.off('open', updateState)
-    })
-    return open
-}
-
-/**
- * "Composable" function used to retrieve and store the list of
- * current players in the game. This is a reactive reference which
- * is automatically updated when players are added or removed
- *
- * @param socket The socket instance to retrieve players from
- */
-export function usePlayers(socket: SocketApi): UnwrapNestedRefs<PlayerMap> {
-    // A reactive object for storing the keys of players mapped to the player objects
-    const players = reactive<PlayerMap>({...socket.players})
-    // A function for clearing the players reactive object
-    const clearPlayers = () => clearObject(players)
-    // A function for replacing the players reactive object
-    const updatePlayers = (data: PlayerMap) => replaceObject(players, data)
-    // Hook the players modify event to update the players
-    events.on('players', updatePlayers)
-    // Hook the game reset event to clear the player list
-    events.on('reset', clearPlayers)
-    // Hook the unmounted event to remove the listeners
-    onUnmounted(() => {
-        // Remove the listeners
-        events.off('players', updatePlayers)
-        events.off('reset', clearPlayers)
-    })
-    return players
-}
-
-/**
  * Creates a timer reactive reference value which is linked to and updated by
  * the server synced time packets. This time will count down on its own
  * automatically but will always trust server time sync over its own time
@@ -500,7 +424,7 @@ export function usePlayers(socket: SocketApi): UnwrapNestedRefs<PlayerMap> {
  */
 export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<number> {
     // The actual value itself that should be displayed
-    let value = ref(initialValue)
+    const value = ref(initialValue)
 
     // Stores the last time in milliseconds that the counter ran a countdown animation
     let lastUpdateTime: number = -1
@@ -545,9 +469,7 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
     // Use onTimeSync as the packet handler for time sync packets
     socket.setHandler(0x07, onTimeSync);
 
-    onUnmounted(() => {
-        // Clear the time sync packet handler
-        socket.clearHandler(0x07)
-    })
+    // Clear the time sync packet handler on unmount
+    onUnmounted(() => socket.clearHandler(0x07))
     return value
 }

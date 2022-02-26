@@ -11,18 +11,16 @@ import { useCreateStore } from "@store/create";
 import { storeToRefs } from "pinia";
 import { useSocket } from "@/api";
 import { useRouter } from "vue-router";
-import packets, { JoinGameData } from "@api/packets";
-import { useGameStore } from "@store/game";
+import packets, { GameData } from "@api/packets";
 import Nav from "@component/Nav.vue";
-import { events } from "@/events";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 
 const router = useRouter()
 const socket = useSocket()
-const gameState = useGameStore()
 const createState = useCreateStore()
 const {questions, title} = storeToRefs(createState)
 
+// Simple computed function to ensure there is at least 1 question
 const hasQuestions = computed(() => questions.value.length > 0)
 
 /**
@@ -44,19 +42,15 @@ function deleteQuestion(index: number) {
 function createQuiz() {
     // Send the creation game packet
     socket.send(packets.createGame(title.value, questions.value))
-
-    // Add a new join listener
-    events.off('game')
-    events.on('game', (data: JoinGameData | null) => {
-        if (data != null) {
-            gameState.joined = true;
-            // Copy the game data and set it into the gameState store
-            gameState.data = {...data}
-            // Redirect to the overview page
-            router.push({name: 'Overview'})
-        }
-    })
 }
+
+// Watch the game data for changes
+watch(socket.gameData, (data: GameData | null) => {
+    if (data != null) { // If we have game data
+        // Redirect to the overview page
+        router.push({name: 'Overview'})
+    }
+})
 
 </script>
 <template>

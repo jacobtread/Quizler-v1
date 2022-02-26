@@ -1,34 +1,27 @@
 <script setup lang="ts">
 
-import { GameState, useGameState, usePlayers, useSocket, useSyncedTimer } from "@/api";
-import { useGameStore } from "@store/game";
+import { GameState, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
 import packets from "@api/packets";
 import { computed, watch } from "vue";
 
 const socket = useSocket()
-
-const players = usePlayers(socket)
-const gameState = useGameState(socket)
+const {players, gameData, gameState} = socket
 const syncedTime = useSyncedTimer(socket, 5)
 
-const store = useGameStore()
 const router = useRouter()
-
 
 const canPlay = computed(() => Object.keys(players).length > 0)
 
-// Subscribe to the game store for mutations
-store.$subscribe((mutation, state) => {
-    if (!state.joined) { // If we are no longer in a game
-        router.push({name: 'Home'}) // Return to the home screen
-    }
-}, {deep: true, immediate: true})
-
 watch(gameState, () => {
     console.log('State Changed to ' + gameState.value)
-    if (gameState.value === GameState.STARTED && !store.data.owner) {
+    if (gameState.value === GameState.DOES_NOT_EXIST || gameData.value == null) {
+        router.push({name: 'Home'}) // Return to the home screen
+        return
+    }
+
+    if (gameState.value === GameState.STARTED && !gameData.value.owner) {
         router.push({name: 'Game'})
     }
 }, {immediate: true})
@@ -38,7 +31,7 @@ watch(gameState, () => {
  */
 
 function disconnect() {
-    if (store.joined) {
+    if (gameState.value !== GameState.DOES_NOT_EXIST) {
         socket.disconnect()
     }
 }
@@ -53,11 +46,11 @@ function startGame() {
     <form @submit.prevent="startGame">
         <Nav title="Waiting Room" :back-function="disconnect"/>
         <div class="wrapper">
-            <h1 class="code">{{ store.data.id }}</h1>
-            <h2 class="title">{{ store.data.title }}</h2>
+            <h1 class="code">{{ gameData.id }}</h1>
+            <h2 class="title">{{ gameData.title }}</h2>
             <template v-if="gameState === GameState.WAITING">
                 <h3 class="status">Waiting to start</h3>
-                <form v-if="store.data.owner && canPlay" @submit.prevent="startGame">
+                <form v-if="gameData.owner && canPlay" @submit.prevent="startGame">
                     <button class="button button--text" type="submit">
                         Start Game
                     </button>
@@ -65,7 +58,7 @@ function startGame() {
                 <ul class="players">
                     <li v-for="(player, index) of players" :key="index" class="player">
                         <span class="player__name">{{ player.name }}</span>
-                        <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">
+                        <button @click="socket.kick(player.id)" v-if="gameData.owner" class="button player__button">
                             Kick
                         </button>
                     </li>

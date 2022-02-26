@@ -2,33 +2,37 @@
 import { onUnmounted, ref, watch } from "vue";
 import Play from "@asset/play.svg?inline";
 import { GameState, useSocket } from "@/api";
-import packets, { JoinGameData } from "@api/packets";
-import { useGameStore } from "@store/game";
+import packets, { GameData, NameTakenResultData } from "@api/packets";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
-import { storeToRefs } from "pinia";
 import { dialog, events } from "@/events";
+
+const router = useRouter()
+const socket = useSocket()
+const {gameData, gameState} = socket
+
 
 let gameCode = ref('')
 let disabled = ref(true)
+const name = ref('')
+const hasGame = ref(false)
+const searching = ref(false)
 
-const socket = useSocket()
 
-watch(gameCode, () => {
-    const value = gameCode.value.toUpperCase().replace(/[^a-fA-F0-9]/, '')
+watch(gameCode, (code: string) => {
+    const value = code.replace(/[^a-fA-F0-9]/, '')
     gameCode.value = value
     disabled.value = value.length != 5
 })
 
-const gameState = useGameStore()
+watch(gameData, (data: GameData | null) => {
+    if (data != null) {
+        // Redirect to the overview page
+        router.push({name: 'Overview'})
+    }
+})
 
-const {name} = storeToRefs(gameState)
-const router = useRouter()
-
-const hasGame = ref(false)
-const searching = ref(false)
-
-function onGameState(data: GameState) {
+watch(gameState, (data: GameState) => {
     if (data === GameState.WAITING) {
         hasGame.value = true
     } else if (data === GameState.DOES_NOT_EXIST) {
@@ -39,49 +43,30 @@ function onGameState(data: GameState) {
         dialog('Cannot Join', 'That game has already finished you are unable to join it now.')
     }
     searching.value = false
-}
+}, {immediate: true})
 
 function checkGameExists() {
     searching.value = true
     hasGame.value = false
     const code = gameCode.value
     socket.send(packets.requestGameState(code))
-    events.off('gameState')
-    events.on('gameState', onGameState)
 }
 
-function onNameTaken(taken: boolean) {
-    if (taken) {
+function onNameTakenResult(data: NameTakenResultData) {
+    if (data.result) {
         dialog('Name taken', 'That name is already in use. Please choose another')
     } else {
         socket.send(packets.requestJoin(gameCode.value, name.value))
-        events.off('game') // Clear existing join listeners
-        // Add a new join listener
-        events.on('game', (data: JoinGameData | null) => {
-            if (data != null) {
-                gameState.joined = true;
-                // Copy the game data and set it into the gameState store
-                gameState.data = {...data}
-                // Redirect to the overview page
-                router.push({name: 'Overview'})
-            }
-        })
     }
 }
 
 function joinGame() {
     const code = gameCode.value
     socket.send(packets.checkNameTaken(code, name.value))
-    events.off('nameTaken')
-    events.on('nameTaken', onNameTaken)
+    socket.setHandler(0x04, onNameTakenResult)
 }
 
-onUnmounted(() => {
-    events.off('nameTaken')
-    events.off('game')
-    events.off('gameState')
-})
-
+onUnmounted(() => socket.clearHandler(0x04))
 </script>
 
 <template>
@@ -141,95 +126,95 @@ onUnmounted(() => {
 @import "../assets/variables";
 
 .content {
-    flex: auto;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
+  flex: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .logo {
-    max-width: 250px;
-    color: white;
+  max-width: 250px;
+  color: white;
 }
 
 .main {
-    justify-content: center;
-    align-items: center;
+  justify-content: center;
+  align-items: center;
 }
 
 .title {
-    margin-bottom: 0.5rem;
-    font-size: 4rem;
+  margin-bottom: 0.5rem;
+  font-size: 4rem;
 }
 
 .text {
-    color: #bbbbbb;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+  color: #bbbbbb;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .input {
-    flex: auto;
-    display: block;
-    padding: 0.7rem;
-    font-size: 3rem;
-    width: 100%;
-    max-width: 15rem;
-    text-align: center;
-    background-color: transparent;
-    border: 5px solid #222;
-    border-bottom: 5px solid white;
-    color: white;
-    border-radius: 0.5rem;
-    outline: none;
-    transition: 0.5s ease;
-    letter-spacing: 0.25rem;
+  flex: auto;
+  display: block;
+  padding: 0.7rem;
+  font-size: 3rem;
+  width: 100%;
+  max-width: 15rem;
+  text-align: center;
+  background-color: transparent;
+  border: 5px solid #222;
+  border-bottom: 5px solid white;
+  color: white;
+  border-radius: 0.5rem;
+  outline: none;
+  transition: 0.5s ease;
+  letter-spacing: 0.25rem;
 
-    &--active, &:focus {
-        border-bottom-color: $primary;
-    }
+  &--active, &:focus {
+    border-bottom-color: $primary;
+  }
 }
 
 .input__wrapper {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
 }
 
 .button {
-    flex: none;
-    padding: 1rem;
-    border-radius: 1rem;
-    border: none;
-    cursor: pointer;
-    color: white;
-    background-color: $primary;
-    transition: 0.25s ease;
+  flex: none;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: none;
+  cursor: pointer;
+  color: white;
+  background-color: $primary;
+  transition: 0.25s ease;
 
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 
-    overflow: hidden;
+  overflow: hidden;
 
-    &:disabled {
-        background-color: #333;
-        cursor: not-allowed;
-    }
+  &:disabled {
+    background-color: #333;
+    cursor: not-allowed;
+  }
 }
 
 .button-enter-active,
 .button-leave-active {
-    width: 5rem;
-    transform: translateX(0) scale(1);
+  width: 5rem;
+  transform: translateX(0) scale(1);
 }
 
 .button-leave-to, .button-enter-from {
-    width: 0;
-    transform: translateX(-100%) scale(0);
-    opacity: 0;
-    padding: 0;
+  width: 0;
+  transform: translateX(-100%) scale(0);
+  opacity: 0;
+  padding: 0;
 }
 
 </style>
