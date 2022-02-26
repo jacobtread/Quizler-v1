@@ -75,11 +75,17 @@ function getFontSize(text: string): string {
       <Loader/>
     </div>
     <div v-else-if="!answered" class="wrapper question">
+      <header>
+      <h1>{{store.data.title}}</h1>
+      <div></div>
+      </header>
       <div class="image-wrapper"
            style="">
-        <div v-if="question.image">
-
-        </div>
+        <div
+            v-if="question.image"
+            class="image"
+            :style="{backgroundImage: `url(${question.image})`}"
+        ></div>
         <div v-else>
           <Logo/>
         </div>
@@ -114,7 +120,6 @@ function getFontSize(text: string): string {
   display: flex;
   flex-flow: row wrap;
   gap: 0.5rem;
-  padding-bottom: 5rem;
 }
 
 .answer {
@@ -126,27 +131,42 @@ function getFontSize(text: string): string {
   background-color: #222;
   border-radius: 0.25rem;
   color: white;
-  font-weight: bold;
   font-size: 1.1rem;
   white-space: pre-wrap;
   line-break: loose;
   text-overflow: ellipsis;
   overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.2s linear;
+
+  &:hover {
+    background: adjust-color($primary, $alpha: -0.5);
+  }
 }
 
 .image-wrapper {
   flex: auto;
+  width: 100%;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .question {
   max-width: 1200px;
+  padding: 1.5rem;
   width: 100%;
 }
 
 .question__text {
   width: 100%;
   font-size: 1.25rem;
-  background-color: #222;
+  background-color: #333;
   padding: 1rem;
 }
 
