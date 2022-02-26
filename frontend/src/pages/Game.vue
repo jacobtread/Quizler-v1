@@ -70,7 +70,7 @@ function getRandomText() {
         <div class="content loader-wrapper" v-if="question === null">
             <Loader/>
         </div>
-        <div v-else-if="result" class="result" :class="{'result--correct': result}">
+        <div v-else-if="result !== null" class="result" :class="{'result--correct': result}">
             <template v-if="result">
                 <h1 class="result__text">Correct Answer!</h1>
             </template>

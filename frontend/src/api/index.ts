@@ -16,6 +16,7 @@ import packets, {
 import { onUnmounted, reactive, ref, Ref } from "vue";
 import { dialog, toast } from "@/tools/ui";
 import { DEBUG, HOST } from "@/constants";
+import { router } from "@/router";
 
 // An enum for all the different possible game states
 export enum GameState {
@@ -232,6 +233,7 @@ class SocketApi {
     onDisconnect(data: DisconnectData) {
         dialog('Disconnected', data.reason) // Display a disconnected dialog with the reason
         this.resetState()
+        router.push({name: 'Home'}).then().catch()
     }
 
     /**
@@ -353,7 +355,6 @@ export function usePacketHandler<D>(socket: SocketApi, id: ServerPacketId, handl
     onUnmounted(() => {
         const current = socket.handlers[id];
         if (current === handler) {
-            console.log('Unhooked '+ id)
             socket.handlers[id] = EMPTY_HANDLER
         }
     })
