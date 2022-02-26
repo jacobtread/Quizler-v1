@@ -1,4 +1,4 @@
-import { JoinGameData, QuestionData, TimeSyncData } from "@api/packets";
+import { JoinGameData } from "@api/packets";
 import { GameState, PlayerMap } from "@/api";
 import mitt from "mitt";
 
@@ -29,7 +29,6 @@ export interface DialogData {
     title: string;
     content: string;
 }
-
 
 export const events = mitt<Events>() // The event system
 

@@ -2,26 +2,33 @@
 import Play from "@asset/play.svg?inline";
 import Logo from "@asset/logo.svg?inline";
 import Create from "@asset/create.svg?inline";
+import { useGameStore } from "@store/game";
+
+const gameStore = useGameStore()
+/**
+ * The game state data needs to be reset whenever the home page is
+ * visited to prevent game state from persisting
+ */
+gameStore.$reset()
 </script>
-
 <template>
-  <div>
-    <main class="main">
-      <Logo class="logo"/>
-      <div class="button-grid">
-        <router-link :to="{name: 'Join'}" class="button">
-          <Play class="button__icon"/>
-          <span class="button__wrap">Join a quiz<span class="button__subtext">Enter a game code and hop right in</span></span>
-        </router-link>
-        <router-link :to="{name: 'Create'}" class="button">
-          <Create class="button__icon"/>
-          <span class="button__wrap">Create a quiz<span class="button__subtext">Create your own quiz</span></span>
-        </router-link>
-      </div>
-    </main>
-  </div>
+    <div>
+        <main class="main">
+            <Logo class="logo"/>
+            <div class="button-grid">
+                <router-link :to="{name: 'Join'}" class="button">
+                    <Play class="button__icon"/>
+                    <span class="button__wrap">Join a quiz<span class="button__subtext">Enter a game code and hop right in</span></span>
+                </router-link>
+                <router-link :to="{name: 'Create'}" class="button">
+                    <Create class="button__icon"/>
+                    <span class="button__wrap">Create a quiz<span
+                            class="button__subtext">Create your own quiz</span></span>
+                </router-link>
+            </div>
+        </main>
+    </div>
 </template>
-
 <style scoped lang="scss">
 @import "../assets/variables";
 
@@ -156,10 +163,12 @@ import Create from "@asset/create.svg?inline";
     align-items: center;
     text-align: center;
     font-size: 1.2rem;
+
     &__icon {
       padding: 0.5rem 0;
       height: 32px;
     }
+
     &__subtext {
       font-size: 1rem;
     }

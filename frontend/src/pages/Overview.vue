@@ -1,116 +1,91 @@
 <script setup lang="ts">
 
-import { GameState, useApi } from "@/api";
+import { GameState, useGameState, usePlayers, useSocket, useSyncedTimer } from "@/api";
 import { useGameStore } from "@store/game";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets, { TimeSyncData } from "@api/packets";
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import packets from "@api/packets";
+import { computed, watch } from "vue";
 
-const {socket, players, state} = useApi()
+const socket = useSocket()
+
+const players = usePlayers(socket)
+const gameState = useGameState(socket)
+const syncedTime = useSyncedTimer(socket, 5)
 
 const store = useGameStore()
 const router = useRouter()
 
-const startTime = ref(5)
 
 const canPlay = computed(() => Object.keys(players).length > 0)
 
 // Subscribe to the game store for mutations
 store.$subscribe((mutation, state) => {
-  if (!state.joined) { // If we are no longer in a game
-    router.push({name: 'Home'}) // Return to the home screen
-  }
+    if (!state.joined) { // If we are no longer in a game
+        router.push({name: 'Home'}) // Return to the home screen
+    }
 }, {deep: true, immediate: true})
 
-watch(state, () => {
-  console.log('State Changed to ' + state.value)
-  if (state.value === GameState.STARTED && !store.data.owner) {
-    router.push({name: 'Game'})
-  }
+watch(gameState, () => {
+    console.log('State Changed to ' + gameState.value)
+    if (gameState.value === GameState.STARTED && !store.data.owner) {
+        router.push({name: 'Game'})
+    }
 }, {immediate: true})
-
-function onTimeSync(data: TimeSyncData) {
-  startTime.value = Math.ceil(data.remaining / 1000)
-  lastFrameChange = performance.now()
-  requestAnimationFrame(updateTime)
-}
-
-let lastFrameChange = -1
-
-function updateTime() {
-  if (startTime.value - 1 < 0) return
-  let time = performance.now()
-  let elapsed = time - lastFrameChange
-  if (elapsed >= 1000) {
-    lastFrameChange = time
-    startTime.value--
-  }
-  requestAnimationFrame(updateTime)
-}
-
 
 /**
  * Disconnects from the current game
  */
 
 function disconnect() {
-  if (store.joined) {
-    socket.disconnect()
-  }
+    if (store.joined) {
+        socket.disconnect()
+    }
 }
 
 function startGame() {
-  // Send the start game packet
-  socket.send(packets.start())
+    // Send the start game packet
+    socket.send(packets.start())
 }
-
-
-onMounted(() => {
-  socket.setHandler(0x07, onTimeSync)
-})
-
-onUnmounted(() => {
-  socket.clearHandler(0x07)
-})
-
 
 </script>
 <template>
-  <form @submit.prevent="startGame">
-    <Nav title="Waiting Room" :back-function="disconnect"/>
-    <div class="wrapper">
-      <h1 class="code">{{ store.data.id }}</h1>
-      <h2 class="title">{{ store.data.title }}</h2>
-      <template v-if="state === GameState.WAITING">
-        <h3 class="status">Waiting to start</h3>
-        <form v-if="store.data.owner && canPlay" @submit.prevent="startGame">
-          <button class="button button--text" type="submit">
-            Start Game
-          </button>
-        </form>
-        <ul class="players">
-          <li v-for="(player, index) of players" :key="index" class="player">
-            <span class="player__name">{{ player.name }}</span>
-            <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">Kick</button>
-          </li>
-        </ul>
-      </template>
-      <template v-else-if="state === GameState.STARTING">
-        <h3 class="status">Game starting in</h3>
-        <h2 class="countdown">{{ startTime.toFixed(0) }}s</h2>
-      </template>
-      <template v-else-if="state === GameState.STARTED">
-        <h3 class="status">Game started</h3>
-        <ul class="players">
-          <li v-for="(player, index) of players" :key="index" class="player">
-            <span class="player__name">{{ player.name }}</span>
-            <span>{{ player.score ?? 0 }}</span>
-          </li>
-        </ul>
-      </template>
-    </div>
-  </form>
+    <form @submit.prevent="startGame">
+        <Nav title="Waiting Room" :back-function="disconnect"/>
+        <div class="wrapper">
+            <h1 class="code">{{ store.data.id }}</h1>
+            <h2 class="title">{{ store.data.title }}</h2>
+            <template v-if="gameState === GameState.WAITING">
+                <h3 class="status">Waiting to start</h3>
+                <form v-if="store.data.owner && canPlay" @submit.prevent="startGame">
+                    <button class="button button--text" type="submit">
+                        Start Game
+                    </button>
+                </form>
+                <ul class="players">
+                    <li v-for="(player, index) of players" :key="index" class="player">
+                        <span class="player__name">{{ player.name }}</span>
+                        <button @click="socket.kick(player.id)" v-if="store.data.owner" class="button player__button">
+                            Kick
+                        </button>
+                    </li>
+                </ul>
+            </template>
+            <template v-else-if="gameState === GameState.STARTING">
+                <h3 class="status">Game starting in</h3>
+                <h2 class="countdown">{{ syncedTime.toFixed(0) }}s</h2>
+            </template>
+            <template v-else-if="gameState === GameState.STARTED">
+                <h3 class="status">Game started</h3>
+                <ul class="players">
+                    <li v-for="(player, index) of players" :key="index" class="player">
+                        <span class="player__name">{{ player.name }}</span>
+                        <span>{{ player.score ?? 0 }}</span>
+                    </li>
+                </ul>
+            </template>
+        </div>
+    </form>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";

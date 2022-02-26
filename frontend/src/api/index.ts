@@ -6,11 +6,12 @@ import packets, {
     NameTakenResultData,
     Packet,
     PlayerData,
-    PlayerDataP
+    PlayerDataP,
+    TimeSyncData
 } from "./packets";
-import { onMounted, onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
-import { useGameStore } from "@store/game";
+import { onUnmounted, reactive, ref, Ref, UnwrapNestedRefs } from "vue";
 import { dialog, events, toast } from "@/events";
+import { clearObject, replaceObject } from "@/tools";
 
 export const APP_HOST: string = import.meta.env.VITE_HOST
 
@@ -422,62 +423,138 @@ interface UseApi {
 }
 
 /**
- * "Composable" function to use the SocketApi within vue js
- * through the composition API this will create a socket
- * instance if it doesn't already exist and will bind the
- * open state event to an open ref
+ * A function for using the socket connection. Will create a new
+ * socket connection if there isn't already one
  */
-export function useApi(): UseApi {
-    const open = ref(false)
-    const state = ref<GameState>(GameState.DOES_NOT_EXIST)
+export function useSocket(): SocketApi {
+    // If we don't have a socket instance create a new one
     if (!socket) socket = new SocketApi()
-    const players = reactive<PlayerMap>({})
+    return socket
+}
 
-    function clearPlayers() {
-        for (let key of Object.keys(players)) {
-            delete players[key]
-        }
-    }
-
-    function updatePlayers(data: PlayerMap) {
-        for (let key of Object.keys(players)) {
-            if (!data[key]) delete players[key]
-        }
-        for (let dataKey in data) {
-            players[dataKey] = data[dataKey]
-        }
-    }
-
-    function updateState(state: boolean) {
-        open.value = state;
-    }
-
-    function updateGameState(data: GameState) {
-        state.value = data
-    }
-
-    const gameState = useGameStore()
-
-    function handleReset() {
-        gameState.$reset()
-        clearPlayers()
-    }
-
-    onMounted(() => {
-        events.on('gameState', updateGameState)
-        events.on('open', updateState)
-        events.on('players', updatePlayers)
-        events.on('reset', handleReset)
-        updatePlayers(socket.players)
-        state.value = socket.state
+/**
+ * "Composable" function to use the state of the current game
+ * within vue js. Creates a reactive reference to the game state
+ * which is updated by the server using listeners
+ */
+export function useGameState(socket: SocketApi): Ref<GameState> {
+    // Reactive reference for the game state value
+    const state = ref<GameState>(socket.state)
+    // Function for handling the game state data
+    const updateGameState = (data: GameState) => state.value = data
+    events.on('gameState', updateGameState) // Hook the game state socket event
+    // Hook the unmounted event to remove the game state listener
+    onUnmounted(() => {
+        // Remove the game state listener
+        events.off('gameState', updateGameState)
     })
+    return state
+}
+
+/**
+ * "Composable" function used to determine whether the socket has
+ * an open connection with the web socket server
+ */
+export function useSocketOpen(): Ref<boolean> {
+    // Reactive reference for the open state of the socket
+    const open = ref(false)
+    // Function for handling state updates
+    const updateState = (state: boolean) => open.value = state
+    // Hook the open socket event
+    events.on('open', updateState)
+    // Hook the unmounted event to remove the open state listener
+    onUnmounted(() => {
+        // Remove the open state listener
+        events.off('open', updateState)
+    })
+    return open
+}
+
+/**
+ * "Composable" function used to retrieve and store the list of
+ * current players in the game. This is a reactive reference which
+ * is automatically updated when players are added or removed
+ *
+ * @param socket The socket instance to retrieve players from
+ */
+export function usePlayers(socket: SocketApi): UnwrapNestedRefs<PlayerMap> {
+    // A reactive object for storing the keys of players mapped to the player objects
+    const players = reactive<PlayerMap>({...socket.players})
+    // A function for clearing the players reactive object
+    const clearPlayers = () => clearObject(players)
+    // A function for replacing the players reactive object
+    const updatePlayers = (data: PlayerMap) => replaceObject(players, data)
+    // Hook the players modify event to update the players
+    events.on('players', updatePlayers)
+    // Hook the game reset event to clear the player list
+    events.on('reset', clearPlayers)
+    // Hook the unmounted event to remove the listeners
+    onUnmounted(() => {
+        // Remove the listeners
+        events.off('players', updatePlayers)
+        events.off('reset', clearPlayers)
+    })
+    return players
+}
+
+/**
+ * Creates a timer reactive reference value which is linked to and updated by
+ * the server synced time packets. This time will count down on its own
+ * automatically but will always trust server time sync over its own time
+ *
+ * @param socket The socket instance to use synced time from
+ * @param initialValue The initial time value to count from until time is synced
+ */
+export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<number> {
+    // The actual value itself that should be displayed
+    let value = ref(initialValue)
+
+    // Stores the last time in milliseconds that the counter ran a countdown animation
+    let lastUpdateTime: number = -1
+
+    /**
+     * Handles time sync packets (0x07) and updates
+     * the current time based on that
+     *
+     * @param data The time sync packet data
+     */
+    function onTimeSync(data: TimeSyncData) {
+        // Convert the remaining time to seconds and ceil it
+        value.value = Math.ceil(data.remaining / 1000)
+        // Set the last update time = now to prevent it updating again
+        // and causing an accidental out of sync
+        lastUpdateTime = performance.now()
+    }
+
+    /**
+     * Run on browser animation frames used to update the time and count
+     * down the timer every second. This is used to continue counting
+     * so that the server doesn't have to send a large volume of time
+     * updates and can instead send only a few every couple of second's
+     * to sync up the times
+     */
+    function update() {
+        // The value should not be changed if It's going to be < 0
+        if (value.value - 1 >= 0) {
+            const time = performance.now() // Retrieve the current time
+            const elapsed = time - lastUpdateTime // Calculate the time passed since last update
+            if (elapsed >= 1000) { // If 1 second has passed since the last update
+                lastUpdateTime = time // Set the last update time
+                value.value-- // Decrease the countdown value
+            }
+        }
+        // Request the next animation frame
+        requestAnimationFrame(update)
+    }
+
+    update() // Trigger the update function to start the animation loop
+
+    // Use onTimeSync as the packet handler for time sync packets
+    socket.setHandler(0x07, onTimeSync);
 
     onUnmounted(() => {
-        events.off('gameState', updateGameState)
-        events.off('open', updateState)
-        events.off('players', updatePlayers)
-        events.off('reset', handleReset)
+        // Clear the time sync packet handler
+        socket.clearHandler(0x07)
     })
-
-    return {socket, players, open, state}
+    return value
 }

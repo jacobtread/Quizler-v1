@@ -9,7 +9,7 @@ import Cross from "@asset/cross.svg?inline"
 import Edit from "@asset/edit.svg?inline"
 import { useCreateStore } from "@store/create";
 import { storeToRefs } from "pinia";
-import { useApi } from "@/api";
+import { useSocket } from "@/api";
 import { useRouter } from "vue-router";
 import packets, { JoinGameData } from "@api/packets";
 import { useGameStore } from "@store/game";
@@ -18,7 +18,7 @@ import { events } from "@/events";
 import { computed } from "vue";
 
 const router = useRouter()
-const {socket} = useApi()
+const socket = useSocket()
 const gameState = useGameStore()
 const createState = useCreateStore()
 const {questions, title} = storeToRefs(createState)
@@ -33,7 +33,7 @@ const hasQuestions = computed(() => questions.value.length > 0)
  * @param index The index to remove
  */
 function deleteQuestion(index: number) {
-  questions.value = questions.value.filter((_, i) => i != index)
+    questions.value = questions.value.filter((_, i) => i != index)
 }
 
 /**
@@ -42,88 +42,89 @@ function deleteQuestion(index: number) {
  * and sets the screen to the overview screen when it receives one
  */
 function createQuiz() {
-  // Send the creation game packet
-  socket.send(packets.createGame(title.value, questions.value))
+    // Send the creation game packet
+    socket.send(packets.createGame(title.value, questions.value))
 
-  // Add a new join listener
-  events.off('game')
-  events.on('game', (data: JoinGameData | null) => {
-    if (data != null) {
-      gameState.joined = true;
-      // Copy the game data and set it into the gameState store
-      gameState.data = {...data}
-      // Redirect to the overview page
-      router.push({name: 'Overview'})
-    }
-  })
+    // Add a new join listener
+    events.off('game')
+    events.on('game', (data: JoinGameData | null) => {
+        if (data != null) {
+            gameState.joined = true;
+            // Copy the game data and set it into the gameState store
+            gameState.data = {...data}
+            // Redirect to the overview page
+            router.push({name: 'Overview'})
+        }
+    })
 }
 
 </script>
 <template>
-  <form @submit.prevent="createQuiz">
-    <Nav title="Create Quiz"/>
-    <div class="wrapper">
-      <main class="main">
-        <div class="box">
-          <p class="text">To get started creating your quiz press the
-            <Add class="inline-icon"/>
-            button to add a new question. If you accidentally
-            added a question just press the
-            <Cross class="inline-icon"/>
-            icon to remove it or
-            <Edit class="inline-icon"/>
-            to edit it
-          </p>
-          <label class="input">
-            <span class="input__label">Title</span>
-            <input type="text" class="input__value" placeholder="Title" v-model="title" required minlength="1"
-                   maxlength="30">
-          </label>
-        </div>
-        <div class="box">
-          <h2 class="box__title">Questions</h2>
-          <transition-group name="slide-fade">
-            <div class="questions" v-if="questions.length > 0">
-              <div v-for="(question, index) of questions" :key="index" class="question">
-                <div class="question__head">
-                  <h2 class="question__head__title">{{ question.question }}</h2>
-                  <div class="question__head__buttons">
-                    <router-link :to="{name: 'Modify', params: {edit: index}}"
-                                 class="question__head__button question__head__button--edit">
-                      <Edit class="question__head__button__icon"/>
-                    </router-link>
-                    <button
-                        class="question__head__button question__head__button--delete"
-                        type="button"
-                        @click="deleteQuestion(index)"
-                    >
-                      <Cross class="question__head__button__icon"/>
-                    </button>
-                  </div>
+    <form @submit.prevent="createQuiz">
+        <Nav title="Create Quiz"/>
+        <div class="wrapper">
+            <main class="main">
+                <div class="box">
+                    <p class="text">To get started creating your quiz press the
+                        <Add class="inline-icon"/>
+                        button to add a new question. If you accidentally
+                        added a question just press the
+                        <Cross class="inline-icon"/>
+                        icon to remove it or
+                        <Edit class="inline-icon"/>
+                        to edit it
+                    </p>
+                    <label class="input">
+                        <span class="input__label">Title</span>
+                        <input type="text" class="input__value" placeholder="Title" v-model="title" required
+                               minlength="1"
+                               maxlength="30">
+                    </label>
                 </div>
-                <ul class="question__answers">
-                  <li v-for="(answer, index) of question.answers"
-                      class="question__answers__item"
-                      :class="{'question__answers__item--selected': question.values.indexOf(index) !== -1}"
-                  >
-                    {{ answer }}
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </transition-group>
-          <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block">
-            <Add class="button__icon"/>
-          </router-link>
+                <div class="box">
+                    <h2 class="box__title">Questions</h2>
+                    <transition-group name="slide-fade">
+                        <div class="questions" v-if="questions.length > 0">
+                            <div v-for="(question, index) of questions" :key="index" class="question">
+                                <div class="question__head">
+                                    <h2 class="question__head__title">{{ question.question }}</h2>
+                                    <div class="question__head__buttons">
+                                        <router-link :to="{name: 'Modify', params: {edit: index}}"
+                                                     class="question__head__button question__head__button--edit">
+                                            <Edit class="question__head__button__icon"/>
+                                        </router-link>
+                                        <button
+                                                class="question__head__button question__head__button--delete"
+                                                type="button"
+                                                @click="deleteQuestion(index)"
+                                        >
+                                            <Cross class="question__head__button__icon"/>
+                                        </button>
+                                    </div>
+                                </div>
+                                <ul class="question__answers">
+                                    <li v-for="(answer, index) of question.answers"
+                                        class="question__answers__item"
+                                        :class="{'question__answers__item--selected': question.values.indexOf(index) !== -1}"
+                                    >
+                                        {{ answer }}
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </transition-group>
+                    <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block">
+                        <Add class="button__icon"/>
+                    </router-link>
+                </div>
+                <div class="full__box">
+                    <button class="button button--text button--block" type="submit" :disabled="!hasQuestions">
+                        Create Quiz
+                    </button>
+                </div>
+            </main>
         </div>
-        <div class="full__box">
-          <button class="button button--text button--block" type="submit" :disabled="!hasQuestions">
-            Create Quiz
-          </button>
-        </div>
-      </main>
-    </div>
-  </form>
+    </form>
 </template>
 
 <style scoped lang="scss">
