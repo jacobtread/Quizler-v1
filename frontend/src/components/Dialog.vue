@@ -16,7 +16,7 @@ function close() {
 </script>
 <template>
     <transition appear name="fade">
-        <div class="dialog-wrapper" v-if="open">
+        <div class="dialog-wrapper" v-if="open && dialog != null">
             <div class="dialog">
                 <h2 class="dialog__title">{{ dialog.title }}</h2>
                 <p class="dialog__message">{{ dialog.content }}</p>

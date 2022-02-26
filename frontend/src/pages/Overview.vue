@@ -1,9 +1,9 @@
 <script setup lang="ts">
 
-import { GameState, ServerPacketId, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
+import { GameState, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets, { ScoresData } from "@api/packets";
+import packets from "@api/packets";
 import { computed, watch } from "vue";
 
 const socket = useSocket()
@@ -15,14 +15,14 @@ const router = useRouter()
 const canPlay = computed(() => Object.keys(players).length > 0)
 
 watch(gameState, () => {
-    console.log('State Changed to ' + gameState.value)
     if (gameState.value === GameState.DOES_NOT_EXIST || gameData.value == null) {
         router.push({name: 'Home'}) // Return to the home screen
         return
     }
-
-    if (gameState.value === GameState.STARTED && !gameData.value.owner) {
-        router.push({name: 'Game'})
+    if (gameState.value === GameState.STARTED) {
+        if (!gameData.value.owner) {
+            router.push({name: 'Game'})
+        }
         syncedTime.value = 10
     }
 }, {immediate: true})
@@ -30,19 +30,20 @@ watch(gameState, () => {
 /**
  * Disconnects from the current game
  */
-
 function disconnect() {
-    if (gameState.value !== GameState.DOES_NOT_EXIST) {
-        socket.disconnect()
+    if (gameState.value !== GameState.DOES_NOT_EXIST
+        && gameState.value !== GameState.UNSET) { // Ensure the game actually exists
+        socket.disconnect() // Disconnect from the game
     }
 }
 
+/**
+ * Starts the current game (Host only)
+ */
 function startGame() {
     // Send the start game packet
     socket.send(packets.start)
 }
-
-
 </script>
 <template>
     <form @submit.prevent="startGame" v-if="gameData">

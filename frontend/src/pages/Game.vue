@@ -11,15 +11,16 @@ const router = useRouter()
 const socket = useSocket()
 const {gameState, gameData, question, players} = socket
 
-const sortedPlayers = computed(() => Object.values(players).sort((a, b) => a.score - b.score).slice(0, 5))
+const sortedPlayers = computed(() => Object.values(players).sort((a, b) => b.score - a.score).slice(0, 5))
 
 const answered = ref(false);
 const result = ref<boolean | null>(null)
 
 watch(gameState, () => {
-    console.log('State Changed to ' + gameState.value)
     if (gameState.value === GameState.UNSET) { // If we are no longer in a game
         router.push({name: 'Home'}) // Return to the home screen
+    } else if (gameState.value === GameState.STOPPED) {
+        router.push({name: 'GameOver'})
     }
 }, {immediate: true})
 

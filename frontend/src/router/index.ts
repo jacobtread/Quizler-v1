@@ -6,6 +6,7 @@ import Create from "@page/Create.vue"
 import CreateQuestion from "@page/CreateQuestion.vue"
 import Overview from "@page/Overview.vue"
 import Game from "@page/Game.vue"
+import GameOver from "@page/GameOver.vue"
 
 const routes = [
     {
@@ -42,6 +43,11 @@ const routes = [
         name: 'Game',
         path: '/game',
         component: Game
+    },
+    {
+        name: 'GameOver',
+        path: '/game-over',
+        component: GameOver
     }
 ]
 
