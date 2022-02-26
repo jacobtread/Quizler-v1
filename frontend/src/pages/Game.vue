@@ -76,8 +76,8 @@ function getFontSize(text: string): string {
     </div>
     <div v-else-if="!result" class="wrapper question">
       <header>
-      <h1>{{store.data.title}}</h1>
-      <div></div>
+        <h1 class="title">{{ store.data.title }}</h1>
+        <div></div>
       </header>
       <div class="image-wrapper">
         <div
@@ -119,6 +119,7 @@ function getFontSize(text: string): string {
   display: flex;
   flex-flow: row wrap;
   gap: 0.5rem;
+  width: 100%;
 }
 
 .answer {
@@ -146,6 +147,9 @@ function getFontSize(text: string): string {
 .image-wrapper {
   flex: auto;
   width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .image {
@@ -167,6 +171,18 @@ function getFontSize(text: string): string {
   font-size: 1.25rem;
   background-color: #333;
   padding: 1rem;
+}
+
+.logo {
+  max-width: 240px;
+  width: 100%;
+  flex: auto;
+
+}
+
+.title {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 </style>
