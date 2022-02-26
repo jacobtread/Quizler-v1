@@ -7,7 +7,8 @@ import packets, {
     GameStateData,
     Packet,
     PlayerData,
-    PlayerDataP,
+    PlayerDataMode,
+    PlayerDataWithMode,
     QuestionData,
     TimeSyncData
 } from "./packets";
@@ -161,7 +162,7 @@ class SocketApi {
      */
     onMessage(event: MessageEvent) {
         try {
-            const packet = JSON.parse(event.data) as Packet<any>
+            const packet = JSON.parse(event.data) as Packet
             const id: ServerPacketId = packet.id
             const data: any = packet.data
             // Check to make sure we have a handler for this packet id
@@ -178,6 +179,7 @@ class SocketApi {
         }
     }
 
+
     /**
      * Packet handler for PlayerData packet (0x07) handles data about other
      * players in the game such as username and id's
@@ -185,11 +187,11 @@ class SocketApi {
      * @param api The current connection instance
      * @param data The player data of the other player
      */
-    onPlayerData(api: SocketApi, data: PlayerDataP) {
+    onPlayerData(api: SocketApi, data: PlayerDataWithMode) {
         const elm = {id: data.id, name: data.name}
-        if (data.mode === 0) {
+        if (data.mode === PlayerDataMode.ADD) {
             api.players[data.id] = elm
-        } else if (data.mode === 1) {
+        } else if (data.mode === PlayerDataMode.REMOVE) {
             delete api.players[data.id]
         }
     }
@@ -288,7 +290,7 @@ class SocketApi {
      *
      * @param packet The packet to send
      */
-    send(packet: Packet<any>) {
+    send(packet: Packet) {
         debugLogPacket(Direction.OUT, packet)
         this.ws.send(JSON.stringify(packet))
     }
@@ -299,7 +301,7 @@ class SocketApi {
      */
     keepAlive() {
         this.lastSendKeepAlive = performance.now()
-        this.send(packets.keepAlive())
+        this.send(packets.keepAlive)
     }
 
     /**
@@ -319,7 +321,7 @@ class SocketApi {
     disconnect() {
         console.log('Disconnected from game')
         this.setGameData(null)
-        this.send(packets.disconnect())
+        this.send(packets.disconnect)
     }
 
     /**

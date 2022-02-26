@@ -1,8 +1,8 @@
 import { DEBUG, DEBUG_IGNORE_KEEP_ALIVE } from "@/constants";
 
-export interface Packet<V> {
+export interface Packet {
     id: number;
-    data?: V;
+    data?: any;
 }
 
 export interface ErrorData {
@@ -25,10 +25,11 @@ export interface PlayerData {
     score?: number;
 }
 
-export interface PlayerDataP {
-    id: string;
-    name: string;
-    mode: number;
+export type PlayerDataWithMode = PlayerData & { mode: number }
+
+export enum PlayerDataMode {
+    ADD,
+    REMOVE
 }
 
 export interface GameStateData {
@@ -57,15 +58,12 @@ export interface TimeSyncData {
     remaining: number;
 }
 
-
 export interface AnswerResultData {
     result: boolean;
 }
 
-type ScoresMap = { [id: string]: number }
-
 export interface ScoresData {
-    scores: ScoresMap
+    scores: Record<string, number>
 }
 
 // Represents the direction a packet is travelling to IN = inbounds packets OUT = outbound packets
@@ -83,7 +81,7 @@ const debugNames = getDebugPacketNames()
  * @param dir The direction the packet is going IN for inbound OUT for outbound
  * @param packet The packet to print debug info about
  */
-export function debugLogPacket(dir: Direction, packet: Packet<any>) {
+export function debugLogPacket(dir: Direction, packet: Packet) {
     if (!DEBUG) return
     const id = packet.id
     if (DEBUG_IGNORE_KEEP_ALIVE && id === 0x00) {
@@ -153,15 +151,64 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
     ]
 }
 
-export default {
-    keepAlive: () => ({id: 0x00}),
-    disconnect: () => ({id: 0x01}),
-    createGame: (title: string, questions: QuestionData[]) => ({id: 0x02, data: {title, questions}}),
+/**
+ * Object contains a mix of constructors for packets that have changing
+ * values and normal packet objects for those that only have ID's
+ */
+const constructors = {
+    // Tells the server this client is still alive
+    keepAlive: {id: 0x00},
+    // Disconnects from the current game
+    disconnect: {id: 0x01},
+    /**
+     * Creates a new game server with the provided title and
+     * questions
+     *
+     * @param title The new game title
+     * @param questions The questions for the game
+     */
+    createGame: (title: string, questions: QuestionData) => ({id: 0x02, data: {title, questions}}),
+    /**
+     * Checks if the provided name is already in use
+     *
+     * @param id The id of the game to check
+     * @param name The name to check for
+     */
     checkNameTaken: (id: string, name: string) => ({id: 0x03, data: {id, name}}),
+    /**
+     * Requests the game with the provided id for its
+     * current state (This is sent back in a game state packet)
+     *
+     * @param id The id of the game to request the state of
+     */
     requestGameState: (id: string) => ({id: 0x04, data: {id}}),
+    /**
+     * Requests permission to join the game with the provided
+     * id as the provided name
+     *
+     * @param id The id of the game to request to join
+     * @param name The name of the player to play as
+     */
     requestJoin: (id: string, name: string) => ({id: 0x05, data: {id, name}}),
-    start: () => ({id: 0x06}),
+    // Starts the current game (host only)
+    start: {id: 0x06},
+    /**
+     * Tells the server which answer this player would like
+     * to select
+     *
+     * @param id The index of the answer to choose
+     */
     answer: (id: number) => ({id: 0x07, data: {id}}),
+    /**
+     * Kicks the player with the provided id from the game
+     * this will only work if the player sending it is the
+     * host
+     *
+     * @param id The id of the player to remove
+     */
     kick: (id: string) => ({id: 0x08, data: {id}}),
-    skip: () => ({id: 0x09})
+    // Skips the current question (host only)
+    skip: {id: 0x09}
 }
+
+export default constructors
