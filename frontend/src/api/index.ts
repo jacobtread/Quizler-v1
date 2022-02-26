@@ -16,6 +16,7 @@ import { onUnmounted, reactive, ref, Ref } from "vue";
 import { dialog, toast } from "@/tools/ui";
 import { APP_HOST, DEBUG } from "@/constants";
 
+// An enum for all the different possible game states
 export enum GameState {
     UNSET = -1,
     WAITING,
@@ -25,13 +26,13 @@ export enum GameState {
     DOES_NOT_EXIST,
 }
 
-export interface PlayerMap {
-    [name: string]: PlayerData
-}
+// Defines a map of id -> player data
+type PlayerMap = Record<string, PlayerData>
 
-const EMPTY_HANDLER = () => {
-}
+// An empty function for handlers without a function
+const EMPTY_HANDLER = () => null
 
+// An enum containing all the id's for each incoming packet
 export enum ServerPacketId {
     KEEP_ALIVE = 0x00,
     DISCONNECT,
@@ -46,7 +47,9 @@ export enum ServerPacketId {
     SCORES
 }
 
+// Defines the type of packet handler function
 type PacketHandlerFunction = (data: any) => void
+// Defines the packet handlers map which is id -> handler
 type PacketHandlers = Record<ServerPacketId, PacketHandlerFunction>
 
 /**
