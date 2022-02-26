@@ -424,7 +424,7 @@ export function useSocket(): SocketApi {
  */
 export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<number> {
     // The actual value itself that should be displayed
-    const value = ref(initialValue)
+    const value = ref<number>(initialValue)
 
     // Stores the last time in milliseconds that the counter ran a countdown animation
     let lastUpdateTime: number = -1

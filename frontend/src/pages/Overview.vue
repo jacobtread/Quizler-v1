@@ -43,7 +43,7 @@ function startGame() {
 
 </script>
 <template>
-    <form @submit.prevent="startGame">
+    <form @submit.prevent="startGame" v-if="gameData">
         <Nav title="Waiting Room" :back-function="disconnect"/>
         <div class="wrapper">
             <h1 class="code">{{ gameData.id }}</h1>
