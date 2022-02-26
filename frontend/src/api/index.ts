@@ -1,4 +1,6 @@
 import packets, {
+    debugLogPacket,
+    Direction,
     DisconnectData,
     ErrorData,
     GameData,
@@ -11,27 +13,7 @@ import packets, {
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
 import { dialog, toast } from "@/tools/ui";
-
-export const APP_HOST: string = import.meta.env.VITE_HOST
-
-/**
- * Converts the provided value to a hex string representation
- * that must fit the length provided in padding
- *
- * @param value
- * @param padding
- */
-function toHex(value: number, padding: number = 2) {
-    let hexString = value.toString(16)
-    while (hexString.length < padding) {
-        hexString = '0' + hexString
-    }
-    return '0x' + hexString
-}
-
-interface PacketHandlers {
-    [id: number]: (api: SocketApi, data: any) => void
-}
+import { APP_HOST } from "@/constants";
 
 export enum GameState {
     UNSET = -1,
@@ -46,14 +28,25 @@ export interface PlayerMap {
     [name: string]: PlayerData
 }
 
-enum Direction {
-    IN,
-    OUT
-}
-
 const EMPTY_HANDLER = () => {
 }
 
+export enum ServerPacketId {
+    KEEP_ALIVE = 0x00,
+    DISCONNECT,
+    ERROR,
+    JOIN_GAME,
+    NAME_TAKEN_RESULT,
+    GAME_STATE,
+    PLAYER_DATA,
+    TIME_SYNC,
+    QUESTION,
+    ANSWER_RESULT,
+    SCORES
+}
+
+type PacketHandlerFunction = (api: SocketApi, data: any) => void
+type PacketHandlers = Record<ServerPacketId, PacketHandlerFunction>
 
 /**
  * Stores all logic for communicating between the client and server over the
@@ -66,11 +59,6 @@ class SocketApi {
 
     // Whether the main update loop is running
     private isRunning: boolean = true
-    // Whether debug logging should be enabled
-    private isDebug: boolean = true
-    // Whether to hide keep alive packets from the debug log
-    private isDebugHideKeepAlive: boolean = true
-
 
     // The interval timer handle used to cancel the update interval
     private updateInterval: any = undefined
@@ -92,17 +80,17 @@ class SocketApi {
      * they can be handled separately instead of a large switch statement
      */
     handlers: PacketHandlers = {
-        0x00: this.onKeepAlive,
-        0x01: this.onDisconnect,
-        0x02: this.onError,
-        0x03: this.onJoinGame,
-        0x04: EMPTY_HANDLER, // NAME TAKEN RESULT PACKET
-        0x05: this.onGameState,
-        0x06: this.onPlayerData,
-        0x07: EMPTY_HANDLER, // TIME SYNC PACKET
-        0x08: this.onQuestion,
-        0x09: EMPTY_HANDLER, // ANSWER RESULT PACKET
-        0x0A: EMPTY_HANDLER, // SCORES PACKET
+        [ServerPacketId.KEEP_ALIVE]: this.onKeepAlive,
+        [ServerPacketId.DISCONNECT]: this.onDisconnect,
+        [ServerPacketId.ERROR]: this.onError,
+        [ServerPacketId.JOIN_GAME]: this.onJoinGame,
+        [ServerPacketId.NAME_TAKEN_RESULT]: EMPTY_HANDLER, // NAME TAKEN RESULT PACKET
+        [ServerPacketId.GAME_STATE]: this.onGameState,
+        [ServerPacketId.PLAYER_DATA]: this.onPlayerData,
+        [ServerPacketId.TIME_SYNC]: EMPTY_HANDLER, // TIME SYNC PACKET
+        [ServerPacketId.QUESTION]: this.onQuestion,
+        [ServerPacketId.ANSWER_RESULT]: EMPTY_HANDLER, // ANSWER RESULT PACKET
+        [ServerPacketId.SCORES]: EMPTY_HANDLER, // SCORES PACKET
     }
 
     /**
@@ -110,6 +98,8 @@ class SocketApi {
      * all the listeners are added to the websocket and the update interval is set
      */
     connect(): WebSocket {
+        this.handlers[ServerPacketId.KEEP_ALIVE] = this.onKeepAlive
+
         const ws = new WebSocket(APP_HOST)
         ws.onopen = () => this.onOpened()
         ws.onmessage = (e) => this.onMessage(e)
@@ -172,11 +162,11 @@ class SocketApi {
     onMessage(event: MessageEvent) {
         try {
             const packet = JSON.parse(event.data) as Packet<any>
-            const id: number = packet.id
+            const id: ServerPacketId = packet.id
             const data: any = packet.data
             // Check to make sure we have a handler for this packet id
             if (id in this.handlers) {
-                this.debugPacket(Direction.IN, packet)
+                debugLogPacket(Direction.IN, packet)
                 const handler = this.handlers[id]
                 // Call the packet handler with this and the packet data
                 handler(this, data)
@@ -293,38 +283,13 @@ class SocketApi {
     }
 
     /**
-     * Debug logs information about the provided packet
-     *
-     * @param dir The direction the packet is going IN for inbound OUT for outbound
-     * @param packet The packet to print debug info about
-     */
-    debugPacket(dir: Direction, packet: Packet<any>) {
-        if (this.isDebug) { // Ensure that this only happens in debug mode
-            const id = packet.id
-            if (this.isDebugHideKeepAlive && id === 0x00) {
-                return
-            }
-            let name = packets.names[dir][id] // Retrieve debug friendly packet name
-            if (!name) name = 'Unknown Name'
-            let dirName = dir == 0 ? '<-' : '->'
-
-            if (packet.data !== undefined) {
-                const dataString = JSON.stringify(packet.data)
-                console.debug(`[${dirName}] ${name} (${toHex(id, 2)}) ${dataString}`)
-            } else {
-                console.debug(`[${dirName}] ${name} (${toHex(id, 2)})`)
-            }
-        }
-    }
-
-    /**
      * Serializes the packet to json and sends it to the ws server.
      * Logs the packet to debug if isDebug is enabled
      *
      * @param packet The packet to send
      */
     send(packet: Packet<any>) {
-        this.debugPacket(Direction.OUT, packet)
+        debugLogPacket(Direction.OUT, packet)
         this.ws.send(JSON.stringify(packet))
     }
 
@@ -413,7 +378,7 @@ export function useSocket(): SocketApi {
  * @param id The id of the packets to listen for
  * @param handler The listener packet handling function
  */
-export function usePacketHandler<D>(socket: SocketApi, id: number, handler: (data: D) => any) {
+export function usePacketHandler<D>(socket: SocketApi, id: ServerPacketId, handler: (data: D) => any) {
     // Set the packet handler to the provided handler
     socket.handlers[id] = (api: SocketApi, data: D) => handler(data)
     // Reset the handler on unmount
@@ -473,6 +438,6 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
     update() // Trigger the update function to start the animation loop
 
     // Listen for time sync packets with onTimeSync
-    usePacketHandler(socket, 0x07, onTimeSync)
+    usePacketHandler(socket, ServerPacketId.TIME_SYNC, onTimeSync)
     return value
 }
