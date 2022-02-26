@@ -37,7 +37,7 @@ function disconnect() {
 <template>
     <div class="content">
         <Nav title="Game Over" :back-function="disconnect"/>
-        <div class="wrapper" v-if="gameData">
+        <div class="wrapper" v-if="gameData != null">
             <h1 class="title">{{ gameData.title }}</h1>
             <div class="players">
                 <div class="player-slot player-slot--second" v-if="secondPlace!= null">

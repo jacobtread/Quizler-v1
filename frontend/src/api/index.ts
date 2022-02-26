@@ -231,7 +231,9 @@ class SocketApi {
      * @param data The disconnect data contains the reason for disconnect
      */
     onDisconnect(data: DisconnectData) {
-        dialog('Disconnected', data.reason) // Display a disconnected dialog with the reason
+        if (this.gameState.value !== GameState.STOPPED) {
+            dialog('Disconnected', data.reason) // Display a disconnected dialog with the reason
+        }
         this.resetState()
         router.push({name: 'Home'}).then().catch()
     }

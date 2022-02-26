@@ -43,7 +43,7 @@ watch(gameState, (data: GameState) => {
         dialog('Cannot Join', `That game has already ${reason} you are unable to join it now.`)
     }
     searching.value = false
-}, {immediate: true})
+})
 
 function checkGameExists() {
     searching.value = true

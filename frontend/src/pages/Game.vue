@@ -110,13 +110,22 @@ function getRandomText() {
                 </button>
             </div>
         </div>
-        <div v-else-if="answered">
-            <h1>Waiting...</h1>
+        <div v-else-if="answered" class="waiting">
+            <h1 class="waiting__title">Waiting...</h1>
+            <p class="waiting__text">Hmm I wonder if you got it right....</p>
         </div>
     </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
+
+.waiting {
+  flex: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-flow: column;
+}
 
 .result {
   flex: auto;

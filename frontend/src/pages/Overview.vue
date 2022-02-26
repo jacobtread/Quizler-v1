@@ -46,9 +46,9 @@ function startGame() {
 }
 </script>
 <template>
-    <form @submit.prevent="startGame" v-if="gameData != null">
+    <form @submit.prevent="startGame">
         <Nav title="Waiting Room" :back-function="disconnect"/>
-        <div class="wrapper">
+        <div class="wrapper" v-if="gameData != null">
             <h1 class="code">{{ gameData.id }}</h1>
             <h2 class="title">{{ gameData.title }}</h2>
             <template v-if="gameState === GameState.WAITING">
