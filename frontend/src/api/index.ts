@@ -415,13 +415,6 @@ class SocketApi {
 // The socket instance
 let socket: SocketApi
 
-interface UseApi {
-    socket: SocketApi;
-    open: Ref<boolean>;
-    state: Ref<GameState>;
-    players: UnwrapNestedRefs<PlayerMap>;
-}
-
 /**
  * A function for using the socket connection. Will create a new
  * socket connection if there isn't already one

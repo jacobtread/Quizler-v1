@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import "@/assets/global.scss"
-import { useSocketOpen } from "@/api";
+import { useSocket, useSocketOpen } from "@/api";
 import Loader from "@/components/Loader.vue";
 import ToastSystem from "@component/ToastSystem.vue";
 import Dialog from "@component/Dialog.vue";
+import { watch } from "vue";
 
+useSocket() // Use the socket to create a socket instance
 const open = useSocketOpen()
+
 </script>
 <template>
     <template v-if="open">
