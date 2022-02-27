@@ -11,7 +11,7 @@ import packets, {
     PlayerDataWithMode,
     QuestionData,
     ScoresData,
-    SPID,
+    SPID, States,
     TimeSyncData
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
@@ -250,7 +250,7 @@ class SocketApi {
      */
     disconnect() {
         if (DEBUG) console.debug('Disconnected from game') // Print debug disconnected message
-        this.send(packets.disconnect) // Send a disconnect packet
+        this.send(packets.stateChange(States.DISCONNECT)) // Send a disconnect packet
         this.resetState()
     }
 

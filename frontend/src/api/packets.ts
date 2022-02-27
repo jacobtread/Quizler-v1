@@ -132,14 +132,20 @@ export enum SPID {
 
 // An enum containing all the id's for each outgoing packet
 export enum CPID {
-    DISCONNECT = 0x00,
-    CREATE_GAME,
+    CREATE_GAME = 0x00,
     CHECK_NAME_TAKEN,
     REQUEST_GAME_STATE,
     REQUEST_JOIN,
-    START,
+    STATE_CHANGE,
     ANSWER,
     KICK,
+}
+
+// An enum containing different states the client can request
+// from the server
+export enum States {
+    DISCONNECT,
+    START,
     SKIP
 }
 
@@ -165,15 +171,13 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
             [SPID.GAME_OVER]: 'GAME_OVER'
         },
         {
-            [CPID.DISCONNECT]: 'DISCONNECT',
             [CPID.CREATE_GAME]: 'CREATE_GAME',
             [CPID.CHECK_NAME_TAKEN]: 'CHECK_NAME_TAKEN',
             [CPID.REQUEST_GAME_STATE]: 'REQUEST_GAME_STATE',
             [CPID.REQUEST_JOIN]: 'REQUEST_JOIN',
-            [CPID.START]: 'START',
+            [CPID.STATE_CHANGE]: 'STATE_CHANGE',
             [CPID.ANSWER]: 'ANSWER',
             [CPID.KICK]: 'KICK',
-            [CPID.SKIP]: 'SKIP'
         }
     ]
 }
@@ -183,8 +187,6 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
  * values and normal packet objects for those that only have ID's
  */
 const constructors = {
-    // Disconnects from the current game
-    disconnect: {id: CPID.DISCONNECT},
     /**
      * Creates a new game server with the provided title and
      * questions
@@ -215,8 +217,13 @@ const constructors = {
      * @param name The name of the player to play as
      */
     requestJoin: (id: string, name: string) => ({id: CPID.REQUEST_JOIN, data: {id, name}}),
-    // Starts the current game (host only)
-    start: {id: CPID.START},
+    /**
+     * Requests the server to change a specific game state
+     *
+     * @see States
+     * @param state The state to change to
+     */
+    stateChange: (state: States) => ({id: CPID.STATE_CHANGE, data: {state}}),
     /**
      * Tells the server which answer this player would like
      * to select
@@ -232,8 +239,6 @@ const constructors = {
      * @param id The id of the player to remove
      */
     kick: (id: string) => ({id: CPID.KICK, data: {id}}),
-    // Skips the current question (host only)
-    skip: {id: CPID.SKIP}
 }
 
 export default constructors

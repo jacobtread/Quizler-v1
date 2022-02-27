@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import { GameState, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import { computed, ref, watch } from "vue";

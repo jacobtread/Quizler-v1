@@ -48,7 +48,6 @@ watch(socket.gameData, (data: GameData | null) => {
         router.push({name: 'Overview'})
     }
 })
-
 </script>
 <template>
     <form @submit.prevent="createQuiz">

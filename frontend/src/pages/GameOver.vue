@@ -1,9 +1,8 @@
 <script setup lang="ts">
-
 import { GameState, useSocket } from "@/api";
 import { useRouter } from "vue-router";
-import { ref, watch } from "vue";
-import { GameData, PlayerData } from "@api/packets";
+import { ref } from "vue";
+import { PlayerData } from "@api/packets";
 import CrownIcon from "@asset/crown.svg?inline"
 import Nav from "@component/Nav.vue";
 
@@ -62,9 +61,11 @@ function disconnect() {
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
+
 .title {
   margin-bottom: 5rem;
 }
+
 .wrapper {
   overflow: hidden;
 }
@@ -80,10 +81,9 @@ function disconnect() {
 
 .player-slot {
   position: relative;
-  padding: 1rem;
   background-color: #222;
   flex: auto;
-  padding-bottom: 2rem;
+  padding: 1rem 1rem 2rem;
   gap: 1rem;
 
   &__place {
@@ -91,6 +91,7 @@ function disconnect() {
     color: #888;
     font-size: 3rem;
     position: relative;
+
     span {
       color: #444;
       font-size: 1.25rem;
@@ -133,7 +134,7 @@ function disconnect() {
   }
 }
 
-@media screen and (max-width: 820px){
+@media screen and (max-width: 820px) {
   .title {
     margin-bottom: 0.5rem;
   }
@@ -151,13 +152,14 @@ function disconnect() {
     flex: auto;
     width: 100%;
     max-width: none;
+
     &--first {
       transform: translateY(0);
     }
   }
 }
 
-@media screen and (max-width: 300px){
+@media screen and (max-width: 300px) {
   .players {
     gap: 1rem;
     padding: 1rem;

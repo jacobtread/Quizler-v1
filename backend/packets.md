@@ -23,7 +23,7 @@
 | 0x01 | CHECK_NAME_TAKEN   | id (string), name (string)                 |
 | 0x02 | REQUEST_GAME_STATE | id (string)                                |
 | 0x03 | REQUEST_JOIN       | id (string), name (string)                 |
-| 0x04 | STATE_CHANGE       |                                            |
+| 0x04 | STATE_CHANGE       | state (State)                              |
 | 0x05 | ANSWER             | id (uint16)                                |
 | 0x06 | KICK               | id (string)                                |
 

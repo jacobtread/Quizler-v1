@@ -1,9 +1,8 @@
 <script setup lang="ts">
-
 import { GameState, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets from "@api/packets";
+import packets, { States } from "@api/packets";
 import { computed, watch } from "vue";
 
 const socket = useSocket()
@@ -42,7 +41,7 @@ function disconnect() {
  */
 function startGame() {
     // Send the start game packet
-    socket.send(packets.start)
+    socket.send(packets.stateChange(States.START))
 }
 </script>
 <template>
