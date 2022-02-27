@@ -54,8 +54,7 @@ class SocketApi {
     players = reactive<PlayerMap>({}) // The map of players to their names
     question = ref<QuestionData | null>(null) // The active question in the game (store here to persist)
     gameState = ref<GameState>(GameState.UNSET) // The current game state
-
-    self = ref<PlayerData | null>(null)
+    self = ref<PlayerData | null>(null) // The player we are playing as
 
     /**
      * A mapping to convert the packet ids into handler functions so that

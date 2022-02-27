@@ -69,9 +69,11 @@ func SocketConnect(c *gin.Context) {
 		// Read incoming packet into the raw packet map
 		err = ws.ReadJSON(&rawPacket)
 		if err != nil { // If packet parsing failed or the ID was missing
-			// Disconnect the client for sending invalid data
-			conn.Send(DisconnectPacket("Failed to decode packet"))
-			log.Println("Failed to decode packet", err)
+			if conn.Open { // Ignore this message if the client is not connected any more
+				// Disconnect the client for sending invalid data
+				conn.Send(DisconnectPacket("Failed to decode packet"))
+				log.Println("Failed to decode packet", err)
+			}
 			break
 		}
 

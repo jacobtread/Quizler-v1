@@ -86,11 +86,10 @@ const debugNames = getDebugPacketNames()
  * @param packet The packet to print debug info about
  */
 export function debugLogPacket(dir: Direction, packet: Packet) {
-    if (!DEBUG) return
+    if (!DEBUG) return // Ignore this function if DEBUG is disabled
     const id: PacketId = packet.id
-    let name = (debugNames[dir][id]) || 'UNKNOWN' // Retrieve debug friendly packet name
-    let dirName = dir == 0 ? '<-' : '->'
-
+    let name = (debugNames[dir][id]) ?? 'UNKNOWN' // Retrieve debug friendly packet name
+    let dirName = dir == 0 ? '<-' : '->' // Direction pointing arrow
     if (packet.data !== undefined) {
         const dataString = JSON.stringify(packet.data)
         console.debug(`[${dirName}] ${name} (${toHex(id, 2)}) ${dataString}`)
