@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"time"
 )
 
 func main() {
@@ -45,9 +44,6 @@ func SocketConnect(c *gin.Context) {
 
 	var rawPacket = PacketRaw{}
 
-	// The last time in milliseconds when a keep alive was received
-	lastKeepAlive := game.Time()
-
 	var hostOf *game.Game
 	var activeGame *game.Game
 	var activePlayer *game.Player
@@ -55,17 +51,6 @@ func SocketConnect(c *gin.Context) {
 	conn := NewConnection(ws)
 
 	for conn.Open {
-		// The current system time
-		currentTime := game.Time()
-		// The elapsed time since the last keep alive
-		elapsed := currentTime - lastKeepAlive
-
-		if elapsed > 10*time.Second { // If we didn't receive a Keep Alive Packet within the last 10s
-			// Then we disconnect the client for "Connection timed out"
-			conn.Send(DisconnectPacket("Connection timed out"))
-			break
-		}
-
 		// Read incoming packet into the raw packet map
 		err = ws.ReadJSON(&rawPacket)
 		if err != nil { // If packet parsing failed or the ID was missing
@@ -78,9 +63,6 @@ func SocketConnect(c *gin.Context) {
 		}
 
 		switch rawPacket.Id {
-		case CKeepAlive:
-			lastKeepAlive = currentTime
-			conn.Send(KeepAlivePacket())
 		case CDisconnect:
 			log.Printf("Player disconnected")
 			if activeGame != nil { // If we are in a game

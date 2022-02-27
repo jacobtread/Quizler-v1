@@ -7,18 +7,17 @@ import (
 
 // Ids for server packets
 const (
-	SKeepAlive       PacketId = 0x00
-	SDisconnect               = 0x01
-	SError                    = 0x02
-	SJoinedGame               = 0x03
-	SNameTakenResult          = 0x04
-	SGameState                = 0x05
-	SPlayerData               = 0x06
-	STimeSync                 = 0x07
-	SQuestion                 = 0x08
-	SAnswerResult             = 0x09
-	SScores                   = 0x0A
-	SGameOver                 = 0x0B
+	SDisconnect      PacketId = 0x00
+	SError                    = 0x01
+	SJoinedGame               = 0x02
+	SNameTakenResult          = 0x03
+	SGameState                = 0x04
+	SPlayerData               = 0x05
+	STimeSync                 = 0x06
+	SQuestion                 = 0x07
+	SAnswerResult             = 0x08
+	SScores                   = 0x09
+	SGameOver                 = 0x0A
 )
 
 // DisconnectPacket creates a new disconnect packet with the provided reason
@@ -26,11 +25,6 @@ func DisconnectPacket(reason string) Packet {
 	return Packet{Id: SDisconnect, Data: struct {
 		Reason string `json:"reason"` // The reason for disconnecting
 	}{Reason: reason}}
-}
-
-// KeepAlivePacket creates a new keep alive packet
-func KeepAlivePacket() Packet {
-	return Packet{Id: SKeepAlive}
 }
 
 type PlayerDataMode = uint8

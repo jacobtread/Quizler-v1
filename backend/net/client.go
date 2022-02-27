@@ -4,15 +4,14 @@ import "backend/types"
 
 // Ids for client packets
 const (
-	CKeepAlive        PacketId = 0x00
-	CDisconnect                = 0x01
-	CCreateGame                = 0x02
-	CCheckNameTaken            = 0x03
-	CRequestGameState          = 0x04
-	CRequestJoin               = 0x05
-	CStart                     = 0x06
-	CAnswer                    = 0x07
-	CKick                      = 0x08
+	CDisconnect       PacketId = 0x00
+	CCreateGame                = 0x01
+	CCheckNameTaken            = 0x02
+	CRequestGameState          = 0x03
+	CRequestJoin               = 0x04
+	CStart                     = 0x05
+	CAnswer                    = 0x06
+	CKick                      = 0x07
 )
 
 // KickData A structure representing the data a client will send to kick a player
