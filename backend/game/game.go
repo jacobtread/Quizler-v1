@@ -324,6 +324,7 @@ func (game *Game) NextQuestion() {
 // GameOver called when the game has ended and there is no more questions
 // sets the game state to stopped and logs the game over
 func (game *Game) GameOver() {
+	game.SetState(Stopped)
 	log.Printf("Game over for game '%s' (%s)", game.Title, game.Id)
 
 	GamesLock.Lock()       // Establish write lock on the games map
