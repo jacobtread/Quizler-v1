@@ -93,7 +93,7 @@ watch(question, (data: QuestionData | null) => {
                     </ul>
                 </template>
                 <template v-else>
-                    <h4 class="name">{{ self.name }}</h4>
+                    <h4 class="name">{{ self?.name }}</h4>
                 </template>
             </template>
             <template v-else-if="gameState === GameState.STARTING">

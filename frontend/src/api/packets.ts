@@ -76,9 +76,6 @@ export enum Direction {
     OUT
 }
 
-// Stores the debug names for each packet
-const debugNames = getDebugPacketNames()
-
 /**
  * Debug logs information about the provided packet
  *
@@ -88,7 +85,7 @@ const debugNames = getDebugPacketNames()
 export function debugLogPacket(dir: Direction, packet: Packet) {
     if (!DEBUG) return // Ignore this function if DEBUG is disabled
     const id: PacketId = packet.id
-    let name = (debugNames[dir][id]) ?? 'UNKNOWN' // Retrieve debug friendly packet name
+    let name: string = SPID[id] ?? CPID[id] ?? 'UNKNOWN';
     let dirName = dir == 0 ? '<-' : '->' // Direction pointing arrow
     if (packet.data !== undefined) {
         const dataString = JSON.stringify(packet.data)
@@ -146,38 +143,6 @@ export enum States {
     DISCONNECT,
     START,
     SKIP
-}
-
-
-/**
- * Creates a list of packet names for debugging purposes. Will create
- * an empty list if the app is not in debug mode in order to save memory
- */
-export function getDebugPacketNames(): Array<Record<number, string>> {
-    if (!DEBUG) return [{}, {}]
-    return [
-        { // Server packets
-            [SPID.DISCONNECT]: 'DISCONNECT',
-            [SPID.ERROR]: 'ERROR',
-            [SPID.JOIN_GAME]: 'JOINED_GAME',
-            [SPID.NAME_TAKEN_RESULT]: 'NAME_TAKEN_RESULT',
-            [SPID.GAME_STATE]: 'GAME_STATE',
-            [SPID.PLAYER_DATA]: 'PLAYER_DATA',
-            [SPID.TIME_SYNC]: 'TIME_SYNC',
-            [SPID.QUESTION]: 'QUESTION',
-            [SPID.ANSWER_RESULT]: 'ANSWER_RESULT',
-            [SPID.SCORES]: 'SCORES',
-        },
-        { // Client packets
-            [CPID.CREATE_GAME]: 'CREATE_GAME',
-            [CPID.CHECK_NAME_TAKEN]: 'CHECK_NAME_TAKEN',
-            [CPID.REQUEST_GAME_STATE]: 'REQUEST_GAME_STATE',
-            [CPID.REQUEST_JOIN]: 'REQUEST_JOIN',
-            [CPID.STATE_CHANGE]: 'STATE_CHANGE',
-            [CPID.ANSWER]: 'ANSWER',
-            [CPID.KICK]: 'KICK',
-        }
-    ]
 }
 
 /**

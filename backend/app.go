@@ -3,22 +3,57 @@ package main
 import (
 	"backend/game"
 	. "backend/net"
-	"github.com/gin-contrib/static"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
+	"mime"
 	"net/http"
+	"os"
+)
+
+const (
+	Version = "1.0.0"
+	Port    = 8080
+	Address = "0.0.0.0"
 )
 
 func main() {
+
+	intro := `
+   __         __       ___  __  
+  /  \ |  | |  / |    |__  |__) 
+  \__X \__/ | /_ |___ |___ |  \   by Jacobtread
+  
+  Version %s    Server Started on http://localhost:%d
+
+	`
+	fmt.Printf(intro, Version, Port)
+
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.Default()
 	// Create a new web socket endpoint
 	g.GET("/ws", SocketConnect)
-	// Server the public dir (will be used later to serve the app)
-	g.Use(static.Serve("/", static.LocalFile("./public", true)))
+
+	// Retrieve the file info about the public dir
+	_, fileErr := os.Stat("public")
+
+	if fileErr == nil || os.IsExist(fileErr) { // If the public dir exists
+		// Fixing the go extension type for javascript files
+		_ = mime.AddExtensionType(".js", "text/javascript")
+		// Serve the assets directory
+		g.Static("/assets", "./public/assets")
+		// Serve the index page as a fallback
+		g.NoRoute(func(context *gin.Context) {
+			// Serve the index.html file
+			context.File("./public/index.html")
+		})
+	} else { // If the public dir is missing
+		log.Println("Public folder didn't exist so it wont be served")
+	}
+
 	// Run the server
-	err := g.Run()
+	err := g.Run(fmt.Sprintf("%s:%d", Address, Port))
 	if err != nil {
 		log.Fatal("An error occurred", err)
 	}

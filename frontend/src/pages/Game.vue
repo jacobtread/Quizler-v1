@@ -98,7 +98,7 @@ function getRandomText(): string {
             </div>
             <div v-else-if="!answered" class="wrapper question">
                 <header class="header">
-                    <h1 class="title">{{ gameData.title }}</h1>
+                    <h1 class="title">{{ gameData?.title }}</h1>
                     <span class="time">{{ syncedTime.toFixed(0) }}s</span>
                 </header>
                 <div class="image-wrapper">

@@ -8,6 +8,9 @@ export default defineConfig({
     plugins: [vue({
         reactivityTransform: true
     }), vueSvg()],
+    build: {
+        outDir: path.resolve(__dirname, '../backend/public')
+    },
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),

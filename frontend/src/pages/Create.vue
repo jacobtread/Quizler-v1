@@ -95,7 +95,7 @@ watch(socket.gameData, (data: GameData | null) => {
                                 <ul class="question__answers">
                                     <li v-for="(answer, index) of question.answers"
                                         class="question__answers__item"
-                                        :class="{'question__answers__item--selected': question.values.indexOf(index) !== -1}"
+                                        :class="{'question__answers__item--selected': question.values?.indexOf(index) !== -1}"
                                     >
                                         {{ answer }}
                                     </li>

@@ -4,9 +4,9 @@ import Logo from "@asset/logo.svg?inline";
 import Create from "@asset/create.svg?inline";
 import { useSocket } from "@/api";
 
-const {resetState} = useSocket() // Use the socket reset state function
+const socket = useSocket() // Use the socket
 // Reset the state (state should always rest when home page is reached)
-resetState();
+socket.resetState();
 
 </script>
 <template>

@@ -43,7 +43,7 @@ function removeAt(index: number) {
             <li v-for="(_, index) of question.answers"
                 class="answer"
                 :key="index"
-                :class="{'answer--selected': question.values.indexOf(index) !== -1}"
+                :class="{'answer--selected': question.values?.indexOf(index) !== -1}"
             >
                 <label class="answer__select">
                     <input class="answer__select__value" type="checkbox" v-model="question.values" :value="index">
