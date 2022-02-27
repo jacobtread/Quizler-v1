@@ -108,7 +108,7 @@ func (state *SocketState) onCreateGame(data *CreateGameData) {
 	state.Hosted = g                                            // Set the hosted game for this state
 	state.Send(JoinGamePacket(true, g.Id, g.Title))             // Tell the host they've joined the new game as owner
 	state.Send(GameStatePacket(game.Waiting))                   // Tell the player the game state is waiting
-	log.Printf("Created new game '%state' (%state)", g.Title, g.Id)
+	log.Printf("Created new game '%s' (%s)", g.Title, g.Id)
 }
 
 // onCheckNameTaken Packet handler function for the net.CCheckNameTaken packet. Handles
@@ -127,7 +127,7 @@ func (state *SocketState) onCheckNameTaken(data *CheckNameTakenData) {
 // retrieving and sending the player the state of a game. Will send back game.DoesNotExist
 // if the game is not found
 func (state *SocketState) onRequestGameState(data *RequestGameStateData) {
-	log.Printf("Client requested game state for '%state'", data.Id)
+	log.Printf("Client requested game state for '%s'", data.Id)
 	g := game.Get(data.Id)
 	if g == nil { // If the game doesn't exist
 		state.Send(GameStatePacket(game.DoesNotExist))
