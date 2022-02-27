@@ -65,7 +65,9 @@ function getFontSize(text: string): string {
  */
 function getRandomText(): string {
     let texts: string[]
-    if (result.value) {
+    if (result.value === null) {
+        texts = ['Hmm I wonder if you got it right....', 'It definitely had to be that one!', 'Yeah it was probably that one...', '0_0 good luck i guess..']
+    } else if (result.value) {
         texts = ['You did it!', 'That one was right!', 'Good job!', 'Yup that was it!']
     } else {
         texts = ['Ooops..', 'Yeah not that one...', 'Better luck next time', 'Noooo your other left']
@@ -120,7 +122,7 @@ function getRandomText(): string {
             </div>
             <div v-else-if="answered" class="waiting">
                 <h1 class="waiting__title">Waiting...</h1>
-                <p class="waiting__text">Hmm I wonder if you got it right....</p>
+                <p class="waiting__text">{{ getRandomText() }}</p>
             </div>
         </Transition>
     </div>
