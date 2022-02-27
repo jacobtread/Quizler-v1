@@ -49,8 +49,6 @@ func NewConnection(ws *websocket.Conn) *Connection {
 	// Create the new connection
 	conn := Connection{Socket: ws, Open: true, Lock: &sync.RWMutex{}}
 	ws.SetCloseHandler(func(code int, text string) error {
-		// Print to the console that the connection closed
-		log.Printf("Websocket connection closed '%s' (%d)", text, code)
 		// Set the connection open to false
 		conn.Open = false
 		return nil
@@ -64,11 +62,8 @@ func (conn *Connection) Send(packet Packet) {
 	if conn.Open { // Only send the packet if the connection is open
 		conn.Lock.Lock()
 		// Write the packet to the socket as JSON
-		err := conn.Socket.WriteJSON(packet)
+		_ = conn.Socket.WriteJSON(packet)
 		conn.Lock.Unlock()
-		if err != nil { // If the packet failed to write
-			log.Printf("Failed to send packet '%x'", packet.Id)
-		}
 	}
 }
 

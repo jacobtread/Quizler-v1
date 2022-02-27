@@ -14,24 +14,38 @@ import (
 
 const (
 	Version = "1.0.0"
-	Port    = 8080
-	Address = "0.0.0.0"
 )
 
 func main() {
+
+	address, hasAddress := os.LookupEnv("ADDRESS")
+	if !hasAddress {
+		address = "0.0.0.0"
+	}
+
+	port, hasPort := os.LookupEnv("PORT")
+	if !hasPort {
+		port = "8080"
+	}
+
+	// Create a host url from ADDRESS:PORT
+	host := fmt.Sprintf("%s:%s", address, port)
 
 	intro := `
    __         __       ___  __  
   /  \ |  | |  / |    |__  |__) 
   \__X \__/ | /_ |___ |___ |  \   by Jacobtread
   
-  Version %s    Server Started on http://localhost:%d
+  Version %s    Server Started on http://localhost:%s
 
-	`
-	fmt.Printf(intro, Version, Port)
+`
+	fmt.Printf(intro, Version, port)
 
 	gin.SetMode(gin.ReleaseMode)
-	g := gin.Default()
+	g := gin.New()
+
+	g.Use(gin.Recovery()) // Recovery middleware to recover from panics and send 500 instead
+
 	// Create a new web socket endpoint
 	g.GET("/ws", SocketConnect)
 
@@ -53,7 +67,7 @@ func main() {
 	}
 
 	// Run the server
-	err := g.Run(fmt.Sprintf("%s:%d", Address, Port))
+	err := g.Run(host)
 	if err != nil {
 		log.Fatal("An error occurred", err)
 	}
@@ -97,7 +111,6 @@ func SocketConnect(c *gin.Context) {
 			if conn.Open { // Ignore this message if the client is not connected any more
 				// Disconnect the client for sending invalid data
 				conn.Send(DisconnectPacket("Failed to decode packet"))
-				log.Println("Failed to decode packet", err)
 			}
 			break
 		}

@@ -16,5 +16,6 @@
         <method importPath="github.com/gorilla/websocket" receiver="*Conn" name="Close" />
       </methods>
     </inspection_tool>
+    <inspection_tool class="HttpUrlsUsage" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
   </profile>
 </component>
