@@ -9,12 +9,17 @@ Quizler is a real time quiz app I am making which is similar to games like [Kaho
 fully real time and uses VueJS for its front-end and has a backend server written in Go; The whole thing communicates
 via a WebSocket packet system.
 
-The packet system is ever-changing but the basic packet descriptions are available [Here](./backend/packets.md)
+The packet system packet descriptions are available [Here](backend/packets.md)
 
 ## Showcase
 
-The following gif is a quick overview of the current app progress
+You can view an up-to-date gif of the app
+[Here](https://gyazo.com/6b23868be9b649b507f35b7b7a9bb8ee)
+
+and a slightly older gif below
 
 ![Gif](https://i.gyazo.com/f30dcedc58bf781e51e9ba91f9595656.gif)
 
+# Server Showcase
 
+![Preview](server_preview.png)
