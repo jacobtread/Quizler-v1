@@ -4,9 +4,20 @@
  * in the dev environment by adding VITE_THE_VAR_NAME=VALUE to the .env
  * file
  */
+function getHost(value: string | undefined): string {
+    if (!value || value === 'origin') {
+        let host = window.location.origin.replace(/^(http(s)?)/g, 'ws')
+        if (!host.endsWith('/')) host += '/'
+        host += 'ws'
+        return host
+    } else {
+        return value
+    }
+}
+
 // The websocket host url
-export const HOST: string = import.meta.env.VITE_HOST ?? (window.location.origin + '/ws')
+export const HOST: string = getHost(import.meta.env.VITE_HOST)
 // Whether to do debug logging
 export const DEBUG: boolean = import.meta.env.VITE_DEBUG == 'true'
 
-if (DEBUG) console.debug(`Web socket host is ${HOST}`)
+console.debug(`Web socket host is ${HOST}`)
