@@ -5,6 +5,8 @@
  * file
  */
 // The websocket host url
-export const HOST: string = import.meta.env.VITE_HOST
+export const HOST: string = import.meta.env.VITE_HOST ?? (window.location.origin + '/ws')
 // Whether to do debug logging
 export const DEBUG: boolean = import.meta.env.VITE_DEBUG == 'true'
+
+if (DEBUG) console.debug(`Web socket host is ${HOST}`)
