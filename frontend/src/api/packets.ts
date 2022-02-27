@@ -125,8 +125,7 @@ export enum SPID {
     TIME_SYNC,
     QUESTION,
     ANSWER_RESULT,
-    SCORES,
-    GAME_OVER
+    SCORES
 }
 
 
@@ -168,7 +167,6 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
             [SPID.QUESTION]: 'QUESTION',
             [SPID.ANSWER_RESULT]: 'ANSWER_RESULT',
             [SPID.SCORES]: 'SCORES',
-            [SPID.GAME_OVER]: 'GAME_OVER'
         },
         {
             [CPID.CREATE_GAME]: 'CREATE_GAME',

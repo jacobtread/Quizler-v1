@@ -17,7 +17,6 @@ const (
 	SQuestion                 = 0x07
 	SAnswerResult             = 0x08
 	SScores                   = 0x09
-	SGameOver                 = 0x0A
 )
 
 // DisconnectPacket creates a new disconnect packet with the provided reason

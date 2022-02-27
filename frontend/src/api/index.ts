@@ -71,7 +71,6 @@ class SocketApi {
         [SPID.QUESTION]: this.onQuestion.bind(this),
         [SPID.ANSWER_RESULT]: EMPTY_HANDLER,
         [SPID.SCORES]: this.onScores.bind(this),
-        [SPID.GAME_OVER]: EMPTY_HANDLER
     }
 
     /**
