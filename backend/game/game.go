@@ -247,13 +247,15 @@ func GetScore(player *Player, question *ActiveQuestion) uint32 {
 	}
 }
 
-// SkipQuestion skips to the next question and marks the active question if there
-// is already a question that has been sent
+// SkipQuestion skips to the next question by changing the question start time
+// to the time at which marking should be happening
 func (game *Game) SkipQuestion() {
-	if game.ActiveQuestion != nil && !game.ActiveQuestion.Marked { // If we have an unmarked question
-		game.MarkQuestion(game.ActiveQuestion) // Mark the question
+	q := game.ActiveQuestion
+	if q != nil { // If we have an active question
+		q.StartTime = Time() - QuestionTime // Set the time to a time when it would be complete
+	} else { // If we don't already have a question
+		game.NextQuestion() // Set the next question straight away
 	}
-	game.NextQuestion() // Move to the next question
 }
 
 // MarkQuestion Marks the question at the end of the
@@ -309,6 +311,8 @@ func (game *Game) NextQuestion() {
 	}
 }
 
+// GameOver called when the game has ended and there is no more questions
+// sets the game state to stopped and logs the game over
 func (game *Game) GameOver() {
 	log.Printf("Game over for game '%s' (%s)", game.Title, game.Id)
 	game.SetState(Stopped)

@@ -13,6 +13,9 @@ const answered = ref(false);
 // A reactive reference to whether the player answer was correct
 const result = ref<boolean | null>(null)
 
+// Create a synced timer with the default time of 10 seconds
+const syncedTime = useSyncedTimer(socket, 10)
+
 useRequireGame(socket) // Require an active game
 
 // Watch for changes to the question
@@ -42,9 +45,6 @@ function setAnswer(index: number) {
 usePacketHandler(socket, SPID.ANSWER_RESULT, (data: AnswerResultData) => {
     result.value = data.result
 })
-
-// Create a synced timer with the default time of 10 seconds
-const syncedTime = useSyncedTimer(socket, 10)
 
 /**
  * Calculates an appropriate font size for the answer value based on how

@@ -48,12 +48,13 @@ const skipEnabled = ref(false)
  */
 async function skipQuestion() {
     if (skipEnabled.value) {
+        // Prompt the user whether to skip
         const confirm = await confirmDialog('Confirm Skip', 'Are you sure you want to skip this question?')
-        if (!confirm) return
-        socket.send(packets.stateChange(States.SKIP))
-        syncedTime.value = 10
-        skipEnabled.value = false
-        setTimeout(() => {
+        if (!confirm) return // If the user pressed cancel
+        socket.send(packets.stateChange(States.SKIP)) // Send a skip packet
+        syncedTime.value = 10 // Reset the synced time
+        skipEnabled.value = false // Disable the skip button
+        setTimeout(() => { // Enable the skip button in 1.5s
             skipEnabled.value = true
         }, 1500)
     }
@@ -62,8 +63,8 @@ async function skipQuestion() {
 // Watch for changes to the question
 watch(question, (data: QuestionData | null) => {
     if (data === null) {
-        skipEnabled.value = false
-        setTimeout(() => {
+        skipEnabled.value = false // Disable the skip button
+        setTimeout(() => { // Enable the skip button in 1.5s
             skipEnabled.value = true
         }, 1500)
     }
