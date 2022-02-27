@@ -3,27 +3,28 @@ package game
 import (
 	"backend/net"
 	. "backend/tools"
-	. "backend/types"
 	"sync"
 	"time"
 )
 
-// Player A structure representing a player in the game
-type Player struct {
-	Net        *net.Connection               // The connection to the player socket
-	Id         Identifier                    // The unique ID of this player
-	Name       string                        // The name of this player
-	Score      uint32                        // The score this player has
-	Answers    map[QuestionIndex]AnswerIndex // A map of the question index to the answer chosen
-	AnswerTime time.Duration                 // The time of which the player provided its answer
-}
+type (
+	// Player A structure representing a player in the game
+	Player struct {
+		Net        *net.Connection               // The connection to the player socket
+		Id         Identifier                    // The unique ID of this player
+		Name       string                        // The name of this player
+		Score      uint32                        // The score this player has
+		Answers    map[QuestionIndex]AnswerIndex // A map of the question index to the answer chosen
+		AnswerTime time.Duration                 // The time of which the player provided its answer
+	}
 
-// PlayerStore A structure for storing, retrieving, removing and overall
-// management of players for the game
-type PlayerStore struct {
-	Lock *sync.RWMutex          // A lock for ensuring that writes are synchronized
-	Map  map[Identifier]*Player // The underlying map that stores the players mapped to Identifier's
-}
+	// PlayerStore A structure for storing, retrieving, removing and overall
+	// management of players for the game
+	PlayerStore struct {
+		Lock *sync.RWMutex          // A lock for ensuring that writes are synchronized
+		Map  map[Identifier]*Player // The underlying map that stores the players mapped to Identifier's
+	}
+)
 
 // NewPlayerStore Creates a new player store
 func NewPlayerStore() PlayerStore {

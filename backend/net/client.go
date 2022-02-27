@@ -1,6 +1,8 @@
 package net
 
-import "backend/types"
+import (
+	"backend/tools"
+)
 
 // Ids for client packets
 const (
@@ -14,38 +16,42 @@ const (
 	CKick                      = 0x07
 )
 
-// KickData A structure representing the data a client will send to kick a player
-type KickData struct {
-	Id string `json:"id"` // The id of the player to kick
-}
+// Different types for client packets
+type (
 
-// CreateGameData A structure representing the data a client will send to create a game
-type CreateGameData struct {
-	Title     string               `json:"title"`     // The title of the game
-	Questions []types.QuestionData `json:"questions"` // The questions to include in the game
-}
+	// KickData A structure representing the data a client will send to kick a player
+	KickData struct {
+		Id string `json:"id"` // The id of the player to kick
+	}
 
-// CheckNameTakenData A structure representing a client checking the server for if a name
-// is already in use
-type CheckNameTakenData struct {
-	Id   string `json:"id"`   // The id of the quiz to check names in
-	Name string `json:"name"` // The name to check if is taken
-}
+	// CreateGameData A structure representing the data a client will send to create a game
+	CreateGameData struct {
+		Title     string               `json:"title"`     // The title of the game
+		Questions []tools.QuestionData `json:"questions"` // The questions to include in the game
+	}
 
-// RequestGameStateData A structure representing a client requesting the current state of
-// a game from the server this will be followed up with a SGameState packet
-type RequestGameStateData struct {
-	Id string `json:"id"` // The id of the game to get the state of
-}
+	// CheckNameTakenData A structure representing a client checking the server for if a name
+	// is already in use
+	CheckNameTakenData struct {
+		Id   string `json:"id"`   // The id of the quiz to check names in
+		Name string `json:"name"` // The name to check if is taken
+	}
 
-// RequestJoinData A structure representing a client requesting to join a game with the
-// provided Id using the provided Name
-type RequestJoinData struct {
-	Id   string `json:"id"`   // The id of the game (game code)
-	Name string `json:"name"` // The name to join the game with
-}
+	// RequestGameStateData A structure representing a client requesting the current state of
+	// a game from the server this will be followed up with a SGameState packet
+	RequestGameStateData struct {
+		Id string `json:"id"` // The id of the game to get the state of
+	}
 
-// AnswerData A structure representing a client answering a question with the index
-type AnswerData struct {
-	Id types.AnswerIndex `json:"id"` // The index of the answer
-}
+	// RequestJoinData A structure representing a client requesting to join a game with the
+	// provided Id using the provided Name
+	RequestJoinData struct {
+		Id   string `json:"id"`   // The id of the game (game code)
+		Name string `json:"name"` // The name to join the game with
+	}
+
+	// AnswerData A structure representing a client answering a question with the index
+	AnswerData struct {
+		Id tools.AnswerIndex `json:"id"` // The index of the answer
+	}
+)
