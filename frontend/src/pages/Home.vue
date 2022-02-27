@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import Play from "@asset/play.svg?inline";
 import Logo from "@asset/logo.svg?inline";
-import Create from "@asset/create.svg?inline";</script>
+import Create from "@asset/create.svg?inline";
+import { useSocket } from "@/api";
+
+const {resetState} = useSocket() // Use the socket reset state function
+// Reset the state (state should always rest when home page is reached)
+resetState();
+
+</script>
 <template>
     <div>
         <main class="main">

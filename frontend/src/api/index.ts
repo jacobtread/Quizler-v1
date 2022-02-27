@@ -202,6 +202,7 @@ class SocketApi {
      * Clears the associated persisted state for this socket
      */
     resetState() {
+        this.self.value = null
         this.gameData.value = null
         this.question.value = null
         this.gameState.value = GameState.UNSET
