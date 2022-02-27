@@ -6,6 +6,7 @@ import (
 	"log"
 	"math"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -38,24 +39,31 @@ type ActiveQuestion struct {
 	Marked    bool          // Whether the question has been marked
 }
 
+// GamesLock A lock for modifying the games map
+var GamesLock = sync.RWMutex{}
+
 // Games A map of games to their identifiers
 var Games = map[Identifier]*Game{}
 
 // CreateGameId Creates a new game id this will be unique in order to not collided
 // with existing game ids so will iterate CreateRandomId until a unique one is found
 func CreateGameId() Identifier {
+	GamesLock.RLock() // Establish a read lock on the games map
 	for {
 		id := CreateRandomId(5)
 		_, contains := Games[id]
 		if !contains { // Check the id doesn't already exist
-			return id // Return the id
+			GamesLock.RUnlock() // Release the read lock
+			return id           // Return the id
 		}
 	}
 }
 
 // Get retrieves the game with a matching Identifier or else returns nil
 func Get(identifier Identifier) *Game {
+	GamesLock.RLock() // Establish a read lock on the games map
 	game, contains := Games[identifier]
+	GamesLock.RUnlock() // Release the read lock
 	if !contains {
 		return nil
 	}
@@ -76,9 +84,11 @@ func New(host *net.Connection, title string, questions []QuestionData) *Game {
 		StartTime: Time(),
 		State:     Waiting,
 	}
+	GamesLock.Lock() // Establish write lock on the games map
 	// Store the game in the games map
 	Games[id] = &game
-	go game.Loop() // Start a new goroutine for the game loop
+	GamesLock.Unlock() // Release write lock
+	go game.Loop()     // Start a new goroutine for the game loop
 	return &game
 }
 
@@ -315,7 +325,10 @@ func (game *Game) NextQuestion() {
 // sets the game state to stopped and logs the game over
 func (game *Game) GameOver() {
 	log.Printf("Game over for game '%s' (%s)", game.Title, game.Id)
-	game.SetState(Stopped)
+
+	GamesLock.Lock()       // Establish write lock on the games map
+	delete(Games, game.Id) // Remove the game
+	GamesLock.Unlock()     // Release write lock
 }
 
 // SetState sets the current game state and broadcasts the game state packet
@@ -354,4 +367,8 @@ func (game *Game) Stop() {
 	})
 	// Log a debug messaging saying the game was stopped
 	log.Printf("Stopping game '%s' (%s)", game.Title, game.Id)
+
+	GamesLock.Lock()       // Establish write lock on the games map
+	delete(Games, game.Id) // Remove the game
+	GamesLock.Unlock()     // Release write lock
 }
