@@ -148,10 +148,15 @@ socket.resetState();
   .button {
     flex-flow: column;
     align-items: flex-start;
+    font-size: 1.25rem;
 
     &__icon {
       width: 100%;
       padding: 1rem 0;
+    }
+
+    &__subtext {
+      font-size: 0.9rem;
     }
   }
 }

@@ -216,4 +216,18 @@ usePacketHandler(socket, SPID.NAME_TAKEN_RESULT, onNameTakenResult)
   padding: 0;
 }
 
+@media screen and (max-width: 650px) {
+  .title {
+    font-size: 2.5rem;
+  }
+  .text {
+    font-size: 1rem;
+  }
+
+  .input {
+    font-size: 2rem;
+    max-width: 10rem;
+  }
+}
+
 </style>

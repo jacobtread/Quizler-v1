@@ -134,6 +134,8 @@ function removeAt(index: number) {
     border-radius: 0.5rem;
     background-color: #222;
     outline: none;
+    min-width: 0;
+    width: 100%;
 
     &--active, &:focus {
       border-bottom-color: $primary;
