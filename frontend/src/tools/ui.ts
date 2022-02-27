@@ -1,11 +1,13 @@
-import { Ref, ref } from "vue";
+import { reactive, Ref, ref, UnwrapNestedRefs } from "vue";
 
+// Enum for choosing what type of toast message should be displayed
 export enum ToastMode {
     INFO,
     ERROR,
     WARNING
 }
 
+// Structure for a toast contains the mode, content and a unique id
 export interface Toast {
     id: number;
     mode: ToastMode;
@@ -17,12 +19,19 @@ export interface DialogData {
     content: string;
 }
 
+export interface LoaderState {
+    visible: boolean;
+    message: string;
+}
+
+const loader = reactive<LoaderState>({visible: false, message: 'Loading...'})
 const dialogData = ref<DialogData | null>(null)
 const toastData = ref<Toast[]>([])
 let toastId = 0
 
 export const useDialogData = (): Ref<DialogData | null> => dialogData
 export const useToastData = (): Ref<Toast[]> => toastData
+export const useLoaderData = (): UnwrapNestedRefs<LoaderState> => loader
 
 /**
  * Creates a new "toast" which is a small information popup
@@ -57,4 +66,15 @@ export function toast(content: string, mode: ToastMode = ToastMode.INFO) {
  */
 export function dialog(title: string, content: string) {
     dialogData.value = {title, content}
+}
+
+/**
+ * Used to change the loading state of the page.
+ *
+ * @param value Whether the page is loading or not
+ * @param message The message to display in the loader
+ */
+export function loading(value: boolean, message: string = 'Loading...') {
+    loader.visible = value
+    loader.message = message
 }

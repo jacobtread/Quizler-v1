@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import ImageIcon from "@asset/image.svg?inline"
 import imageCompression from "browser-image-compression"
+import { dialog, loading, toast } from "@/tools/ui";
 
 // Defining properties and emits for model value so v-model can be used
 const {modelValue} = defineProps(['modelValue'])
@@ -25,36 +26,52 @@ function removeImage() {
 }
 
 /**
- * Called when the file selected in the file input changes. Uses a FileReader
- * to convert the file contents into a base64 dataURL which will be used to
- * display the image and for later use.
+ * Called when the file selected in the file input changes. Asynchronously
+ * compresses and converts the image to a data url using loadImage
  */
-function onFileChange() {
+async function onFileChange() {
     const input: HTMLInputElement = fileInput.value!
     // Ensure that there is actually at least 1 file selected
     if (input.files && input.files.length > 0) {
-        // Create a new file reader
-        const reader = new FileReader()
-        reader.onload = () => {
-            // Ensure the result is present
-            if (reader.result) {
-                // Emit the update event
-                const dataURL: string = reader.result as string
-                emit('update:modelValue', dataURL)
-            }
-        }
+        // Retrieve the first file
+        const file = input.files[0]
         try {
-            imageCompression(input.files[0], {
-                maxSizeMB: 0.4
-            }).then(out => {
-                // Read the file as a data url (so we can get the base64 data url)
-                reader.readAsDataURL(out) /* The first file */
-            }).catch()
+            loading(true, 'Loading Image...') // Show a loader while we upload
+            const imageData = await loadImage(file) // Async load the image data
+            emit('update:modelValue', imageData) // Emit the changes
+            loading(false) // Hide the loader
+            toast('Image Uploaded') // Show a toast saying the image was uploaded
         } catch (e) {
-            console.error('Failed to compress image')
+            console.error(e)
+            dialog('Failed to load', 'The image you tried to upload failed to load. Try uploading it again and if it continues to fail use another image')
         }
     }
 }
+
+/**
+ * Async function for compressing and converting an image file into
+ * a data url (https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URIs)
+ *
+ * @param file The image file to load and compress
+ */
+function loadImage(file: File): Promise<string> {
+    return new Promise<string>(async (resolve, reject) => {
+        // Compress the image file try and get the file size down to 400kb
+        const compressedFile = await imageCompression(file, {maxSizeMB: 0.8});
+
+        const reader = new FileReader() // Create a new file reader
+        reader.onload = () => { // Set the loaded listener
+            if (reader.result) { // Ensure the result exits
+                resolve(reader.result as string) // Resolve the promise with the value
+            }
+        }
+        // Set the error listener as the reject function
+        reader.onerror = reject
+        // Read the compressed file into a data url these can be used directly as the source for image tags
+        reader.readAsDataURL(compressedFile)
+    })
+}
+
 </script>
 <template>
     <div class="image-wrapper" v-if="modelValue"> <!-- If we already have an image present -->
@@ -74,7 +91,6 @@ function onFileChange() {
 <style scoped lang="scss">
 // Importing the variables
 @import "../../assets/variables";
-
 
 .image {
   position: relative;

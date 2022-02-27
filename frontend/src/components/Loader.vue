@@ -1,10 +1,20 @@
 <script setup lang="ts">
-import Logo from "@asset/logo.svg?inline"</script>
+import Logo from "@asset/logo.svg?inline"
+
+defineProps({
+    message: {
+        type: String,
+        default: 'Loading...'
+    }
+})
+</script>
 <template>
-    <div class="loader">
-        <div class="loader__ring"><span class="loader__ring__qu">?</span></div>
-        <Logo class="loader__logo"/>
-        <p class="loader__text">Loading...</p>
+    <div class="loader-pad">
+        <div class="loader">
+            <div class="loader__ring"><span class="loader__ring__qu">?</span></div>
+            <Logo class="loader__logo"/>
+            <p class="loader__text">{{ message }}</p>
+        </div>
     </div>
 </template>
 <style scoped lang="scss">
@@ -21,14 +31,22 @@ import Logo from "@asset/logo.svg?inline"</script>
   padding: 1rem;
   margin: 1rem;
 
+  &-pad {
+    background: $background;
+    z-index: -1;
+    border-radius: 100%;
+  }
+
   &__ring {
 
     position: absolute;
     left: 0;
     top: 0;
+
     width: 170px;
     height: 170px;
     border-radius: 100%;
+
     border: 5px solid #222;
     border-top-color: $primary;
     animation: rotate 2s cubic-bezier(0.25, 0.46, 0.69, -0.16) infinite;
@@ -61,7 +79,6 @@ import Logo from "@asset/logo.svg?inline"</script>
   }
   50% {
     transform: rotate(180deg) scale(1);
-
   }
   100% {
     transform: rotate(360deg) scale(1.1);

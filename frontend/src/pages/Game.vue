@@ -4,8 +4,8 @@ import { GameState, ServerPacketId, usePacketHandler, useSocket, useSyncedTimer 
 import { useRouter } from "vue-router";
 import { computed, ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData } from "@api/packets";
-import Loader from "@component/Loader.vue";
 import Logo from "@asset/logo.svg?inline"
+import { loading } from "@/tools/ui";
 
 const router = useRouter()
 const socket = useSocket()
@@ -28,8 +28,10 @@ watch(question, (data: QuestionData | null) => {
     if (data != null) {
         answered.value = false
         result.value = null
+    } else {
+        loading(true)
     }
-})
+}, {immediate: true})
 
 function onAnswerResult(data: AnswerResultData) {
     result.value = data.result
@@ -67,10 +69,7 @@ function getRandomText() {
 </script>
 <template>
     <div class="content">
-        <div class="content loader-wrapper" v-if="question === null">
-            <Loader/>
-        </div>
-        <div v-else-if="result !== null" class="result" :class="{'result--correct': result}">
+        <div v-if="question !== null && result !== null" class="result" :class="{'result--correct': result}">
             <template v-if="result">
                 <h1 class="result__text">Correct Answer!</h1>
             </template>

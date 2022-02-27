@@ -7,9 +7,9 @@ const toasts = useToastData() // Retrieve the toast data
     <div class="toasts">
         <transition-group name="fade" appear>
             <div class="toast"
-                 v-for="toast in toasts.reverse()"
+                 v-for="toast in toasts"
                  :data-type="toast.mode"
-                 :key="toasts.id">
+                 :key="toast.id">
                 {{ toast.content }}
             </div>
         </transition-group>
@@ -34,7 +34,7 @@ const toasts = useToastData() // Retrieve the toast data
   right: 1rem;
   bottom: 1rem;
   display: flex;
-  flex-flow: column;
+  flex-flow: column-reverse;
   gap: 0.5rem;
 }
 

@@ -1,30 +1,29 @@
 <script setup lang="ts">
 import "@/assets/global.scss"
 import { useSocket } from "@/api";
-import Loader from "@/components/Loader.vue";
 import ToastSystem from "@component/Toasts.vue";
 import Dialog from "@component/Dialog.vue";
+import GlobalLoader from "@component/GlobalLoader.vue";
+import { loading } from "@/tools/ui";
+import { watch } from "vue";
 
-const {open} = useSocket()
+const {open} = useSocket(); // Use the socket for the open state
 
+watch(open, (value: boolean) => { // Watch for changes of the open state
+    loading(!value, 'Connecting...') // Show the loader if we aren't connected
+}, {immediate: true}/* Watch immediately (include the initial value) */)
 </script>
 <template>
-    <template v-if="open">
-        <div class="content">
-            <router-view v-slot="{ Component }">
-                <transition name="content">
-                    <component :is="Component" class="content__item"/>
-                </transition>
-            </router-view>
-            <Dialog/>
-            <ToastSystem/>
-        </div>
-    </template>
-    <template v-else>
-        <div class="content loader-wrapper">
-            <Loader/>
-        </div>
-    </template>
+    <div class="content">
+        <router-view v-slot="{ Component }">
+            <transition name="content">
+                <component :is="Component" class="content__item"/>
+            </transition>
+        </router-view>
+        <Dialog/>
+        <ToastSystem/>
+        <GlobalLoader/>
+    </div>
 </template>
 
 <style lang="scss">
