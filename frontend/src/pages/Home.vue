@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import Play from "@asset/play.svg?inline";
-import Logo from "@asset/logo.svg?inline";
-import Create from "@asset/create.svg?inline";
+import Play from "@asset/icons/play.svg?inline";
+import Logo from "@asset/icons/logo.svg?inline";
+import Create from "@asset/icons/create.svg?inline";
 import { useSocket } from "@/api";
 
 const socket = useSocket() // Use the socket

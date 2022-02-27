@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // Import the back icon as an inline svg
-import BackIcon from "@asset/back.svg?inline"
+import BackIcon from "@asset/icons/back.svg?inline"
 
 // Define the properties
 defineProps({

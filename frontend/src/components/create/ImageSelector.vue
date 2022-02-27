@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import ImageIcon from "@asset/image.svg?inline"
+import ImageIcon from "@asset/icons/image.svg?inline"
 import imageCompression from "browser-image-compression"
 import { dialog, loading, toast } from "@/tools/ui";
 

@@ -3,7 +3,7 @@ import { GameState, useSocket } from "@/api";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
 import { PlayerData } from "@api/packets";
-import CrownIcon from "@asset/crown.svg?inline"
+import CrownIcon from "@asset/icons/crown.svg?inline"
 import Nav from "@component/Nav.vue";
 
 const router = useRouter()

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import Play from "@asset/play.svg?inline";
+import Play from "@asset/icons/play.svg?inline";
 import { GameState, usePacketHandler, useSocket } from "@/api";
 import packets, { GameData, NameTakenResultData, SPID } from "@api/packets";
 import { useRouter } from "vue-router";

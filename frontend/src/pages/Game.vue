@@ -2,7 +2,7 @@
 import { usePacketHandler, useRequireGame, useSocket, useSyncedTimer } from "@/api";
 import { computed, ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData, SPID } from "@api/packets";
-import Logo from "@asset/logo.svg?inline"
+import Logo from "@asset/icons/logo.svg?inline"
 import { loading } from "@/tools/ui";
 
 const socket = useSocket(), {gameData, question, players} = socket // Use the socket

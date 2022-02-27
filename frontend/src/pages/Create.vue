@@ -4,15 +4,18 @@
 * a list of questions that can be modified, added, or deleted
 */
 
-import Add from "@asset/add.svg?inline"
-import Cross from "@asset/cross.svg?inline"
-import Edit from "@asset/edit.svg?inline"
+import Add from "@asset/icons/add.svg?inline"
+import Cross from "@asset/icons/cross.svg?inline"
+import Edit from "@asset/icons/edit.svg?inline"
+import ExportIcon from "@asset/icons/export.svg?inline"
+import ImportIcon from "@asset/icons/import.svg?inline"
 import { store } from "@store/create";
 import { useSocket } from "@/api";
 import { useRouter } from "vue-router";
-import packets, { GameData } from "@api/packets";
+import packets, { GameData, QuestionData } from "@api/packets";
 import Nav from "@component/Nav.vue";
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { dialog, loading, toast } from "@/tools/ui";
 
 const router = useRouter()
 const socket = useSocket()
@@ -48,6 +51,89 @@ watch(socket.gameData, (data: GameData | null) => {
         router.push({name: 'Overview'})
     }
 })
+
+// A reference to the file input element used to access the files
+const fileInput = ref<HTMLInputElement>()
+
+/**
+ * Async function for importing the quiz files as well as showing loaders
+ * and toasts with relevant info
+ */
+async function importFile() {
+    const input: HTMLInputElement = fileInput.value!
+    // Ensure that there is actually at least 1 file selected
+    if (input.files && input.files.length > 0) {
+        // Retrieve the first file
+        const file = input.files[0]
+        try {
+            loading(true, 'Loading Quiz') // Show a loader while we load
+            const config = await loadQuiz(file) // Load the quiz file
+
+            store.title = config.title // Set the quiz title from the config
+            store.questions = config.questions // Set the quiz questions from the config
+
+            loading(false) // Hide the loader
+            toast('Quiz Loaded') // Show a toast saying the quiz was loaded
+        } catch (e) {
+            console.error(e)
+            dialog('Failed to load', 'Failed to load that quiz file. Are you sure it was a valid quiz file')
+        }
+    }
+}
+
+// The structure of quiz config files
+interface Config {
+    title: string;
+    questions: QuestionData[]
+}
+
+/**
+ * Async function for loading the quiz data from a file
+ * and parsing it as JSON
+ *
+ * @param file The image file to load and compress
+ */
+function loadQuiz(file: File): Promise<Config> {
+    return new Promise<Config>(async (resolve, reject) => {
+        const reader = new FileReader() // Create a new file reader
+        reader.onload = () => { // Set the loaded listener
+            if (reader.result) { // Ensure the result exits
+                const raw = reader.result as string
+                const json = JSON.parse(raw) as Config
+                resolve(json) // Resolve the promise with the value
+            }
+        }
+        // Set the error listener as the reject function
+        reader.onerror = reject
+        // Read the compressed file as plain text
+        reader.readAsText(file)
+    })
+}
+
+/**
+ * Exports the current quiz as a json/.quiz file and starts a
+ * download of the file.
+ */
+function exportFile() {
+    const title = store.title
+    const questions = store.questions
+    const dataValue = JSON.stringify({title, questions})
+    const URL = window.webkitURL ?? window.URL;
+    const id = 'tmpDownload'
+    let element: HTMLAnchorElement = document.getElementById(id) as (HTMLAnchorElement | null) ?? ((): HTMLAnchorElement => {
+        const element = document.createElement('a') as HTMLAnchorElement
+        element.id = id
+        return element
+    })()
+    const safeName: string = title.replace(/[ ^\/]/g, '_')
+    const blob = new Blob([dataValue], {'type': 'application/json'});
+    element.download = safeName + '.quiz';
+    element.href = URL.createObjectURL(blob);
+    element.dataset.downloadurl = ['application/json', element.download, element.href].join(':');
+    element.style.display = 'none';
+    element.click()
+}
+
 </script>
 <template>
     <form @submit.prevent="createQuiz">
@@ -64,12 +150,21 @@ watch(socket.gameData, (data: GameData | null) => {
                         <Edit class="inline-icon"/>
                         to edit it
                     </p>
-                    <label class="input">
-                        <span class="input__label">Title</span>
-                        <input type="text" class="input__value" placeholder="Title" v-model="store.title" required
-                               minlength="1"
-                               maxlength="30">
-                    </label>
+                    <div class="action-bar">
+                        <label class="input" title="Enter the quiz title">
+                            <input type="text" class="input__value" placeholder="Title" v-model="store.title" required
+                                   minlength="1"
+                                   maxlength="30">
+                        </label>
+                        <label class="button button--icon" title="Click to Import">
+                            <ImportIcon class="button__icon"/>
+                            <input ref="fileInput" type="file" style="display: none;" @change="importFile"
+                                   accept=".quiz,.json">
+                        </label>
+                        <button class="button button--icon" @click.prevent="exportFile" title="Click to Export">
+                            <ExportIcon class="button__icon"/>
+                        </button>
+                    </div>
                 </div>
                 <div class="box">
                     <h2 class="box__title">Questions</h2>
@@ -80,6 +175,7 @@ watch(socket.gameData, (data: GameData | null) => {
                                     <h2 class="question__head__title">{{ question.question }}</h2>
                                     <div class="question__head__buttons">
                                         <router-link :to="{name: 'Modify', params: {edit: index}}"
+                                                     title="Edit Question"
                                                      class="question__head__button question__head__button--edit">
                                             <Edit class="question__head__button__icon"/>
                                         </router-link>
@@ -87,6 +183,7 @@ watch(socket.gameData, (data: GameData | null) => {
                                                 class="question__head__button question__head__button--delete"
                                                 type="button"
                                                 @click="deleteQuestion(index)"
+                                                title="Delete Question"
                                         >
                                             <Cross class="question__head__button__icon"/>
                                         </button>
@@ -108,7 +205,10 @@ watch(socket.gameData, (data: GameData | null) => {
                     </router-link>
                 </div>
                 <div class="full__box">
-                    <button class="button button--text button--block" type="submit" :disabled="!hasQuestions">
+                    <button class="button button--text button--block"
+                            type="submit"
+                            title="Create Quiz"
+                            :disabled="!hasQuestions">
                         Create Quiz
                     </button>
                 </div>
@@ -119,6 +219,15 @@ watch(socket.gameData, (data: GameData | null) => {
 
 <style scoped lang="scss">
 @import "../assets/variables";
+
+.action-bar {
+  display: flex;
+  gap: 0.5rem;
+
+  .input {
+    flex: auto;
+  }
+}
 
 .full__box {
   grid-area: full;

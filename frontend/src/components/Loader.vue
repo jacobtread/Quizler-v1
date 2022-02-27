@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Logo from "@asset/logo.svg?inline"
+import Logo from "@asset/icons/logo.svg?inline"
 
 defineProps({
     message: {
