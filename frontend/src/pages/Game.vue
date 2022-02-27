@@ -1,9 +1,9 @@
 <script setup lang="ts">
 
-import { GameState, ServerPacketId, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
+import { GameState, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import { computed, ref, watch } from "vue";
-import packets, { AnswerResultData, QuestionData } from "@api/packets";
+import packets, { AnswerResultData, QuestionData, SPID } from "@api/packets";
 import Logo from "@asset/logo.svg?inline"
 import { loading } from "@/tools/ui";
 
@@ -42,7 +42,7 @@ function setAnswer(index: number) {
     socket.send(packets.answer(index))
 }
 
-usePacketHandler(socket, ServerPacketId.ANSWER_RESULT, onAnswerResult)
+usePacketHandler(socket, SPID.ANSWER_RESULT, onAnswerResult)
 const syncedTime = useSyncedTimer(socket, 10)
 
 function getFontSize(text: string): string {

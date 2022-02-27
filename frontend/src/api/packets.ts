@@ -1,10 +1,5 @@
-import { DEBUG, DEBUG_IGNORE_KEEP_ALIVE } from "@/constants";
+import { DEBUG } from "@/constants";
 import { GameState } from "@api/index";
-
-export interface Packet {
-    id: number;
-    data?: any;
-}
 
 export interface ErrorData {
     cause: string;
@@ -68,6 +63,13 @@ export interface ScoresData {
     scores: Record<string, number>
 }
 
+type PacketId = number | CPID | SPID
+
+export interface Packet {
+    id: PacketId;
+    data?: any;
+}
+
 // Represents the direction a packet is travelling to IN = inbounds packets OUT = outbound packets
 export enum Direction {
     IN,
@@ -85,12 +87,8 @@ const debugNames = getDebugPacketNames()
  */
 export function debugLogPacket(dir: Direction, packet: Packet) {
     if (!DEBUG) return
-    const id = packet.id
-    if (DEBUG_IGNORE_KEEP_ALIVE && id === 0x00) {
-        return
-    }
-    let name = debugNames[dir][id] // Retrieve debug friendly packet name
-    if (!name) name = 'Unknown Name'
+    const id: PacketId = packet.id
+    let name = (debugNames[dir][id]) || 'UNKNOWN' // Retrieve debug friendly packet name
     let dirName = dir == 0 ? '<-' : '->'
 
     if (packet.data !== undefined) {
@@ -117,6 +115,36 @@ function toHex(value: number, padding: number = 2) {
     return '0x' + hexString
 }
 
+// An enum containing all the id's for each incoming packet
+export enum SPID {
+    DISCONNECT = 0x00,
+    ERROR,
+    JOIN_GAME,
+    NAME_TAKEN_RESULT,
+    GAME_STATE,
+    PLAYER_DATA,
+    TIME_SYNC,
+    QUESTION,
+    ANSWER_RESULT,
+    SCORES,
+    GAME_OVER
+}
+
+
+// An enum containing all the id's for each outgoing packet
+export enum CPID {
+    DISCONNECT = 0x00,
+    CREATE_GAME,
+    CHECK_NAME_TAKEN,
+    REQUEST_GAME_STATE,
+    REQUEST_JOIN,
+    START,
+    ANSWER,
+    KICK,
+    SKIP
+}
+
+
 /**
  * Creates a list of packet names for debugging purposes. Will create
  * an empty list if the app is not in debug mode in order to save memory
@@ -125,30 +153,28 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
     if (!DEBUG) return [{}, {}]
     return [
         {
-            0x00: 'KEEP_ALIVE',
-            0x01: 'DISCONNECT',
-            0x02: 'ERROR',
-            0x03: 'JOINED_GAME',
-            0x04: 'NAME_TAKEN_RESULT',
-            0x05: 'GAME_STATE',
-            0x06: 'PLAYER_DATA',
-            0x07: 'TIME_SYNC',
-            0x08: 'QUESTION',
-            0x09: 'ANSWER_RESULT',
-            0x0A: 'SCORES',
-            0x0B: 'GAME_OVER'
+            [SPID.DISCONNECT]: 'DISCONNECT',
+            [SPID.ERROR]: 'ERROR',
+            [SPID.JOIN_GAME]: 'JOINED_GAME',
+            [SPID.NAME_TAKEN_RESULT]: 'NAME_TAKEN_RESULT',
+            [SPID.GAME_STATE]: 'GAME_STATE',
+            [SPID.PLAYER_DATA]: 'PLAYER_DATA',
+            [SPID.TIME_SYNC]: 'TIME_SYNC',
+            [SPID.QUESTION]: 'QUESTION',
+            [SPID.ANSWER_RESULT]: 'ANSWER_RESULT',
+            [SPID.SCORES]: 'SCORES',
+            [SPID.GAME_OVER]: 'GAME_OVER'
         },
         {
-            0x00: 'KEEP_ALIVE',
-            0x01: 'DISCONNECT',
-            0x02: 'CREATE_GAME',
-            0x03: 'CHECK_NAME_TAKEN',
-            0x04: 'REQUEST_GAME_STATE',
-            0x05: 'REQUEST_JOIN',
-            0x06: 'START',
-            0x07: 'ANSWER',
-            0x08: 'KICK',
-            0x09: 'SKIP'
+            [CPID.DISCONNECT]: 'DISCONNECT',
+            [CPID.CREATE_GAME]: 'CREATE_GAME',
+            [CPID.CHECK_NAME_TAKEN]: 'CHECK_NAME_TAKEN',
+            [CPID.REQUEST_GAME_STATE]: 'REQUEST_GAME_STATE',
+            [CPID.REQUEST_JOIN]: 'REQUEST_JOIN',
+            [CPID.START]: 'START',
+            [CPID.ANSWER]: 'ANSWER',
+            [CPID.KICK]: 'KICK',
+            [CPID.SKIP]: 'SKIP'
         }
     ]
 }
@@ -158,10 +184,8 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
  * values and normal packet objects for those that only have ID's
  */
 const constructors = {
-    // Tells the server this client is still alive
-    keepAlive: {id: 0x00},
     // Disconnects from the current game
-    disconnect: {id: 0x01},
+    disconnect: {id: CPID.DISCONNECT},
     /**
      * Creates a new game server with the provided title and
      * questions
@@ -169,21 +193,21 @@ const constructors = {
      * @param title The new game title
      * @param questions The questions for the game
      */
-    createGame: (title: string, questions: QuestionData[]) => ({id: 0x02, data: {title, questions}}),
+    createGame: (title: string, questions: QuestionData[]) => ({id: CPID.CREATE_GAME, data: {title, questions}}),
     /**
      * Checks if the provided name is already in use
      *
      * @param id The id of the game to check
      * @param name The name to check for
      */
-    checkNameTaken: (id: string, name: string) => ({id: 0x03, data: {id, name}}),
+    checkNameTaken: (id: string, name: string) => ({id: CPID.CHECK_NAME_TAKEN, data: {id, name}}),
     /**
      * Requests the game with the provided id for its
      * current state (This is sent back in a game state packet)
      *
      * @param id The id of the game to request the state of
      */
-    requestGameState: (id: string) => ({id: 0x04, data: {id}}),
+    requestGameState: (id: string) => ({id: CPID.REQUEST_GAME_STATE, data: {id}}),
     /**
      * Requests permission to join the game with the provided
      * id as the provided name
@@ -191,16 +215,16 @@ const constructors = {
      * @param id The id of the game to request to join
      * @param name The name of the player to play as
      */
-    requestJoin: (id: string, name: string) => ({id: 0x05, data: {id, name}}),
+    requestJoin: (id: string, name: string) => ({id: CPID.REQUEST_JOIN, data: {id, name}}),
     // Starts the current game (host only)
-    start: {id: 0x06},
+    start: {id: CPID.START},
     /**
      * Tells the server which answer this player would like
      * to select
      *
      * @param id The index of the answer to choose
      */
-    answer: (id: number) => ({id: 0x07, data: {id}}),
+    answer: (id: number) => ({id: CPID.ANSWER, data: {id}}),
     /**
      * Kicks the player with the provided id from the game
      * this will only work if the player sending it is the
@@ -208,9 +232,9 @@ const constructors = {
      *
      * @param id The id of the player to remove
      */
-    kick: (id: string) => ({id: 0x08, data: {id}}),
+    kick: (id: string) => ({id: CPID.KICK, data: {id}}),
     // Skips the current question (host only)
-    skip: {id: 0x09}
+    skip: {id: CPID.SKIP}
 }
 
 export default constructors

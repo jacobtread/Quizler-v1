@@ -11,6 +11,7 @@ import packets, {
     PlayerDataWithMode,
     QuestionData,
     ScoresData,
+    SPID,
     TimeSyncData
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref } from "vue";
@@ -34,25 +35,10 @@ type PlayerMap = Record<string, PlayerData>
 // An empty function for handlers without a function
 const EMPTY_HANDLER = () => null
 
-// An enum containing all the id's for each incoming packet
-export enum ServerPacketId {
-    KEEP_ALIVE = 0x00,
-    DISCONNECT,
-    ERROR,
-    JOIN_GAME,
-    NAME_TAKEN_RESULT,
-    GAME_STATE,
-    PLAYER_DATA,
-    TIME_SYNC,
-    QUESTION,
-    ANSWER_RESULT,
-    SCORES
-}
-
 // Defines the type of packet handler function
 type PacketHandlerFunction = (data: any) => void
 // Defines the packet handlers map which is id -> handler
-type PacketHandlers = Record<ServerPacketId, PacketHandlerFunction>
+type PacketHandlers = Record<SPID, PacketHandlerFunction>
 
 /**
  * Stores all logic for communicating between the client and server over the
@@ -62,14 +48,6 @@ class SocketApi {
 
     // The websocket connection instance
     private ws: WebSocket = this.connect()
-
-    // The interval timer handle used to cancel the update interval
-    private keepAliveInterval: any = undefined
-
-    // The last time a server keep alive response was received
-    private lastServerKeepAlive: number = -1
-    // The last time that this client sent a keep alive at
-    private lastSendKeepAlive: number = -1
 
     open = ref(false) // The open state of the web socket connection
     gameData = ref<GameData | null>(null) // The current game data
@@ -84,17 +62,17 @@ class SocketApi {
      * they can be handled separately instead of a large switch statement
      */
     handlers: PacketHandlers = {
-        [ServerPacketId.KEEP_ALIVE]: this.onKeepAlive.bind(this),
-        [ServerPacketId.DISCONNECT]: this.onDisconnect.bind(this),
-        [ServerPacketId.ERROR]: this.onError.bind(this),
-        [ServerPacketId.JOIN_GAME]: this.onJoinGame.bind(this),
-        [ServerPacketId.NAME_TAKEN_RESULT]: EMPTY_HANDLER, // NAME TAKEN RESULT PACKET
-        [ServerPacketId.GAME_STATE]: this.onGameState.bind(this),
-        [ServerPacketId.PLAYER_DATA]: this.onPlayerData.bind(this),
-        [ServerPacketId.TIME_SYNC]: EMPTY_HANDLER, // TIME SYNC PACKET
-        [ServerPacketId.QUESTION]: this.onQuestion.bind(this),
-        [ServerPacketId.ANSWER_RESULT]: EMPTY_HANDLER, // ANSWER RESULT PACKET
-        [ServerPacketId.SCORES]: this.onScores.bind(this), // SCORES PACKET
+        [SPID.DISCONNECT]: this.onDisconnect.bind(this),
+        [SPID.ERROR]: this.onError.bind(this),
+        [SPID.JOIN_GAME]: this.onJoinGame.bind(this),
+        [SPID.NAME_TAKEN_RESULT]: EMPTY_HANDLER,
+        [SPID.GAME_STATE]: this.onGameState.bind(this),
+        [SPID.PLAYER_DATA]: this.onPlayerData.bind(this),
+        [SPID.TIME_SYNC]: EMPTY_HANDLER,
+        [SPID.QUESTION]: this.onQuestion.bind(this),
+        [SPID.ANSWER_RESULT]: EMPTY_HANDLER,
+        [SPID.SCORES]: this.onScores.bind(this),
+        [SPID.GAME_OVER]: EMPTY_HANDLER
     }
 
     /**
@@ -107,17 +85,16 @@ class SocketApi {
         ws.onopen = () => {
             if (DEBUG) console.debug('Connected to socket server') // Debug logging
             if (this.ws.readyState != WebSocket.OPEN) return // Ensure we are actually on the open ready state
-            this.lastServerKeepAlive = performance.now() // Set the last keep alive time
             this.open.value = true // Update the open state
         }
         // Set the handler for the websocket message event
         ws.onmessage = (event: MessageEvent) => {
             try {
                 const packet = JSON.parse(event.data) as Packet // Parse the packet
-                const id: ServerPacketId = packet.id // Get the packet id
+                debugLogPacket(Direction.IN, packet) // Debug print the packet info
+                const id: SPID = packet.id // Get the packet id
                 const data: any = packet.data
                 if (id in this.handlers) {  // Check to make sure we have a handler for this packet id
-                    debugLogPacket(Direction.IN, packet) // Debug print the packet info
                     const handler = this.handlers[id] // Retrieve the packet handler
                     handler(data) // Invoke the packet handler
                 } else {
@@ -134,22 +111,6 @@ class SocketApi {
             this.retryConnect() // Try and reconnect to the server
         }
         ws.onerror = console.error // Directly print all errors to the console
-        // Set an interval so that an updating function will be called every 100ms
-        this.keepAliveInterval = setInterval(/* This function ensures the connection is alive */() => {
-            if (this.open.value) { // If the connection is open
-                const time = performance.now() // Retrieve the current time in milliseconds
-                // If the last time we received a keep alive from the server was over 10s ago
-                if (time - this.lastServerKeepAlive > 10000) {
-                    if (DEBUG) console.warn('Lost connection with server')
-                    this.retryConnect() // Try and reconnect
-                    return
-                }
-
-                if (time - this.lastSendKeepAlive > 1000) {
-                    this.keepAlive()
-                }
-            }
-        }, 500)
         return ws
     }
 
@@ -164,8 +125,6 @@ class SocketApi {
         }
         // Print a debug message saying the connection was lost
         if (DEBUG) console.debug('Lost connection. Attempting reconnect in 2 seconds')
-        // Clear any existing keep alive interval
-        if (this.keepAliveInterval) clearInterval(this.keepAliveInterval)
         // Set a timeout to try and connect again in 2s
         setTimeout(() => this.ws = this.connect(), 2000)
     }
@@ -252,14 +211,6 @@ class SocketApi {
     }
 
     /**
-     * Packet handler for the KeepAlive packet (0x01) handles updating the
-     * lastServerKeepAlive time ensuring that the server is still alive
-     */
-    onKeepAlive() {
-        this.lastServerKeepAlive = performance.now() // Update the last server keep alive time
-    }
-
-    /**
      * Packet handler for the Error packet (0x03) handles errors that should
      * be displayed to the client.
      *
@@ -305,15 +256,6 @@ class SocketApi {
     }
 
     /**
-     * Keeps alive the connection by sending a Keep Alive packet to
-     * the server. This is called every 1000ms
-     */
-    keepAlive() {
-        this.lastSendKeepAlive = performance.now() // Update the last keep alive time
-        this.send(packets.keepAlive) // Send a keep alive packet
-    }
-
-    /**
      * Removes a player from the game (HOST ONLY)
      *
      * @param id The id of the player to kick
@@ -351,7 +293,7 @@ export function useSocket(): SocketApi {
  * @param id The id of the packets to listen for
  * @param handler The listener packet handling function
  */
-export function usePacketHandler<D>(socket: SocketApi, id: ServerPacketId, handler: (data: D) => any) {
+export function usePacketHandler<D>(socket: SocketApi, id: SPID, handler: (data: D) => any) {
     // Set the packet handler to the provided handler
     socket.handlers[id] = handler
     // Reset the handler on unmount
@@ -415,6 +357,6 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
     }
 
     // Listen for time sync packets with onTimeSync
-    usePacketHandler(socket, ServerPacketId.TIME_SYNC, onTimeSync)
+    usePacketHandler(socket, SPID.TIME_SYNC, onTimeSync)
     return value
 }

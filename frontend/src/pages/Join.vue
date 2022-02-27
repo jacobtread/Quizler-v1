@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import Play from "@asset/play.svg?inline";
-import { GameState, ServerPacketId, usePacketHandler, useSocket } from "@/api";
-import packets, { GameData, NameTakenResultData } from "@api/packets";
+import { GameState, usePacketHandler, useSocket } from "@/api";
+import packets, { GameData, NameTakenResultData, SPID } from "@api/packets";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
 import { dialog } from "@/tools/ui";
@@ -65,7 +65,7 @@ function joinGame() {
     socket.send(packets.checkNameTaken(code, name.value))
 }
 
-usePacketHandler(socket, ServerPacketId.NAME_TAKEN_RESULT, onNameTakenResult)
+usePacketHandler(socket, SPID.NAME_TAKEN_RESULT, onNameTakenResult)
 </script>
 
 <template>
