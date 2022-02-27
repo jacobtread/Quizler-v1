@@ -8,19 +8,34 @@ const dialog = useDialogData()
 
 watch(dialog, function (data: DialogData | null) {
     open.value = data !== null
-})
+}, {immediate: true})
 
 function close() {
     open.value = false
 }
+
+function action(value: boolean) {
+    const action = dialog.value?.action
+    if (action) action(value)
+    open.value = false
+}
+
 </script>
 <template>
-    <transition appear name="fade"  v-if="open && dialog != null">
+    <transition appear name="fade" v-if="open && dialog != null">
         <div class="dialog-wrapper">
             <div class="dialog">
                 <h2 class="dialog__title">{{ dialog.title }}</h2>
                 <p class="dialog__message">{{ dialog.content }}</p>
-                <button class="button button--text button--block" @click="close">Close</button>
+                <div class="dialog__buttons">
+                    <template v-if="dialog.action">
+                        <button class="button button--text" @click="action(true)">Confirm</button>
+                        <button class="button button--text" @click="action(false)">Cancel</button>
+                    </template>
+                    <template v-else>
+                        <button class="button button--text" @click="close">Close</button>
+                    </template>
+                </div>
             </div>
         </div>
     </transition>
@@ -45,7 +60,6 @@ function close() {
     transform: translateX(-15px) scale(0.5);
   }
 }
-
 
 .dialog-wrapper {
   position: fixed;
@@ -83,7 +97,18 @@ function close() {
     font-size: 1.1rem;
     flex: auto;
     color: #777;
+    line-height: 2;
+  }
 
+  &__buttons {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 1rem;
+
+    .button {
+      flex: auto;
+      font-size: 1.25rem;
+    }
   }
 }
 </style>

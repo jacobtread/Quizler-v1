@@ -20,6 +20,7 @@ watch(question, (data: QuestionData | null) => {
     answered.value = false // Set the answered value to false
     result.value = null // Clear the result
     loading(data === null) // If the there's no question show the loader
+    syncedTime.value = 10
 }, {immediate: true})
 
 /**

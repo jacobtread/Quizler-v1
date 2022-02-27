@@ -2,11 +2,12 @@
 import { GameState, useGameState, useRequireGame, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets, { States } from "@api/packets";
-import { computed } from "vue";
+import packets, { QuestionData, States } from "@api/packets";
+import { computed, ref, watch } from "vue";
+import { confirmDialog } from "@/tools/ui";
 
 const router = useRouter() // Use the router to change the page route
-const socket = useSocket(), {players, gameData, gameState} = socket // Use the socket connection
+const socket = useSocket(), {players, gameData, gameState, self, question} = socket // Use the socket connection
 const syncedTime = useSyncedTimer(socket, 5) // Use a synced timer for the game countdown
 
 useRequireGame(socket) // Require an active game
@@ -39,28 +40,60 @@ function startGame() {
     // Send the start game packet
     socket.send(packets.stateChange(States.START))
 }
+
+const skipEnabled = ref(false)
+
+/**
+ * Skips the current question (Host only)
+ */
+async function skipQuestion() {
+    if (skipEnabled.value) {
+        const confirm = await confirmDialog('Confirm Skip', 'Are you sure you want to skip this question?')
+        if (!confirm) return
+        socket.send(packets.stateChange(States.SKIP))
+        syncedTime.value = 10
+        skipEnabled.value = false
+        setTimeout(() => {
+            skipEnabled.value = true
+        }, 1500)
+    }
+}
+
+// Watch for changes to the question
+watch(question, (data: QuestionData | null) => {
+    if (data === null) {
+        skipEnabled.value = false
+        setTimeout(() => {
+            skipEnabled.value = true
+        }, 1500)
+    }
+}, {immediate: true})
+
 </script>
 <template>
-    <form @submit.prevent="startGame">
+    <div class="content">
         <Nav title="Waiting Room" :back-function="disconnect"/>
         <div class="wrapper" v-if="gameData != null">
             <h1 class="code">{{ gameData.id }}</h1>
             <h2 class="title">{{ gameData.title }}</h2>
             <template v-if="gameState === GameState.WAITING">
                 <h3 class="status">Waiting to start</h3>
-                <form v-if="gameData.owner && canPlay" @submit.prevent="startGame">
-                    <button class="button button--text" type="submit">
+                <template v-if="gameData.owner">
+                    <button class="button button--text" v-if="canPlay" @click="startGame" type="button">
                         Start Game
                     </button>
-                </form>
-                <ul class="players">
-                    <li v-for="(player, index) of players" :key="index" class="player">
-                        <span class="player__name">{{ player.name }}</span>
-                        <button @click="socket.kick(player.id)" v-if="gameData.owner" class="button player__button">
-                            Kick
-                        </button>
-                    </li>
-                </ul>
+                    <ul class="players">
+                        <li v-for="(player, index) of players" :key="index" class="player">
+                            <span class="player__name">{{ player.name }}</span>
+                            <button @click="socket.kick(player.id)" class="button player__button">
+                                Kick
+                            </button>
+                        </li>
+                    </ul>
+                </template>
+                <template v-else>
+                    <h4 class="name">{{ self.name }}</h4>
+                </template>
             </template>
             <template v-else-if="gameState === GameState.STARTING">
                 <h3 class="status">Game starting in</h3>
@@ -68,17 +101,20 @@ function startGame() {
             </template>
             <template v-else-if="gameState === GameState.STARTED">
                 <h3 class="status">Game started</h3>
+                <button class="button button--text" :disabled="!skipEnabled" @click="skipQuestion" type="button">
+                    Skip Question
+                </button>
                 <h2>Time remaining</h2>
                 <h2 class="countdown">{{ syncedTime.toFixed(0) }}s</h2>
                 <ul class="players">
                     <li v-for="(player, index) of players" :key="index" class="player">
                         <span class="player__name">{{ player.name }}</span>
-                        <span>{{ player.score ?? 0 }}</span>
+                        <span class="player__score">{{ player.score ?? 0 }}</span>
                     </li>
                 </ul>
             </template>
         </div>
-    </form>
+    </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
@@ -107,16 +143,15 @@ function startGame() {
 .players {
   display: flex;
   justify-content: center;
-  flex-flow: row;
-  flex-wrap: wrap;
-  list-style: none;
-  max-width: 500px;
+  flex-flow: column;
+  max-width: 700px;
   width: 100%;
   gap: 1rem;
 
 }
 
 .player {
+  flex: auto;
   display: flex;
   flex-flow: row;
   align-items: center;

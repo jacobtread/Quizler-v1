@@ -14,9 +14,12 @@ export interface Toast {
     content: string;
 }
 
+export type DialogAction = (result: boolean) => any
+
 export interface DialogData {
     title: string;
     content: string;
+    action?: DialogAction
 }
 
 export interface LoaderState {
@@ -66,6 +69,19 @@ export function toast(content: string, mode: ToastMode = ToastMode.INFO) {
  */
 export function dialog(title: string, content: string) {
     dialogData.value = {title, content}
+}
+
+/**
+ * Creates a new dialog to display to the user returns a promise
+ * which the dialog will resolve on selection of an answer
+ *
+ * @param title The title of the dialog
+ * @param content The message of the dialog
+ */
+export async function confirmDialog(title: string, content: string): Promise<boolean> {
+    return new Promise(resolve => {
+        dialogData.value = {title, content, action: resolve}
+    })
 }
 
 /**
