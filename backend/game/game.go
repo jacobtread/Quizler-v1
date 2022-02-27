@@ -38,11 +38,6 @@ type ActiveQuestion struct {
 	Marked    bool          // Whether the question has been marked
 }
 
-// Time Retrieves the current time in milliseconds
-func Time() time.Duration {
-	return time.Duration(time.Now().UnixNano())
-}
-
 // Games A map of games to their identifiers
 var Games = map[Identifier]*Game{}
 
@@ -158,7 +153,7 @@ const (
 // awarded for each question
 const (
 	Points      uint32  = 100 // The default number of points to award
-	BonusPoints float64 = 500 // The maximum amount of bonus points that can be awarded
+	BonusPoints float64 = 200 // The maximum amount of bonus points that can be awarded
 )
 
 // Loop Run the game loop for the provided game
@@ -250,6 +245,15 @@ func GetScore(player *Player, question *ActiveQuestion) uint32 {
 	} else {
 		return Points
 	}
+}
+
+// SkipQuestion skips to the next question and marks the active question if there
+// is already a question that has been sent
+func (game *Game) SkipQuestion() {
+	if game.ActiveQuestion != nil && !game.ActiveQuestion.Marked { // If we have an unmarked question
+		game.MarkQuestion(game.ActiveQuestion) // Mark the question
+	}
+	game.NextQuestion() // Move to the next question
 }
 
 // MarkQuestion Marks the question at the end of the

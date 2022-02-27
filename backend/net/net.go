@@ -72,9 +72,9 @@ func (conn *Connection) Send(packet Packet) {
 	}
 }
 
-// RequireData wraps around the packet data to create a type safe decoding
+// HandlePacket wraps around the packet data to create a type safe decoding
 // from the packet data map to the packet struct
-func RequireData[T interface{}](rawPacket PacketRaw, action func(data *T)) {
+func HandlePacket[T interface{}](rawPacket PacketRaw, action func(data *T)) {
 	d := rawPacket.Data
 	if d != nil {
 		out := new(T)

@@ -6,14 +6,21 @@ import (
 
 // Ids for client packets
 const (
-	CDisconnect       PacketId = 0x00
-	CCreateGame                = 0x01
-	CCheckNameTaken            = 0x02
-	CRequestGameState          = 0x03
-	CRequestJoin               = 0x04
-	CStart                     = 0x05
-	CAnswer                    = 0x06
-	CKick                      = 0x07
+	CCreateGame       PacketId = 0x00
+	CCheckNameTaken            = 0x01
+	CRequestGameState          = 0x02
+	CRequestJoin               = 0x03
+	CStateChange               = 0x04
+	CAnswer                    = 0x05
+	CKick                      = 0x06
+)
+
+type StateChangeId = uint8
+
+const (
+	CDisconnect StateChangeId = iota
+	CStart
+	CSkip
 )
 
 // Different types for client packets
@@ -48,6 +55,11 @@ type (
 	RequestJoinData struct {
 		Id   string `json:"id"`   // The id of the game (game code)
 		Name string `json:"name"` // The name to join the game with
+	}
+
+	// StateChangeData A structure representing a client requesting state change
+	StateChangeData struct {
+		State StateChangeId `json:"state"` // The state to update
 	}
 
 	// AnswerData A structure representing a client answering a question with the index

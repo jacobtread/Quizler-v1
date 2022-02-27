@@ -42,8 +42,16 @@ func (player *Player) GetAnswer(index QuestionIndex) (AnswerIndex, bool) {
 	return answer, exists
 }
 
+// HasAnswered Checks whether the player has already answered the current question
+func (player *Player) HasAnswered(game *Game) bool {
+	q := game.ActiveQuestion               // Retrieve the active question from the game
+	_, contains := player.Answers[q.Index] // Retrieve the player answer
+	return contains
+}
+
 // Answer sets the player answer to the provided answer index for the current quest
 func (player *Player) Answer(game *Game, id AnswerIndex) {
+	player.AnswerTime = Time()                       // Set the time of answer
 	q := game.ActiveQuestion                         // Retrieve the active question from the game
 	max := len(game.ActiveQuestion.Question.Answers) // Get the maximum question index
 	if id >= max {                                   // If the provided answer is greater

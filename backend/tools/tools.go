@@ -1,6 +1,9 @@
 package tools
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 type (
 	// Identifier represents a unique identifier
@@ -45,4 +48,9 @@ func CreateRandomId(length uint8) Identifier {
 	}
 	// Return the new identifier
 	return Identifier(out)
+}
+
+// Time Retrieves the current time in milliseconds
+func Time() time.Duration {
+	return time.Duration(time.Now().UnixNano())
 }

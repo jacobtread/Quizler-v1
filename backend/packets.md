@@ -19,15 +19,13 @@
 
 | Id   | Name               | Data                                       |
 |------|--------------------|--------------------------------------------|
-| 0x00 | DISCONNECT         |                                            |
-| 0x01 | CREATE_GAME        | title (string), questions (QuestionData[]) |
-| 0x02 | CHECK_NAME_TAKEN   | id (string), name (string)                 |
-| 0x03 | REQUEST_GAME_STATE | id (string)                                |
-| 0x04 | REQUEST_JOIN       | id (string), name (string)                 |
-| 0x05 | START              |                                            |
-| 0x06 | ANSWER             | id (uint16)                                |
-| 0x07 | KICK               | id (string)                                |
-| 0x08 | SKIP               |                                            |
+| 0x00 | CREATE_GAME        | title (string), questions (QuestionData[]) |
+| 0x01 | CHECK_NAME_TAKEN   | id (string), name (string)                 |
+| 0x02 | REQUEST_GAME_STATE | id (string)                                |
+| 0x03 | REQUEST_JOIN       | id (string), name (string)                 |
+| 0x04 | STATE_CHANGE       |                                            |
+| 0x05 | ANSWER             | id (uint16)                                |
+| 0x06 | KICK               | id (string)                                |
 
 
     
