@@ -6,7 +6,9 @@
  */
 function getHost(value: string | undefined): string {
     if (!value || value === 'origin') {
-        let host = window.location.origin.replace(/^(http(s)?)/g, 'ws')
+        let host = window.location.origin
+            .replace(/^https/, 'wss')
+            .replace(/^http/, 'ws')
         if (!host.endsWith('/')) host += '/'
         host += 'ws'
         return host
