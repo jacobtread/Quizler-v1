@@ -1,50 +1,56 @@
 <script setup lang="ts">
-import { GameState, usePacketHandler, useSocket, useSyncedTimer } from "@/api";
-import { useRouter } from "vue-router";
+import { usePacketHandler, useRequireGame, useSocket, useSyncedTimer } from "@/api";
 import { computed, ref, watch } from "vue";
 import packets, { AnswerResultData, QuestionData, SPID } from "@api/packets";
 import Logo from "@asset/logo.svg?inline"
 import { loading } from "@/tools/ui";
 
-const router = useRouter()
-const socket = useSocket()
-const {gameState, gameData, question, players} = socket
-
+const socket = useSocket(), {gameData, question, players} = socket // Use the socket
+// A sorted version of the player list which is sorted based on player score (only takes the first 5 players)
 const sortedPlayers = computed(() => Object.values(players).sort((a, b) => b.score - a.score).slice(0, 5))
-
+// A reactive reference to whether the player has answered the question
 const answered = ref(false);
+// A reactive reference to whether the player answer was correct
 const result = ref<boolean | null>(null)
 
-watch(gameState, () => {
-    if (gameState.value === GameState.UNSET) { // If we are no longer in a game
-        router.push({name: 'Home'}) // Return to the home screen
-    } else if (gameState.value === GameState.STOPPED) {
-        router.push({name: 'GameOver'})
-    }
-}, {immediate: true})
+useRequireGame(socket) // Require an active game
 
+// Watch for changes to the question
 watch(question, (data: QuestionData | null) => {
-    if (data != null) {
-        answered.value = false
-        result.value = null
-        loading(false)
-    } else {
-        loading(true)
-    }
+    answered.value = false // Set the answered value to false
+    result.value = null // Clear the result
+    loading(data === null) // If the there's no question show the loader
 }, {immediate: true})
 
-function onAnswerResult(data: AnswerResultData) {
-    result.value = data.result
-}
-
+/**
+ * Sets the player answer the answer at the provided index.
+ * Sets answered to true and sends an answer packet to the
+ * server with the provided index
+ *
+ * @param index The index of the chosen answer
+ */
 function setAnswer(index: number) {
     answered.value = true
     socket.send(packets.answer(index))
 }
 
-usePacketHandler(socket, SPID.ANSWER_RESULT, onAnswerResult)
+/**
+ * Creates a new packet handler to handle the Answer Result packets
+ * and update the result value accordingly
+ */
+usePacketHandler(socket, SPID.ANSWER_RESULT, (data: AnswerResultData) => {
+    result.value = data.result
+})
+
+// Create a synced timer with the default time of 10 seconds
 const syncedTime = useSyncedTimer(socket, 10)
 
+/**
+ * Calculates an appropriate font size for the answer value based on how
+ * long the text is compared to 100chars
+ *
+ * @param text The text to get the length of
+ */
 function getFontSize(text: string): string {
     const fitLength = 100
     if (text.length > fitLength) return '0.7rem'
@@ -53,19 +59,20 @@ function getFontSize(text: string): string {
     return `${size}rem`
 }
 
-function randomOf(values: string[]) {
-    const index = Math.floor(Math.random() * values.length)
-    return values[index]
-}
-
-function getRandomText() {
+/**
+ * Retrieves a random comment string based on the result
+ * that the user got from answering the question
+ */
+function getRandomText(): string {
+    let texts: string[]
     if (result.value) {
-        return randomOf(['You did it!', 'That one was right!', 'Good job!', 'Yup that was it!'])
+        texts = ['You did it!', 'That one was right!', 'Good job!', 'Yup that was it!']
     } else {
-        return randomOf(['Ooops..', 'Yeah not that one...', 'Better luck next time', 'Noooo your other left'])
+        texts = ['Ooops..', 'Yeah not that one...', 'Better luck next time', 'Noooo your other left']
     }
+    const index = Math.floor(Math.random() * texts.length)
+    return texts[index]
 }
-
 </script>
 <template>
     <div class="content">

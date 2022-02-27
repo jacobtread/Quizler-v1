@@ -11,13 +11,15 @@ import packets, {
     PlayerDataWithMode,
     QuestionData,
     ScoresData,
-    SPID, States,
+    SPID,
+    States,
     TimeSyncData
 } from "./packets";
-import { onUnmounted, reactive, ref, Ref } from "vue";
+import { onUnmounted, reactive, ref, Ref, watch } from "vue";
 import { dialog, toast } from "@/tools/ui";
 import { DEBUG, HOST } from "@/constants";
 import { router } from "@/router";
+import { useRouter } from "vue-router";
 
 // An enum for all the different possible game states
 export enum GameState {
@@ -281,6 +283,48 @@ export function useSocket(): SocketApi {
     // If we don't have a socket instance create a new one
     if (!socket) socket = new SocketApi()
     return socket
+}
+
+/**
+ * A "Composable" function to ensure that the current game state is a
+ * valid game. Will redirect to the home screen if the game state is
+ * unset or non-existent. If the game state is stopped the Game Over
+ * screen will be redirected to instead
+ *
+ * @param socket The socket connection
+ */
+export function useRequireGame(socket: SocketApi) {
+    const router = useRouter()
+    const {gameState, gameData} = socket
+    // Watch for changes in the current game state
+    watch(gameState, (value: GameState) => {
+        if (gameData.value === null
+            || value === GameState.UNSET
+            || value === GameState.DOES_NOT_EXIST) { // If we are no longer in a game
+            router.push({name: 'Home'}).then() // Return to the home screen
+        } else if (value === GameState.STOPPED) { // If the game has ended
+            router.push({name: 'GameOver'}).then() // Send to the game over screen
+        }
+    }, {immediate: true})
+}
+
+/**
+ * A "Composable" function for adding a listener to a specific game state.
+ * Will run the provided handle function when the game state is the same
+ * as the provided state
+ *
+ * @param socket The socket instance to listen on
+ * @param state The desired game state
+ * @param handle The listener function
+ */
+export function useGameState(socket: SocketApi, state: GameState, handle: Function) {
+    const {gameState} = socket
+    // Watch for changes in the current game state
+    watch(gameState, (value: GameState) => {
+        if (value === state) {
+            handle()
+        }
+    }, {immediate: true})
 }
 
 /**

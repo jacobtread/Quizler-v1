@@ -1,30 +1,26 @@
 <script setup lang="ts">
-import { GameState, useSocket, useSyncedTimer } from "@/api";
+import { GameState, useGameState, useRequireGame, useSocket, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
 import packets, { States } from "@api/packets";
-import { computed, watch } from "vue";
+import { computed } from "vue";
 
-const socket = useSocket()
-const {players, gameData, gameState} = socket
-const syncedTime = useSyncedTimer(socket, 5)
+const router = useRouter() // Use the router to change the page route
+const socket = useSocket(), {players, gameData, gameState} = socket // Use the socket connection
+const syncedTime = useSyncedTimer(socket, 5) // Use a synced timer for the game countdown
 
-const router = useRouter()
+useRequireGame(socket) // Require an active game
 
-const canPlay = computed(() => Object.keys(players).length > 0)
-
-watch(gameState, () => {
-    if (gameData.value === null || gameState.value === GameState.UNSET || gameState.value === GameState.DOES_NOT_EXIST) {
-        router.push({name: 'Home'})
-    } else if (gameState.value === GameState.STOPPED) {
-        router.push({name: 'GameOver'})
-    } else if (gameState.value === GameState.STARTED) {
-        if (!gameData.value.owner) {
-            router.push({name: 'Game'})
-        }
-        syncedTime.value = 10
+// Redirect to the Game page if the game state becomes started and the player isn't the host
+useGameState(socket, GameState.STARTED, () => {
+    if (gameData.value != null && !gameData.value.owner) {
+        router.push({name: 'Game'})
     }
-}, {immediate: true})
+    syncedTime.value = 10
+})
+
+// Computed state for whether the start game button should be visible (Requires at least 1 player)
+const canPlay = computed(() => Object.keys(players).length > 0)
 
 /**
  * Disconnects from the current game
@@ -151,5 +147,4 @@ function startGame() {
     }
   }
 }
-
 </style>
