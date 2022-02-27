@@ -14,6 +14,14 @@ import (
 
 const (
 	Version = "1.0.0"
+	Intro   = `
+   __         __       ___  __  
+  /  \ |  | |  / |    |__  |__) 
+  \__X \__/ | /_ |___ |___ |  \   by Jacobtread
+  
+  Version %s    Server Started on http://localhost:%s
+
+`
 )
 
 func main() {
@@ -31,15 +39,7 @@ func main() {
 	// Create a host url from ADDRESS:PORT
 	host := fmt.Sprintf("%s:%s", address, port)
 
-	intro := `
-   __         __       ___  __  
-  /  \ |  | |  / |    |__  |__) 
-  \__X \__/ | /_ |___ |___ |  \   by Jacobtread
-  
-  Version %s    Server Started on http://localhost:%s
-
-`
-	fmt.Printf(intro, Version, port)
+	fmt.Printf(Intro, Version, port) // Print the intro message
 
 	gin.SetMode(gin.ReleaseMode)
 	g := gin.New()
