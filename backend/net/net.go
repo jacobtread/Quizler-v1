@@ -7,39 +7,42 @@ import (
 	"sync"
 )
 
-// PacketId All packet ids are represented as 16-bit integers
-type PacketId = uint16
+type (
 
-// PacketData All data for packets is of type interface{} as a
-// placeholder for its real struct
-type PacketData interface{}
+	// PacketId All packet ids are represented as 16-bit integers
+	PacketId = uint16
 
-// RawPacket The type of data raw packets are parsed into (a string -> interface map)
-type RawPacket map[string]interface{}
+	// PacketData All data for packets is of type interface{} as a
+	// placeholder for its real struct
+	PacketData interface{}
 
-// RawPacketData The type of data raw packets contents are parsed into (a string -> interface map)
-type RawPacketData map[string]interface{}
+	// RawPacket The type of data raw packets are parsed into (a string -> interface map)
+	RawPacket map[string]interface{}
 
-// Packet The structure for outbound packets
-type Packet struct {
-	Id   PacketId   `json:"id"`
-	Data PacketData `json:"data,omitempty"`
-}
+	// RawPacketData The type of data raw packets contents are parsed into (a string -> interface map)
+	RawPacketData map[string]interface{}
 
-// PacketRaw The structure for  inbound packets only used for outbound
-// packets in this case though
-type PacketRaw struct {
-	Id   PacketId      `json:"id"`
-	Data RawPacketData `json:"data,omitempty"`
-}
+	// Packet The structure for outbound packets
+	Packet struct {
+		Id   PacketId   `json:"id"`
+		Data PacketData `json:"data,omitempty"`
+	}
 
-// Connection represents a connection to a websocket has extension function
-// for doing actions such as sending packets
-type Connection struct {
-	Open   bool            // Whether the connection is still open or not
-	Socket *websocket.Conn // The connection to the socket
-	Lock   *sync.RWMutex   // Write lock for the
-}
+	// PacketRaw The structure for  inbound packets only used for outbound
+	// packets in this case though
+	PacketRaw struct {
+		Id   PacketId      `json:"id"`
+		Data RawPacketData `json:"data,omitempty"`
+	}
+
+	// Connection represents a connection to a websocket has extension function
+	// for doing actions such as sending packets
+	Connection struct {
+		Open   bool            // Whether the connection is still open or not
+		Socket *websocket.Conn // The connection to the socket
+		Lock   *sync.RWMutex   // Write lock for the
+	}
+)
 
 // NewConnection Creates a new connection struct and sets the close handler
 func NewConnection(ws *websocket.Conn) *Connection {
