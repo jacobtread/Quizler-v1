@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "build:local": "vue-tsc --noEmit && vite build --outDir ../backend/public --emptyOutDir",
     "preview": "vite preview"
   },
   "dependencies": {
