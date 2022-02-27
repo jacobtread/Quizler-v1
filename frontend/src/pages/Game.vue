@@ -27,6 +27,7 @@ watch(question, (data: QuestionData | null) => {
     if (data != null) {
         answered.value = false
         result.value = null
+        loading(false)
     } else {
         loading(true)
     }
@@ -68,50 +69,53 @@ function getRandomText() {
 </script>
 <template>
     <div class="content">
-        <div v-if="question !== null && result !== null" class="result" :class="{'result--correct': result}">
-            <template v-if="result">
-                <h1 class="result__text">Correct Answer!</h1>
-            </template>
-            <template v-else>
-                <h1 class="result__text">Incorrect Answer</h1>
-            </template>
-            <p class="result__subtext">{{ getRandomText() }}</p>
-            <ul class="players">
-                <li class="player" v-for="player of sortedPlayers" :key="player.id">
-                    <span class="player__name">{{ player.name }}</span>
-                    <span class="player__score">{{ player.score }}</span>
-                </li>
-            </ul>
-        </div>
-        <div v-else-if="!answered" class="wrapper question">
-            <header class="header">
-                <h1 class="title">{{ gameData.title }}</h1>
-                <span class="time">{{ syncedTime.toFixed(0) }}s</span>
-            </header>
-            <div class="image-wrapper">
-                <div
-                        v-if="question.image"
-                        class="image"
-                        :style="{backgroundImage: `url(${question.image})`}"
-                ></div>
-                <div v-else>
-                    <Logo class="logo"/>
+        <Transition name="slide-fade" mode="out-in">
+            <div v-if="question==null"></div>
+            <div v-else-if="result !== null" class="result" :class="{'result--correct': result}">
+                <template v-if="result">
+                    <h1 class="result__text">Correct Answer!</h1>
+                </template>
+                <template v-else>
+                    <h1 class="result__text">Incorrect Answer</h1>
+                </template>
+                <p class="result__subtext">{{ getRandomText() }}</p>
+                <ul class="players">
+                    <li class="player" v-for="player of sortedPlayers" :key="player.id">
+                        <span class="player__name">{{ player.name }}</span>
+                        <span class="player__score">{{ player.score }}</span>
+                    </li>
+                </ul>
+            </div>
+            <div v-else-if="!answered" class="wrapper question">
+                <header class="header">
+                    <h1 class="title">{{ gameData.title }}</h1>
+                    <span class="time">{{ syncedTime.toFixed(0) }}s</span>
+                </header>
+                <div class="image-wrapper">
+                    <div
+                            v-if="question.image"
+                            class="image"
+                            :style="{backgroundImage: `url(${question.image})`}"
+                    ></div>
+                    <div v-else>
+                        <Logo class="logo"/>
+                    </div>
+                </div>
+                <p class="question__text">{{ question.question }}</p>
+                <div class="answers">
+                    <button v-for="(answer, index) in question.answers"
+                            @click="setAnswer(index)"
+                            :style="{fontSize: getFontSize(answer)}"
+                            class="answer">
+                        {{ answer }}
+                    </button>
                 </div>
             </div>
-            <p class="question__text">{{ question.question }}</p>
-            <div class="answers">
-                <button v-for="(answer, index) in question.answers"
-                        @click="setAnswer(index)"
-                        :style="{fontSize: getFontSize(answer)}"
-                        class="answer">
-                    {{ answer }}
-                </button>
+            <div v-else-if="answered" class="waiting">
+                <h1 class="waiting__title">Waiting...</h1>
+                <p class="waiting__text">Hmm I wonder if you got it right....</p>
             </div>
-        </div>
-        <div v-else-if="answered" class="waiting">
-            <h1 class="waiting__title">Waiting...</h1>
-            <p class="waiting__text">Hmm I wonder if you got it right....</p>
-        </div>
+        </Transition>
     </div>
 </template>
 <style scoped lang="scss">
@@ -123,6 +127,25 @@ function getRandomText() {
   justify-content: center;
   align-items: center;
   flex-flow: column;
+
+  background: linear-gradient(to bottom right, $primary, $secondary);
+  width: 100%;
+
+  &__title {
+    margin-bottom: 1rem;
+    font-size: 3rem;
+    text-shadow: 0 4px 0 darken($secondary, 10);
+
+  }
+
+  &__text {
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    color: #DDD;
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+  }
 }
 
 .result {

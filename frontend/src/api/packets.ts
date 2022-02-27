@@ -156,7 +156,7 @@ export enum States {
 export function getDebugPacketNames(): Array<Record<number, string>> {
     if (!DEBUG) return [{}, {}]
     return [
-        {
+        { // Server packets
             [SPID.DISCONNECT]: 'DISCONNECT',
             [SPID.ERROR]: 'ERROR',
             [SPID.JOIN_GAME]: 'JOINED_GAME',
@@ -168,7 +168,7 @@ export function getDebugPacketNames(): Array<Record<number, string>> {
             [SPID.ANSWER_RESULT]: 'ANSWER_RESULT',
             [SPID.SCORES]: 'SCORES',
         },
-        {
+        { // Client packets
             [CPID.CREATE_GAME]: 'CREATE_GAME',
             [CPID.CHECK_NAME_TAKEN]: 'CHECK_NAME_TAKEN',
             [CPID.REQUEST_GAME_STATE]: 'REQUEST_GAME_STATE',
