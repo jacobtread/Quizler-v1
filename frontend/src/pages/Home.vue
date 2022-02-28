@@ -2,6 +2,7 @@
 import Play from "@asset/icons/play.svg?inline";
 import Logo from "@asset/icons/logo.svg?inline";
 import Create from "@asset/icons/create.svg?inline";
+import GitHub from "@asset/icons/github.svg?inline";
 import { useSocket } from "@/api";
 
 const socket = useSocket() // Use the socket
@@ -25,10 +26,44 @@ socket.resetState();
                 </router-link>
             </div>
         </main>
+        <a class="github" href="https://github.com/jacobtread/Quizler" rel="noopener" target="_blank"
+           title="View on Github">
+            <GitHub class="github__icon"/>
+            <span class="github__text">
+                View on Github
+                <span class="github__text__sub">by Jacobtread</span>
+            </span>
+        </a>
     </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
+
+.github {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  color: white;
+  border-radius: 1rem;
+  padding: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: $background-light;
+
+  &__text {
+    display: flex;
+    flex-flow: column;
+    text-align: left;
+
+    &__sub {
+      font-size: 0.7rem;
+      color: #888;
+    }
+  }
+}
 
 .main {
   flex: auto;
