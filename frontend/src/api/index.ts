@@ -46,10 +46,11 @@ type PacketHandlers = Record<SPID, PacketHandlerFunction>
  * Stores all logic for communicating between the client and server over the
  * websocket connection.
  */
-class SocketApi {
+export class SocketApi {
 
     // The websocket connection instance
-    private ws: WebSocket = this.connect()
+    private ws: WebSocket
+    private readonly host: string
 
     open = ref(false) // The open state of the web socket connection
     gameData = ref<GameData | null>(null) // The current game data
@@ -76,11 +77,21 @@ class SocketApi {
     }
 
     /**
+     * Creates a new socket instance
+     *
+     * @param host The websocket server host address
+     */
+    constructor(host: string) {
+        this.host = host
+        this.ws = this.connect(host)
+    }
+
+    /**
      * Creates a connection to the websocket at APP_HOST and returns the websocket
      * all the listeners are added to the websocket and the update interval is set
      */
-    connect(): WebSocket {
-        const ws = new WebSocket(HOST) // Create a new web socket instance
+    connect(host: string): WebSocket {
+        const ws = new WebSocket(host) // Create a new web socket instance
         // Set the handler for the websocket open event
         ws.onopen = () => {
             if (DEBUG) console.debug('Connected to socket server') // Debug logging
@@ -126,7 +137,7 @@ class SocketApi {
         // Print a debug message saying the connection was lost
         if (DEBUG) console.debug('Lost connection. Attempting reconnect in 2 seconds')
         // Set a timeout to try and connect again in 2s
-        setTimeout(() => this.ws = this.connect(), 2000)
+        setTimeout(() => this.ws = this.connect(this.host), 2000)
     }
 
     /**
@@ -282,7 +293,7 @@ let socket: SocketApi
  */
 export function useSocket(): SocketApi {
     // If we don't have a socket instance create a new one
-    if (!socket) socket = new SocketApi()
+    if (!socket) socket = new SocketApi(HOST)
     return socket
 }
 

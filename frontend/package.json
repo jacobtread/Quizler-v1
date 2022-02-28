@@ -6,7 +6,9 @@
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
     "build:local": "vue-tsc --noEmit && vite build --outDir ../backend/public --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@vuetter/vite-plugin-vue-svg": "^0.1.2",
@@ -19,7 +21,9 @@
   "devDependencies": {
     "@types/vue-router": "^2.0.0",
     "@vitejs/plugin-vue": "^2.2.0",
+    "jsdom": "^19.0.0",
     "typescript": "^4.5.5",
-    "vite": "^2.8.0"
+    "vite": "^2.8.0",
+    "vitest": "^0.5.8"
   }
 }

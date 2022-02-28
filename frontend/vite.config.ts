@@ -5,9 +5,7 @@ import path from "path"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [vue({
-        reactivityTransform: true
-    }), vueSvg()],
+    plugins: [vue(), vueSvg()],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -18,4 +16,8 @@ export default defineConfig({
             '@store': path.resolve(__dirname, './src/store'),
         }
     },
+    // @ts-ignore
+    test: {
+        environment: 'jsdom'
+    }
 })

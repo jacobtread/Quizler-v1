@@ -85,7 +85,7 @@ export enum Direction {
 export function debugLogPacket(dir: Direction, packet: Packet) {
     if (!DEBUG) return // Ignore this function if DEBUG is disabled
     const id: PacketId = packet.id
-    let name: string = SPID[id] ?? CPID[id] ?? 'UNKNOWN';
+    let name: string = (dir === Direction.IN ? SPID[id] : CPID[id]) ?? 'UNKNOWN';
     let dirName = dir == 0 ? '<-' : '->' // Direction pointing arrow
     if (packet.data !== undefined) {
         const dataString = JSON.stringify(packet.data)
