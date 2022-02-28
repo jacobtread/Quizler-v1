@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import ImageIcon from "@asset/icons/image.svg?inline"
 import imageCompression from "browser-image-compression"
 import { dialog, loading, toast } from "@/tools/ui";
@@ -10,10 +10,6 @@ const emit = defineEmits(['update:modelValue'])
 
 // A reference to the file input element used to access the files
 const fileInput = ref<HTMLInputElement>()
-
-// Computed style for using the image as a background image
-// sets the background image property to the data url of modelValue
-const backgroundStyle = computed(() => ({backgroundImage: `url(${modelValue})`}))
 
 /**
  * Removes the image by updating the modelValue and setting it
@@ -56,8 +52,11 @@ async function onFileChange() {
  */
 function loadImage(file: File): Promise<string> {
     return new Promise<string>(async (resolve, reject) => {
-        // Compress the image file try and get the file size down to 400kb
-        const compressedFile = await imageCompression(file, {maxSizeMB: 0.8});
+        if (file.size >= (1024 * 2) * 1000) { // If the image is larger than 2mb
+            // Compress the image file try and get the file size down to 800kb
+            file = await imageCompression(file, {maxSizeMB: 0.8});
+        }
+
 
         const reader = new FileReader() // Create a new file reader
         reader.onload = () => { // Set the loaded listener
@@ -68,7 +67,7 @@ function loadImage(file: File): Promise<string> {
         // Set the error listener as the reject function
         reader.onerror = reject
         // Read the compressed file into a data url these can be used directly as the source for image tags
-        reader.readAsDataURL(compressedFile)
+        reader.readAsDataURL(file)
     })
 }
 
@@ -77,7 +76,7 @@ function loadImage(file: File): Promise<string> {
     <div class="image-wrapper" v-if="modelValue"> <!-- If we already have an image present -->
         <div class="image"
              @click="removeImage"
-             :style="backgroundStyle">
+             :style="{backgroundImage: `url(${modelValue})`}">
             <span class="image__text">Click to remove</span>
         </div>
     </div>
