@@ -52,6 +52,7 @@ socket.resetState();
   align-items: center;
   gap: 1rem;
   background: $background-light;
+  z-index: -1;
 
   &__text {
     display: flex;

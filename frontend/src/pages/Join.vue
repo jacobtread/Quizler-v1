@@ -21,7 +21,7 @@ const searching = ref(false)
 
 watch(gameCode, (code: string) => {
     const value = code.replace(/[^a-fA-F0-9]/, '')
-    gameCode.value = value
+    gameCode.value = value.toUpperCase()
     disabled.value = value.length != 5
 })
 
