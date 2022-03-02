@@ -1,5 +1,4 @@
 <script setup lang="ts">
-// Defining properties and emits for model value so v-model can be used
 import { QuestionData } from "@/api/packets";
 import CrossIcon from "@asset/icons/cross.svg?inline"
 import AddIcon from "@asset/icons/add.svg?inline"

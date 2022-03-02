@@ -10,11 +10,11 @@ const router = useRouter()
 const socket = useSocket()
 const {gameState, gameData, players} = socket
 
-const firstPlace = ref<PlayerData | null>(null)
-const secondPlace = ref<PlayerData | null>(null)
-const thirdPlace = ref<PlayerData | null>(null)
+const firstPlace = ref<PlayerData | null>(null) // The player data for first place
+const secondPlace = ref<PlayerData | null>(null) // The player data for second place
+const thirdPlace = ref<PlayerData | null>(null) // The player data for third place
 
-if (gameData.value === null || gameState.value !== GameState.STOPPED) {
+if (gameData.value === null || gameState.value !== GameState.STOPPED) { // If we don't have a game
     router.push({name: 'Home'}) // Return to the home screen
 } else {
     const p = Object.values(players).sort((a, b) => b.score - a.score)

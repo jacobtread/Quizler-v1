@@ -5,66 +5,78 @@ import { GameState, usePacketHandler, useSocket } from "@/api";
 import packets, { GameData, NameTakenResultData, SPID } from "@api/packets";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
-import { dialog } from "@/tools/ui";
+import { dialog, loading } from "@/tools/ui";
 
-const router = useRouter()
-const socket = useSocket()
-const {gameData, gameState} = socket
+const router = useRouter() // Use the router so we can change the page
+const socket = useSocket(), {gameData, gameState} = socket // Use the game state and data from the socket
 
+let gameCode = ref('') // The current game code
+let disabled = ref(true) // Whether the join button should be enabled
+const name = ref('') // The name the player has entered
+const hasGame = ref(false) // Whether the player has entered a game code
 
-let gameCode = ref('')
-let disabled = ref(true)
-const name = ref('')
-const hasGame = ref(false)
-const searching = ref(false)
-
-
-watch(gameCode, (code: string) => {
-    const value = code.replace(/[^a-fA-F0-9]/, '')
-    gameCode.value = value.toUpperCase()
-    disabled.value = value.length != 5
+watch(gameCode, (code: string) => { // Watch for changes in the game code
+    const value = code.replace(/[^a-fA-F0-9]/, '') // Replace any chars that aren't a - f 0 - 9 with nothing
+    gameCode.value = value.toUpperCase() // Update the game code with the new code in all capitals
+    disabled.value = value.length != 5 // Change the enabled state if the code is 5 chars long
 })
 
-watch(gameData, (data: GameData | null) => {
+watch(gameData, (data: GameData | null) => { // When the game data is received
     if (data != null) {
         // Redirect to the overview page
         router.push({name: 'Overview'})
     }
 })
 
-watch(gameState, (data: GameState) => {
-    if (data === GameState.WAITING) {
+watch(gameState, (data: GameState) => { // When the game state changed
+    if (data === GameState.WAITING) { // The waiting state means we have joined a game
         hasGame.value = true
-    } else if (data === GameState.DOES_NOT_EXIST) {
+    } else if (data === GameState.DOES_NOT_EXIST) { // The game didn't exist
         dialog('Invalid code', 'The quiz code you entered doesn\'t seem to exist.')
         gameState.value = GameState.UNSET
-    } else if (data === GameState.STARTED || data === GameState.STOPPED) {
+    } else if (data === GameState.STARTED || data === GameState.STOPPED) { // The game already started or finished
         const reason = data === GameState.STARTED ? 'started' : 'finished'
         dialog('Cannot Join', `That game has already ${reason} you are unable to join it now.`)
     }
-    searching.value = false
+    loading(false)
 })
 
+/**
+ * Checks if the game exists, displays a loader and
+ * resets the has game state.
+ */
 function checkGameExists() {
-    searching.value = true
-    hasGame.value = false
-    const code = gameCode.value
-    socket.send(packets.requestGameState(code))
+    loading(true, 'Checking Game') // Display a checking loader
+    hasGame.value = false // Reset the has game state
+    socket.send(packets.requestGameState(gameCode.value)) // Send q requestion join packet
 }
 
+/**
+ * Listener for the name taken result packet to display
+ * and error message to the player if the name is already
+ * taken or continue the joining process if it isnt
+ *
+ * @param data The name take result
+ */
 function onNameTakenResult(data: NameTakenResultData) {
-    if (data.result) {
+    if (data.result) { // If the name is already taken
         dialog('Name taken', 'That name is already in use. Please choose another')
     } else {
+        // Send a join request
         socket.send(packets.requestJoin(gameCode.value, name.value))
     }
 }
 
-function joinGame() {
-    const code = gameCode.value
-    socket.send(packets.checkNameTaken(code, name.value))
+/**
+ * Checks with the server to see if the name
+ * is already taken
+ */
+function checkName() {
+    // Sends a check name taken packet for the game
+    socket.send(packets.checkNameTaken(gameCode.value, name.value))
 }
 
+// Listen for name taken result packets
 usePacketHandler(socket, SPID.NAME_TAKEN_RESULT, onNameTakenResult)
 </script>
 
@@ -72,50 +84,45 @@ usePacketHandler(socket, SPID.NAME_TAKEN_RESULT, onNameTakenResult)
     <div class="content">
         <Nav title="Join"/>
         <div class="wrapper main">
-            <template v-if="searching">
-                <h1>Checking if game exists</h1>
+            <template v-if="hasGame">
+                <h1 class="title">Enter Name</h1>
+                <p class="text">Please you name for the game</p>
+                <form class="input__wrapper" @submit.prevent="checkName">
+                    <input class="input"
+                           :class="{'input--active': !disabled}"
+                           type="text"
+                           v-model="name"
+                           required
+                           maxlength="12"
+                           minlength="1"
+                           placeholder="Name"
+                    >
+                    <transition name="button" appear>
+                        <button class="button" v-if="!disabled" type="submit">
+                            <Play/>
+                        </button>
+                    </transition>
+                </form>
             </template>
             <template v-else>
-                <template v-if="hasGame">
-                    <h1 class="title">Enter Name</h1>
-                    <p class="text">Please you name for the game</p>
-                    <form class="input__wrapper" @submit.prevent="joinGame">
-                        <input class="input"
-                               :class="{'input--active': !disabled}"
-                               type="text"
-                               v-model="name"
-                               required
-                               maxlength="12"
-                               minlength="1"
-                               placeholder="Name"
-                        >
-                        <transition name="button" appear>
-                            <button class="button" v-if="!disabled" type="submit">
-                                <Play/>
-                            </button>
-                        </transition>
-                    </form>
-                </template>
-                <template v-else>
-                    <h1 class="title">Enter Code</h1>
-                    <p class="text">Please your quiz code</p>
-                    <form class="input__wrapper" @submit.prevent="checkGameExists">
-                        <input class="input"
-                               :class="{'input--active': !disabled}"
-                               type="text"
-                               v-model="gameCode"
-                               required
-                               maxlength="5"
-                               minlength="5"
-                               placeholder="XXXXX"
-                        >
-                        <transition name="button" appear>
-                            <button class="button" v-if="!disabled" type="submit">
-                                <Play/>
-                            </button>
-                        </transition>
-                    </form>
-                </template>
+                <h1 class="title">Enter Code</h1>
+                <p class="text">Please your quiz code</p>
+                <form class="input__wrapper" @submit.prevent="checkGameExists">
+                    <input class="input"
+                           :class="{'input--active': !disabled}"
+                           type="text"
+                           v-model="gameCode"
+                           required
+                           maxlength="5"
+                           minlength="5"
+                           placeholder="XXXXX"
+                    >
+                    <transition name="button" appear>
+                        <button class="button" v-if="!disabled" type="submit">
+                            <Play/>
+                        </button>
+                    </transition>
+                </form>
             </template>
         </div>
     </div>

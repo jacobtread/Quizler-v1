@@ -23,6 +23,7 @@ export interface PlayerData {
 
 export type PlayerDataWithMode = PlayerData & { mode: PlayerDataMode }
 
+// The different possible values for player data packet modes
 export enum PlayerDataMode {
     ADD,
     REMOVE,
@@ -63,6 +64,7 @@ export interface ScoresData {
     scores: Record<string, number>
 }
 
+// Packet ids can be either client or server packet ids
 type PacketId = number | CPID | SPID
 
 export interface Packet {

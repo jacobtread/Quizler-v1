@@ -3,6 +3,6 @@ import App from './App.vue'
 import { router } from "./router";
 
 createApp(App)
-    .use(router)
-    .mount('#app')
+    .use(router) // Use the router
+    .mount('#app') // Mount the app to the #app element
 

@@ -1,24 +1,37 @@
 <script setup lang="ts">
 import Logo from "@asset/icons/logo.svg?inline"
+import { useLoaderData } from "@/tools/ui";
 
-defineProps({
-    message: {
-        type: String,
-        default: 'Loading...'
-    }
-})
+const loaderData = useLoaderData() // Use the loader data
 </script>
 <template>
-    <div class="loader-pad">
-        <div class="loader">
-            <div class="loader__ring"><span class="loader__ring__qu">?</span></div>
-            <Logo class="loader__logo"/>
-            <p class="loader__text">{{ message }}</p>
+    <div class="loader-wrapper" v-if="loaderData.visible">
+        <div class="loader-pad">
+            <div class="loader">
+                <div class="loader__ring"><span class="loader__ring__qu">?</span></div>
+                <Logo class="loader__logo"/>
+                <p class="loader__text">{{ loaderData.message }}</p>
+            </div>
         </div>
     </div>
 </template>
 <style scoped lang="scss">
 @import "../assets/variables";
+
+.loader-wrapper {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: rgba(0, 0, 0, 0.7);
+}
+
 
 .loader {
   display: flex;
@@ -84,5 +97,4 @@ defineProps({
     transform: rotate(360deg) scale(1.1);
   }
 }
-
 </style>

@@ -1,28 +1,33 @@
 <script setup lang="ts">
 
-import { ref, watch } from "vue";
-import { DialogData, useDialogData } from "@/tools/ui";
+import { useDialogData } from "@/tools/ui";
 
-const open = ref(false)
-const dialog = useDialogData()
+const dialog = useDialogData() // Use the dialog data
 
-watch(dialog, function (data: DialogData | null) {
-    open.value = data !== null
-}, {immediate: true})
-
+/**
+ * Simple close function for non confirm dialogs
+ * just closes the dialog
+ */
 function close() {
-    open.value = false
+    dialog.value = null // Clear the active dialog
 }
 
+/**
+ * Called when the user selects one of the buttons. The confirm
+ * button will result in value being true and the cancel will
+ * result in the value being values. Used by confirm dialogs
+ *
+ * @param value Whether the user chose true
+ */
 function action(value: boolean) {
-    const action = dialog.value?.action
-    if (action) action(value)
-    open.value = false
+    const action = dialog.value?.action // Retrieve the close action
+    if (action) action(value) // Trigger the close action
+    dialog.value = null // Clear the active dialog
 }
 
 </script>
 <template>
-    <transition appear name="fade" v-if="open && dialog != null">
+    <transition appear name="fade" v-if=" dialog != null">
         <div class="dialog-wrapper">
             <div class="dialog">
                 <h2 class="dialog__title">{{ dialog.title }}</h2>

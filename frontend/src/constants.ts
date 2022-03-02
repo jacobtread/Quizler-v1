@@ -4,6 +4,15 @@
  * in the dev environment by adding VITE_THE_VAR_NAME=VALUE to the .env
  * file
  */
+
+/**
+ * Determines the websocket host value based on the provided
+ * host environment variable. If the host value is "origin"
+ * then the websocket will use the current window location
+ * origin and determine whether wss or ws should be used
+ *
+ * @param value The original host value
+ */
 function getHost(value: string | undefined): string {
     if (!value || value === 'origin') {
         let host = window.location.origin
@@ -21,5 +30,5 @@ function getHost(value: string | undefined): string {
 export const HOST: string = getHost(import.meta.env.VITE_HOST)
 // Whether to do debug logging
 export const DEBUG: boolean = import.meta.env.VITE_DEBUG == 'true'
-
+// Debug log the current host
 console.debug(`Web socket host is ${HOST}`)

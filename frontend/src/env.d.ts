@@ -1,5 +1,10 @@
 /// <reference types="vite/client" />
 
+/**
+ * THIS FILE CONTAINS INTERFACES USED BY TypeScript TO SUPPORT
+ * VUE-JS AND INLINE SVGs
+ */
+
 interface ImportMetaEnv {
   readonly VITE_HOST: string
   // more env variables...

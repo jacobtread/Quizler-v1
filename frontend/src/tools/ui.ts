@@ -14,26 +14,30 @@ export interface Toast {
     content: string;
 }
 
-export type DialogAction = (result: boolean) => any
-
+// The structure for dialog data
 export interface DialogData {
     title: string;
     content: string;
-    action?: DialogAction
+    action?: (result: boolean) => any
 }
 
+// The structure of the loader state
 export interface LoaderState {
     visible: boolean;
     message: string;
 }
 
+// The data for the loader
 const loader = reactive<LoaderState>({visible: false, message: 'Loading...'})
-const dialogData = ref<DialogData | null>(null)
-const toastData = ref<Toast[]>([])
-let toastId = 0
+const dialogData = ref<DialogData | null>(null) // The data for the dialog
+const toastData = ref<Toast[]>([]) // The list of toasts
+let toastId = 0 // The current id for toasts
 
+// Function for using the dialog data
 export const useDialogData = (): Ref<DialogData | null> => dialogData
+// Function for using the toast data
 export const useToastData = (): Ref<Toast[]> => toastData
+// Function for using the loader data
 export const useLoaderData = (): UnwrapNestedRefs<LoaderState> => loader
 
 /**

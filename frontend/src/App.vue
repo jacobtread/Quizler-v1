@@ -3,7 +3,7 @@ import "@/assets/global.scss"
 import { useSocket } from "@/api";
 import ToastSystem from "@component/Toasts.vue";
 import Dialog from "@component/Dialog.vue";
-import GlobalLoader from "@component/GlobalLoader.vue";
+import Loader from "@component/Loader.vue";
 import { loading } from "@/tools/ui";
 import { watch } from "vue";
 
@@ -22,7 +22,7 @@ watch(open, (value: boolean) => { // Watch for changes of the open state
         </router-view>
         <Dialog/>
         <ToastSystem/>
-        <GlobalLoader/>
+        <Loader/>
     </div>
 </template>
 
