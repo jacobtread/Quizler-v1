@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "build:local": "vue-tsc --noEmit && vite build --outDir ../backend/public --emptyOutDir",
+    "build:local": "vue-tsc --noEmit && vite build --outDir ../backend/public --emptyOutDir && node cleanupBuild.js",
     "preview": "vite preview",
     "test": "vitest",
     "coverage": "vitest run --coverage"
@@ -24,6 +24,7 @@
     "jsdom": "^19.0.0",
     "typescript": "^4.5.5",
     "vite": "^2.8.0",
+    "vite-plugin-singlefile": "^0.7.1",
     "vitest": "^0.5.8"
   }
 }

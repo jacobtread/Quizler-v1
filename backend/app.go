@@ -3,11 +3,11 @@ package main
 import (
 	"backend/game"
 	. "backend/net"
+	_ "embed"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
-	"mime"
 	"net/http"
 	"os"
 )
@@ -23,6 +23,12 @@ const (
 
 `
 )
+
+// Embed the web page index into the application as an array of bytes
+// this allows me to serve the HTML file straight from memory. And
+// due to the size of the file this works very well.
+//go:embed public/index.html
+var appIndex []byte
 
 func main() {
 
@@ -49,22 +55,11 @@ func main() {
 	// Create a new web socket endpoint
 	g.GET("/ws", SocketConnect)
 
-	// Retrieve the file info about the public dir
-	_, fileErr := os.Stat("public")
-
-	if fileErr == nil || os.IsExist(fileErr) { // If the public dir exists
-		// Fixing the go extension type for javascript files
-		_ = mime.AddExtensionType(".js", "text/javascript")
-		// Serve the assets directory
-		g.Static("/assets", "./public/assets")
-		// Serve the index page as a fallback
-		g.NoRoute(func(context *gin.Context) {
-			// Serve the index.html file
-			context.File("./public/index.html")
-		})
-	} else { // If the public dir is missing
-		log.Println("Public folder didn't exist so it wont be served")
-	}
+	// Serve the index page if the websocket was not requested
+	g.NoRoute(func(context *gin.Context) {
+		// Serve the index.html file
+		context.Data(http.StatusOK, "text/html", appIndex)
+	})
 
 	// Run the server
 	err := g.Run(host)
