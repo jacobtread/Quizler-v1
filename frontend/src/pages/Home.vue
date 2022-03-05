@@ -52,7 +52,6 @@ socket.resetState();
   align-items: center;
   gap: 1rem;
   background: $background-light;
-  z-index: -1;
 
   &__text {
     display: flex;
@@ -65,6 +64,26 @@ socket.resetState();
     }
   }
 }
+
+
+@media screen and (max-height: 450px) and (min-width: 850px) {
+  .github {
+    display: none;
+  }
+}
+
+@media screen and (max-height: 632px) and (max-width: 850px) {
+  .github {
+    display: none;
+  }
+}
+
+@media screen and (max-height: 760px) and (max-width: 470px) {
+  .github {
+    display: none;
+  }
+}
+
 
 .main {
   flex: auto;
