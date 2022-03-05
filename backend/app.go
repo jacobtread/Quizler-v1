@@ -13,13 +13,15 @@ import (
 )
 
 const (
-	Version = "1.0.2"
+	Version = "1.0.3"
 	Intro   = `
    __         __       ___  __  
   /  \ |  | |  / |    |__  |__) 
   \__X \__/ | /_ |___ |___ |  \   by Jacobtread
   
   Version %s    Server Started on http://localhost:%s
+
+  - Even smaller than last time. :O
 
 `
 )
@@ -39,13 +41,12 @@ func main() {
 
 	fmt.Printf(Intro, Version, port) // Print the intro message
 
-	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
+	gin.SetMode(gin.ReleaseMode) // Set Gin to "Release" mode (Not debug mode)
+	g := gin.New()               // Create a new gin instance
 
 	g.Use(gin.Recovery()) // Recovery middleware to recover from panics and send 500 instead
 
-	// Create a new web socket endpoint
-	g.GET("/ws", SocketConnect)
+	g.GET("/ws", SocketConnect) // Create a new web socket endpoint
 
 	// Serve the index page if the websocket was not requested
 	g.NoRoute(func(context *gin.Context) {
