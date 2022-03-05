@@ -2,6 +2,7 @@ package tools
 
 import (
 	"math/rand"
+	"os"
 	"time"
 )
 
@@ -29,6 +30,16 @@ type (
 	// ScoreMap A map of player identifiers to score values
 	ScoreMap = map[Identifier]uint32
 )
+
+// EnvOrDefault Used to retrieve an environment variable or the provided
+// default value if that environment variable doesn't exist
+func EnvOrDefault(key string, d string) string {
+	value, exists := os.LookupEnv(key) // Lookup the environment variable
+	if !exists {                       // If the variable doesn't exist
+		return d // Return the default value-
+	}
+	return value
+}
 
 // FreeMemory Used to free up memory from questions that have already been
 // served to the user. (This is done by setting the image to a blank string)

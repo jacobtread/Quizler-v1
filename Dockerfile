@@ -24,11 +24,11 @@ RUN apk add git
 RUN go build -o quizler
 
 # Set the address environment variable to be any address
-ENV ADDRESS="0.0.0.0"
+ENV QUIZLER_ADDRESS="0.0.0.0"
 # Set the port to port 8080
-ENV PORT=8080
+ENV QUIZLER_PORT=8080
 # Expose the port
-EXPOSE ${PORT}
+EXPOSE ${QUIZLER_PORT}
 
 # Execute the server
 CMD ["./quizler"]

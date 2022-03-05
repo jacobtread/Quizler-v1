@@ -135,7 +135,7 @@ export class SocketApi {
             this.open.value = false // Set the open state
         }
         // Print a debug message saying the connection was lost
-        if (DEBUG) console.debug('Lost connection. Attempting reconnect in 2 seconds')
+        console.debug('Lost connection. Attempting reconnect in 2 seconds')
         // Set a timeout to try and connect again in 2s
         setTimeout(() => this.ws = this.connect(this.host), 2000)
     }

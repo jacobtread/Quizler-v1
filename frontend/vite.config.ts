@@ -1,14 +1,19 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueSvg from '@vuetter/vite-plugin-vue-svg';
+// @ts-ignore
 import { viteSingleFile } from "vite-plugin-singlefile"
 import path from "path"
 
 // https://vitejs.dev/config/
 export default defineConfig({
-    plugins: [vue(), vueSvg(), viteSingleFile()],
+    plugins: [
+        vue(),  /* Used to compile VueJS SFC*/
+        vueSvg(), /* Used to inline SVGs as VueJS components */
+        viteSingleFile() /* Used to convert the output into a single html file*/
+    ],
     resolve: {
-        alias: {
+        alias: { // Path aliases for quick easy access to certain file types
             '@': path.resolve(__dirname, './src'),
             '@page': path.resolve(__dirname, './src/pages'),
             '@component': path.resolve(__dirname, './src/components'),
@@ -17,7 +22,7 @@ export default defineConfig({
             '@store': path.resolve(__dirname, './src/store'),
         }
     },
-    build: {
+    build: { // Build options required for single file build
         target: "esnext",
         assetsInlineLimit: 100000000,
         chunkSizeWarningLimit: 100000000,
@@ -31,7 +36,7 @@ export default defineConfig({
         },
     },
     // @ts-ignore
-    test: {
-        environment: 'jsdom'
+    test: {  // Setting the testing environment
+        environment: 'jsdom' // JSDom needs to be used for WebSocket testing
     }
 })

@@ -1,14 +1,16 @@
 /**
- * Quick work around script to remove the SVG files that
- * were copied to the output directory when they did not
- * need to be. (Increases file size when it doesn't need to)
+ * Quick work around script to remove the unused files that
+ * are put into the dist directory. Because the site is
+ * being built into a single file (index.html) these files
+ * can all be discarded to save space as they are unused
  */
-const path = require('path')
-const fsPromise = require('fs/promises')
+const {join} = require('path') // Use path join for resolving paths
+const {rm} = require('fs/promises') // Use "rm" from the node file system promises api
 
-async function removeAssets() {
-    const assetsDir = path.join(__dirname, '../', 'backend', 'public', 'assets')
-    await fsPromise.rm(assetsDir, {recursive: true, force: true})
-}
+// The output assets directory (The directory we want to remove)
+const assetsDir = join(__dirname, '..', 'backend', 'public', 'assets')
 
-removeAssets().then()
+// Recursively remove the assets directory
+rm(assetsDir, {recursive: true, force: true})
+    .then() // Then and catch results are ignored
+    .catch() // build doesn't rely on their completion

@@ -3,13 +3,13 @@ package main
 import (
 	"backend/game"
 	. "backend/net"
+	"backend/tools"
 	_ "embed"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"os"
 )
 
 const (
@@ -31,16 +31,8 @@ const (
 var appIndex []byte
 
 func main() {
-
-	address, hasAddress := os.LookupEnv("ADDRESS")
-	if !hasAddress {
-		address = "0.0.0.0"
-	}
-
-	port, hasPort := os.LookupEnv("PORT")
-	if !hasPort {
-		port = "8080"
-	}
+	address := tools.EnvOrDefault("QUIZLER_ADDRESS", "0.0.0.0") // Retrieve the address environment variable
+	port := tools.EnvOrDefault("QUIZLER_PORT", "8080")          // Retrieve the port environment variable
 
 	// Create a host url from ADDRESS:PORT
 	host := fmt.Sprintf("%s:%s", address, port)
@@ -69,11 +61,7 @@ func main() {
 }
 
 // upgrader Used to upgrade HTTP requests to the WS protocol
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
+var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 // SocketState A structure representing the state of a socket instance
 type SocketState struct {

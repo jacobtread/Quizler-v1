@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vue-tsc --noEmit && vite build && node cleanupBuild.js",
     "build:local": "vue-tsc --noEmit && vite build --outDir ../backend/public --emptyOutDir && node cleanupBuild.js",
     "preview": "vite preview",
     "test": "vitest",

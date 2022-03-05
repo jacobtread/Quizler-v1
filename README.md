@@ -11,6 +11,21 @@ via a WebSocket packet system.
 
 The packet system packet descriptions are available [Here](backend/packets.md)
 
+This repository is a mono-repo it contains the code for both the front-end and back-end of
+this application they are stored in sub folders of this repository
+
+## Docker Image
+
+Quizler is fully dockerized, and you can easily deploy it to docker using this GitHub repository. There is an included
+Dockerfile in the root of this repository.
+
+## Environment Variables
+
+| NAME            | DEFAULT | DESCRIPTION                                        |
+|-----------------|---------|----------------------------------------------------|
+| QUIZLER_ADDRESS | 0.0.0.0 | This is the address that the server should bind on |
+| QUIZLER_PORT    | 8080    | This is the port that the server should bind on    |
+
 ## Showcase
 
 You can view an up-to-date gif of the app
