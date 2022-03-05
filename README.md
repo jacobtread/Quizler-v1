@@ -5,6 +5,8 @@
 ![LINES OF CODE](https://img.shields.io/tokei/lines/github/jacobtread/Quizler?style=for-the-badge)
 ![LICENSE](https://img.shields.io/github/license/jacobtread/Quizler?style=for-the-badge)
 
+This app is deployed to [https://quizler.jacobtread.com/](https://quizler.jacobtread.com/)
+
 Quizler is a real time quiz app I am making which is similar to games like [Kahoot](https://kahoot.com/). The app is
 fully real time and uses VueJS for its front-end and has a backend server written in Go; The whole thing communicates
 via a WebSocket packet system.
