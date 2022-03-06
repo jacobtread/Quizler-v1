@@ -2,6 +2,7 @@
 import { QuestionData } from "@/api/packets";
 import CrossIcon from "@asset/icons/cross.svg?inline"
 import AddIcon from "@asset/icons/add.svg?inline"
+import { MAX_ANSWERS } from "@/constants";
 
 // Structure for representing the properties of this component
 interface Props {
@@ -16,8 +17,10 @@ const {question} = defineProps<Props>()
  * Adds a new empty question
  */
 function add() {
-    // Push a new empty answer to the answers
-    question.answers.push('')
+    if (question.answers.length < MAX_ANSWERS) { // Ensure we don't let the user add more than 9 answers
+        // Push a new empty answer to the answers
+        question.answers.push('')
+    }
 }
 
 /**
@@ -51,7 +54,7 @@ function removeAt(index: number) {
                 <CrossIcon class="answer__button" v-if="index !== 0" @click="removeAt(index)"/>
             </li>
         </ul>
-        <button class="button button--icon button--block" @click="add" type="button">
+        <button class="button button--icon button--block" @click="add" type="button" v-if="question.answers.length < MAX_ANSWERS">
             <AddIcon class="button__icon"/>
         </button>
     </div>

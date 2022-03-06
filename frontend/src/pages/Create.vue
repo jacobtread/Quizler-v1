@@ -16,6 +16,7 @@ import packets, { GameData, QuestionData } from "@api/packets";
 import Nav from "@component/Nav.vue";
 import { computed, ref, watch } from "vue";
 import { dialog, loading, toast } from "@/tools/ui";
+import { MAX_QUESTIONS } from "@/constants";
 
 const router = useRouter()
 const socket = useSocket()
@@ -200,7 +201,7 @@ function exportFile() {
                             </div>
                         </div>
                     </transition-group>
-                    <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block">
+                    <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block" v-if="store.questions.length < MAX_QUESTIONS">
                         <Add class="button__icon"/>
                     </router-link>
                 </div>

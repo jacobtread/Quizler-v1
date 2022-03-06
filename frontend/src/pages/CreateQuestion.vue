@@ -71,6 +71,7 @@ function addQuestion() {
     // Return to the create page
     router.push({name: 'Create'})
 }
+
 </script>
 <template>
     <form @submit.prevent="addQuestion">
