@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	Version = "1.0.3"
+	Version = "1.0.4"
 	Intro   = `
    __         __       ___  __  
   /  \ |  | |  / |    |__  |__) 

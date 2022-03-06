@@ -214,10 +214,16 @@ func (game *Game) Loop() {
 					} else if !game.ActiveQuestion.Marked { // If the question hasn't been marked
 						game.MarkQuestion(game.ActiveQuestion) // Mark the question
 					}
-				} else if elapsedSinceSync >= SyncDelay { // If the current time needs to be synced
-					lastTimeSync = t                                                  // Update the last sync time
-					remaining := QuestionTime - elapsedSinceStart                     // Calculate the
-					game.Broadcast(net.TimeSyncPacket(QuestionTime, remaining), true) // Broadcast the time sync packet
+				} else {
+					if game.HaveAllAnswered() { // If all players have answered the question
+						game.SkipQuestion() // Skip the remaining time to the end of the question
+					}
+
+					if elapsedSinceSync >= SyncDelay { // If the current time needs to be synced
+						lastTimeSync = t                                                  // Update the last sync time
+						remaining := QuestionTime - elapsedSinceStart                     // Calculate the
+						game.Broadcast(net.TimeSyncPacket(QuestionTime, remaining), true) // Broadcast the time sync packet
+					}
 				}
 			}
 		}
@@ -255,6 +261,13 @@ func GetScore(player *Player, question *ActiveQuestion) uint32 {
 	} else {
 		return Points
 	}
+}
+
+// HaveAllAnswered checks whether all players have answered the current question
+func (game *Game) HaveAllAnswered() bool {
+	return game.Players.AllMatch(func(player *Player) bool {
+		return player.HasAnswered(game)
+	})
 }
 
 // SkipQuestion skips to the next question by changing the question start time

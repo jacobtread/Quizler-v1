@@ -149,6 +149,19 @@ func (store *PlayerStore) AnyMatch(test func(player *Player) bool) bool {
 	return false
 }
 
+// AllMatch Checks all the players to see if they all match the passed
+// condition function. Returns true if all players match the condition
+func (store *PlayerStore) AllMatch(test func(player *Player) bool) bool {
+	store.Lock.RLock()                 // Establish a read lock on the players map
+	defer store.Lock.RUnlock()         // Defer the releasing of the read lock
+	for _, player := range store.Map { // Iterate over the players map
+		if !test(player) { // If the test passed
+			return false
+		}
+	}
+	return true
+}
+
 // Get retrieves a pointer to player with a matching Identifier or nil if
 // there are no players with that identifier. Concurrency safe because locks
 // are established
