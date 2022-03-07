@@ -6,14 +6,13 @@ import (
 	"backend/tools"
 	_ "embed"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	"github.com/jacobtread/gowsps"
 	"log"
 	"net/http"
 )
 
 const (
-	Version = "1.0.4"
+	Version = "1.0.5"
 	Intro   = `
    __         __       ___  __  
   /  \ |  | |  / |    |__  |__) 
@@ -35,34 +34,25 @@ var appIndex []byte
 func main() {
 	address := tools.EnvOrDefault("QUIZLER_ADDRESS", "0.0.0.0") // Retrieve the address environment variable
 	port := tools.EnvOrDefault("QUIZLER_PORT", "8080")          // Retrieve the port environment variable
-
-	// Create a host url from ADDRESS:PORT
-	host := fmt.Sprintf("%s:%s", address, port)
+	host := fmt.Sprintf("%s:%s", address, port)                 // Create a host url from ADDRESS:PORT
 
 	fmt.Printf(Intro, Version, port) // Print the intro message
 
-	gin.SetMode(gin.ReleaseMode) // Set Gin to "Release" mode (Not debug mode)
-	g := gin.New()               // Create a new gin instance
-
-	g.Use(gin.Recovery()) // Recovery middleware to recover from panics and send 500 instead
-
-	g.GET("/ws", SocketConnect) // Create a new web socket endpoint
-
-	// Serve the index page if the websocket was not requested
-	g.NoRoute(func(context *gin.Context) {
-		// Serve the index.html file
-		context.Data(http.StatusOK, "text/html", appIndex)
+	// Create a handler for handling http requests
+	http.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path == "/ws" { // If the user accessed the websocket endpoint
+			SocketConnect(writer, request) // Create a socket connection
+		} else {
+			writer.Header().Set("Content-Type", "text/html") // Set the Content-Type as HTML
+			_, _ = writer.Write(appIndex)                    // Write the index HTML body to the response
+		}
 	})
 
-	// Run the server
-	err := g.Run(host)
-	if err != nil {
-		log.Fatal("An error occurred", err)
+	err := http.ListenAndServe(host, nil) // Listen on the provided address
+	if err != nil {                       // If we encountered an error
+		log.Fatal("An error occurred", err) // Print out the error
 	}
 }
-
-// upgrader Used to upgrade HTTP requests to the WS protocol
-var upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
 
 // SocketState A structure representing the state of a socket instance
 type SocketState struct {
@@ -70,52 +60,27 @@ type SocketState struct {
 	Game   *game.Game   // The active game
 	Player *game.Player // The active player
 
-	*Connection // The websocket connection
+	*gowsps.Connection // The websocket connection
 }
 
 //SocketConnect Creates a socket connection and upgrades the HTTP request to WS
-func SocketConnect(c *gin.Context) {
-	// Try to upgrade the http connection to a web socket connection
-	ws, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-	if err != nil { // If we failed to upgrade the connection
-		log.Fatal("Failed to upgrade connection", err)
-	}
-	// Deferred closing of the socket when we are done this will result
-	// in ws.Close being called after this function is finished executing
-	defer func(ws *websocket.Conn) { _ = ws.Close() }(ws)
+func SocketConnect(w http.ResponseWriter, r *http.Request) {
+	s := gowsps.NewPacketSystem()
+	var state = SocketState{} // Create a new state with the connection
 
-	var rawPacket = PacketRaw{}               // The structure for packets to be decoded into as id and raw dat
-	conn := NewConnection(ws)                 // Create a new connection
-	var state = SocketState{Connection: conn} // Create a new state with the connection
+	// Add handlers for each of
+	gowsps.AddHandler(s, CCreateGame, state.onCreateGame)
+	gowsps.AddHandler(s, CCheckNameTaken, state.onCheckNameTaken)
+	gowsps.AddHandler(s, CRequestGameState, state.onRequestGameState)
+	gowsps.AddHandler(s, CRequestJoin, state.onRequestJoin)
+	gowsps.AddHandler(s, CStateChange, state.onStateChange)
+	gowsps.AddHandler(s, CAnswer, state.onAnswer)
+	gowsps.AddHandler(s, CKick, state.onKick)
 
-	for conn.Open { // As long as the connection is still open
-		// Read incoming packet into the raw packet map
-		err = ws.ReadJSON(&rawPacket)
-		if err != nil { // If packet parsing failed or the ID was missing
-			if conn.Open { // Ignore this message if the client is not connected any more
-				// Disconnect the client for sending invalid data
-				conn.Send(DisconnectPacket("Failed to decode packet"))
-			}
-			break
-		}
+	s.UpgradeAndListen(w, r, func(conn *gowsps.Connection, err error) {
+		state.Connection = conn
+	})
 
-		switch rawPacket.Id {
-		case CCreateGame:
-			HandlePacket(rawPacket, state.onCreateGame)
-		case CCheckNameTaken:
-			HandlePacket(rawPacket, state.onCheckNameTaken)
-		case CRequestGameState:
-			HandlePacket(rawPacket, state.onRequestGameState)
-		case CRequestJoin:
-			HandlePacket(rawPacket, state.onRequestJoin)
-		case CStateChange:
-			HandlePacket(rawPacket, state.onStateChange)
-		case CAnswer:
-			HandlePacket(rawPacket, state.onAnswer)
-		case CKick:
-			HandlePacket(rawPacket, state.onKick)
-		}
-	}
 	state.Cleanup() // Cleanup the state
 }
 

@@ -3,6 +3,7 @@ package game
 import (
 	"backend/net"
 	. "backend/tools"
+	. "github.com/jacobtread/gowsps"
 	"log"
 	"math"
 	"strings"
@@ -21,7 +22,7 @@ const (
 
 // Game a structure representing the game itself
 type Game struct {
-	Host           *net.Connection // The connection to the game host
+	Host           *Connection     // The connection to the game host
 	Id             Identifier      // The unique identifier / game code for this game
 	Title          string          // The title / name of this game
 	Questions      []QuestionData  // An array of the questions for this game
@@ -73,7 +74,7 @@ func Get(identifier Identifier) *Game {
 // New Creates a new game instance with the provided host, title, and questions.
 // also starts a new goroutine for the games loop, adds it to Games and returns
 // a reference to the game
-func New(host *net.Connection, title string, questions []QuestionData) *Game {
+func New(host *Connection, title string, questions []QuestionData) *Game {
 	id := CreateGameId() // Create a new unique game ID
 	game := Game{
 		Host:      host,
@@ -94,7 +95,7 @@ func New(host *net.Connection, title string, questions []QuestionData) *Game {
 
 // Join adds a new player to the game with the provided connection and name
 // and returns a reference to the player
-func (game *Game) Join(conn *net.Connection, name string) *Player {
+func (game *Game) Join(conn *Connection, name string) *Player {
 	player := game.Players.Create(conn, name) // Create a new player
 	// Send the initial state of the game
 	player.Net.Send(net.GameStatePacket(game.State))
@@ -115,7 +116,7 @@ func (game *Game) IsNameTaken(name string) bool {
 }
 
 // Broadcast sends the provided packet to all the players in the game
-func (game *Game) Broadcast(packet net.Packet, host bool) {
+func (game *Game) Broadcast(packet Packet, host bool) {
 	// Iterate over all the players
 	game.Players.ForEach(func(id Identifier, player *Player) {
 		player.Net.Send(packet) // Send the packet to the player
@@ -129,7 +130,7 @@ func (game *Game) Broadcast(packet net.Packet, host bool) {
 // BroadcastExcluding sends the provided packet to all the players in the game
 // excluding any players that match the excluded id. The host parameter determines
 // whether this packet will also be sent to the host of the game
-func (game *Game) BroadcastExcluding(exclude Identifier, packet net.Packet, host bool) {
+func (game *Game) BroadcastExcluding(exclude Identifier, packet Packet, host bool) {
 	// Iterate over all the players
 	game.Players.ForEach(func(id Identifier, player *Player) {
 		if id != exclude { // If the player id != the excluded id

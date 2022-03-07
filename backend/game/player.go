@@ -3,6 +3,7 @@ package game
 import (
 	"backend/net"
 	. "backend/tools"
+	"github.com/jacobtread/gowsps"
 	"sync"
 	"time"
 )
@@ -10,7 +11,7 @@ import (
 type (
 	// Player A structure representing a player in the game
 	Player struct {
-		Net        *net.Connection               // The connection to the player socket
+		Net        *gowsps.Connection            // The connection to the player socket
 		Id         Identifier                    // The unique ID of this player
 		Name       string                        // The name of this player
 		Score      uint32                        // The score this player has
@@ -78,7 +79,7 @@ func (store *PlayerStore) CreatePlayerId() Identifier {
 // Create a new player and add it to the PlayerStore. Sends the player
 // data of all other players in the game to that player and adds them to
 // player map. Returns a pointer to the created player
-func (store *PlayerStore) Create(conn *net.Connection, name string) *Player {
+func (store *PlayerStore) Create(conn *gowsps.Connection, name string) *Player {
 	id := store.CreatePlayerId() // Create a unique player ID
 	player := Player{
 		Net:     conn,                            // Set the net connection

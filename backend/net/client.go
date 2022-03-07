@@ -6,13 +6,13 @@ import (
 
 // Ids for client packets
 const (
-	CCreateGame       PacketId = 0x00
-	CCheckNameTaken            = 0x01
-	CRequestGameState          = 0x02
-	CRequestJoin               = 0x03
-	CStateChange               = 0x04
-	CAnswer                    = 0x05
-	CKick                      = 0x06
+	CCreateGame       int = 0x00
+	CCheckNameTaken       = 0x01
+	CRequestGameState     = 0x02
+	CRequestJoin          = 0x03
+	CStateChange          = 0x04
+	CAnswer               = 0x05
+	CKick                 = 0x06
 )
 
 type StateChangeId = uint8
