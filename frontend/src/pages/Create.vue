@@ -10,7 +10,7 @@ import Edit from "@asset/icons/edit.svg?inline"
 import ExportIcon from "@asset/icons/export.svg?inline"
 import ImportIcon from "@asset/icons/import.svg?inline"
 import { store } from "@store/create";
-import { GameData, QuestionDataWithValues, useClient } from "@/api";
+import { QuestionDataWithValues, useClient } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
 import { computed, ref, watch } from "vue";
@@ -18,11 +18,11 @@ import { dialog, loading, toast } from "@/tools/ui";
 import { MAX_QUESTIONS } from "@/constants";
 import { CreateGamePacket } from "@api/packets";
 
-const router = useRouter()
-const client = useClient()
+const router = useRouter();
+const client = useClient();
 
 // Simple computed function to ensure there is at least 1 question
-const hasQuestions = computed(() => store.questions.length > 0)
+const hasQuestions = computed(() => store.questions.length > 0);
 
 /**
  * Delete the question at the provided index. Filters
@@ -32,7 +32,7 @@ const hasQuestions = computed(() => store.questions.length > 0)
  * @param index The index to remove
  */
 function deleteQuestion(index: number) {
-    store.questions = store.questions.filter((_, i) => i != index)
+    store.questions = store.questions.filter((_, i) => i != index);
 }
 
 /**
@@ -42,42 +42,42 @@ function deleteQuestion(index: number) {
  */
 function createQuiz() {
     // Send the creation game packet
-    client.socket.send(CreateGamePacket, {title: store.title, questions: store.questions})
+    client.socket.send(CreateGamePacket, {title: store.title, questions: store.questions});
 }
 
 // Watch the game data for changes
-watch(client.gameData, (data: GameData | null) => {
+watch(client.gameData, (data) => {
     if (data != null) { // If we have game data
         // Redirect to the overview page
-        router.push({name: 'Overview'})
+        router.push({name: 'Overview'});
     }
 })
 
 // A reference to the file input element used to access the files
-const fileInput = ref<HTMLInputElement>()
+const fileInput = ref<HTMLInputElement>();
 
 /**
  * Async function for importing the quiz files as well as showing loaders
  * and toasts with relevant info
  */
 async function importFile() {
-    const input: HTMLInputElement = fileInput.value!
+    const input: HTMLInputElement = fileInput.value!;
     // Ensure that there is actually at least 1 file selected
     if (input.files && input.files.length > 0) {
         // Retrieve the first file
-        const file = input.files[0]
+        const file = input.files[0];
         try {
-            loading(true, 'Loading Quiz') // Show a loader while we load
-            const config = await loadQuiz(file) // Load the quiz file
+            loading(true, 'Loading Quiz'); // Show a loader while we load
+            const config = await loadQuiz(file); // Load the quiz file
 
-            store.title = config.title // Set the quiz title from the config
-            store.questions = config.questions // Set the quiz questions from the config
+            store.title = config.title; // Set the quiz title from the config
+            store.questions = config.questions; // Set the quiz questions from the config
 
-            loading(false) // Hide the loader
-            toast('Quiz Loaded') // Show a toast saying the quiz was loaded
+            loading(false); // Hide the loader
+            toast('Quiz Loaded'); // Show a toast saying the quiz was loaded
         } catch (e) {
-            console.error(e)
-            dialog('Failed to load', 'Failed to load that quiz file. Are you sure it was a valid quiz file')
+            console.error(e);
+            dialog('Failed to load', 'Failed to load that quiz file. Are you sure it was a valid quiz file');
         }
     }
 }
@@ -85,7 +85,7 @@ async function importFile() {
 // The structure of quiz config files
 interface Config {
     title: string;
-    questions: QuestionDataWithValues[]
+    questions: QuestionDataWithValues[];
 }
 
 /**
@@ -96,18 +96,18 @@ interface Config {
  */
 function loadQuiz(file: File): Promise<Config> {
     return new Promise<Config>(async (resolve, reject) => {
-        const reader = new FileReader() // Create a new file reader
+        const reader = new FileReader(); // Create a new file reader
         reader.onload = () => { // Set the loaded listener
             if (reader.result) { // Ensure the result exits
-                const raw = reader.result as string
-                const json = JSON.parse(raw) as Config
-                resolve(json) // Resolve the promise with the value
+                const raw = reader.result as string;
+                const json = JSON.parse(raw) as Config;
+                resolve(json); // Resolve the promise with the value
             }
         }
         // Set the error listener as the reject function
-        reader.onerror = reject
+        reader.onerror = reject;
         // Read the compressed file as plain text
-        reader.readAsText(file)
+        reader.readAsText(file);
     })
 }
 
@@ -116,25 +116,24 @@ function loadQuiz(file: File): Promise<Config> {
  * download of the file.
  */
 function exportFile() {
-    const title = store.title
-    const questions = store.questions
-    const dataValue = JSON.stringify({title, questions})
+    const title = store.title;
+    const questions = store.questions;
+    const dataValue = JSON.stringify({title, questions});
     const URL = window.webkitURL ?? window.URL;
-    const id = 'tmpDownload'
+    const id = 'tmpDownload';
     let element: HTMLAnchorElement = document.getElementById(id) as (HTMLAnchorElement | null) ?? ((): HTMLAnchorElement => {
-        const element = document.createElement('a') as HTMLAnchorElement
-        element.id = id
-        return element
+        const element = document.createElement('a') as HTMLAnchorElement;
+        element.id = id;
+        return element;
     })()
-    const safeName: string = title.replace(/[ ^\/]/g, '_')
+    const safeName: string = title.replace(/[ ^\/]/g, '_');
     const blob = new Blob([dataValue], {'type': 'application/json'});
     element.download = safeName + '.quiz';
     element.href = URL.createObjectURL(blob);
     element.dataset.downloadurl = ['application/json', element.download, element.href].join(':');
     element.style.display = 'none';
-    element.click()
+    element.click();
 }
-
 </script>
 <template>
     <form @submit.prevent="createQuiz">
@@ -354,5 +353,4 @@ function exportFile() {
     }
   }
 }
-
 </style>

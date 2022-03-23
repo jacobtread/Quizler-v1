@@ -36,6 +36,7 @@ describe('Create game', () => {
 
         const TITLE = 'Example Game'
         const QUESTIONS: QuestionDataWithValues[] = [{
+            imageType: '',
             image: new Uint8Array(),
             question: 'Example Question',
             answers: ['Example 1', 'Example 2', 'Example 3'],

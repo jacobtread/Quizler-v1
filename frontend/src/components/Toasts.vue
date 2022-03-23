@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useToastData } from "@/tools/ui";
 
-const toasts = useToastData() // Retrieve the toast data
+const toasts = useToastData(); // Retrieve the toast data
 </script>
 <template>
     <div class="toasts">
@@ -16,7 +16,6 @@ const toasts = useToastData() // Retrieve the toast data
     </div>
 </template>
 <style scoped lang="scss">
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease, transform 0.5s ease;

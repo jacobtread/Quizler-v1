@@ -33,20 +33,23 @@ export enum GameState {
 }
 
 // Defines a map of id -> player data
-type PlayerMap = Record<string, PlayerData>
+type PlayerMap = Record<string, PlayerData>;
 
+// Structure of player data
 export interface PlayerData {
     id: string;
     name: string;
     score: number;
 }
 
+// Structure of game details
 export interface GameData {
     owner: boolean;
     id: string;
     title: string;
 }
 
+// Structure of all question objects
 export interface QuestionData {
     imageBase64?: string;
     imageType: string;
@@ -55,9 +58,8 @@ export interface QuestionData {
     answers: string[];
 }
 
-export type QuestionDataWithValues = {
-    values: number[]
-} & QuestionData
+// QuestionData with the values array (Used only for creation of questions)
+export type QuestionDataWithValues = { values: number[] } & QuestionData;
 
 /**
  * Stores all logic for communicating between the client and server over the
@@ -66,14 +68,14 @@ export type QuestionDataWithValues = {
 export class Client {
 
     // The websocket connection instance
-    socket: BinarySocket
+    socket: BinarySocket;
 
-    open = ref(false) // The open state of the web socket connection
-    gameData = ref<GameData | null>(null) // The current game data
-    players = reactive<PlayerMap>({}) // The map of players to their names
-    question = ref<QuestionData | null>(null) // The active question in the game (store here to persist)
-    gameState = ref<GameState>(GameState.UNSET) // The current game state
-    self = ref<PlayerData | null>(null) // The player we are playing as
+    open = ref(false); // The open state of the web socket connection
+    gameData = ref<GameData | null>(null); // The current game data
+    players = reactive<PlayerMap>({}); // The map of players to their names
+    question = ref<QuestionData | null>(null); // The active question in the game (store here to persist)
+    gameState = ref<GameState>(GameState.UNSET); // The current game state
+    self = ref<PlayerData | null>(null); // The player we are playing as
 
     /**
      * Creates a new socket instance
@@ -81,82 +83,81 @@ export class Client {
      * @param host The websocket server host address
      */
     constructor(host: string) {
-        const socket = new BinarySocket(host, {reconnectTimeout: 2000})
-        socket.setInterceptor((id,data) => {
-            console.table({id, data})
-        })
+        const socket = new BinarySocket(host, {reconnectTimeout: 2000});
+        // Add event listener for when the socket connection is open
         socket.addEventListener('open', () => {
-            if (DEBUG) console.debug('Connected to socket server') // Debug logging
-            this.open.value = true // Update the open state
-        })
+            if (DEBUG) console.debug('Connected to socket server'); // Debug logging
+            this.open.value = true; // Update the open state
+        });
+        // Add event listener for when the socket connection is closed
         socket.addEventListener('close', () => {
-            this.open.value = false
-        })
+            this.open.value = false; // Update the open state
+        });
+        // Define all the server packets that need to be decoded
         socket.definePackets(
-            DisconnectPacket,
-            ErrorPacket,
-            JoinGamePacket,
-            NameTakenResultPacket,
-            GameStatePacket,
-            PlayerDataPacket,
-            TimeSyncPacket,
-            QuestionPacket,
-            AnswerResultPacket,
-            ScoresPacket,
-        )
+            DisconnectPacket, ErrorPacket, JoinGamePacket,
+            NameTakenResultPacket, GameStatePacket, PlayerDataPacket,
+            TimeSyncPacket, QuestionPacket, AnswerResultPacket, ScoresPacket,
+        );
+        // Add a listener for the Disconnect packet
         socket.addListener(DisconnectPacket, async ({reason}) => {
             if (this.gameState.value !== GameState.STOPPED) {
-                dialog('Disconnected', reason) // Display a disconnected dialog with the reason
+                dialog('Disconnected', reason); // Display a disconnected dialog with the reason
             }
-            this.resetState()
-            await router.push({name: 'Home'})
-        })
+            this.resetState(); // Reset the state
+            await router.push({name: 'Home'}); // Return to the home page
+        });
+        // Add a listener for the Error packet
         socket.addListener(ErrorPacket, ({cause}) => {
-            console.error(`An error occurred ${cause}`) // Print the error to the console
-            dialog('Error occurred', cause) // Display an error dialog
-        })
+            console.error(`An error occurred ${cause}`); // Print the error to the console
+            dialog('Error occurred', cause); // Display an error dialog
+        });
+        // Add a listener for the Join Game packet
         socket.addListener(JoinGamePacket, (data: GameData) => {
-            this.gameData.value = data
-            this.gameState.value = GameState.WAITING
-        })
-        socket.addListener(GameStatePacket, ({state}) => {
-            this.gameState.value = state
-        })
+            this.gameData.value = data; // Set the game data provided by the server
+            this.gameState.value = GameState.WAITING; // Set the game state to waiting
+        });
+        // Add a listener for the GameState packet (updates the game state value)
+        socket.addListener(GameStatePacket, ({state}) => this.gameState.value = state);
+        // Add a listener for the PlayerData packet
         socket.addListener(PlayerDataPacket, ({name, id, mode}) => {
-            const elm: PlayerData = {id, name, score: 0}
+            const elm: PlayerData = {id, name, score: 0}; // Create an element for the player data
             if (mode === PlayerDataMode.ADD || mode === PlayerDataMode.SELF) { // If the mode is ADD or SELF
-                this.players[id] = elm // Assign the ID in the player map
+                this.players[id] = elm; // Assign the ID in the player map
                 if (mode === PlayerDataMode.SELF) { // If the mode is SELF
-                    this.self.value = elm // Set the self player to the player data
+                    this.self.value = elm; // Set the self player to the player data
                 }
             } else if (mode === PlayerDataMode.REMOVE) { // if the mode is REMOVE
-                delete this.players[id] // Remove the ID from the player map
+                delete this.players[id]; // Remove the ID from the player map
             }
-        })
+        });
+        // Add a listener for the Question packet
         socket.addListener(QuestionPacket, (data: QuestionData) => {
-            this.question.value = data
-        })
+            this.question.value = data; // Set the question to the provided data
+        });
+        // Add a listener for the Scores packet
         socket.addListener(ScoresPacket, ({scores}) => {
-            for (let dataKey in scores) {
-                const player = this.players[dataKey]
-                if (player) {
-                    player.score = scores[dataKey]
+            for (let dataKey in scores) { // Iterate over the score keys
+                const player = this.players[dataKey]; // Retrieve the player with the matching key
+                if (player) { // If the player exists
+                    player.score = scores[dataKey]; // Set the player score
                 }
             }
-        })
-        this.socket = socket
+        });
+        // Set the socket instance
+        this.socket = socket;
     }
 
     /**
      * Clears the associated persisted state for this socket
      */
     resetState() {
-        this.self.value = null
-        this.gameData.value = null
-        this.question.value = null
-        this.gameState.value = GameState.UNSET
-        for (let key of Object.keys(this.players)) {
-            delete this.players[key]
+        this.self.value = null;
+        this.gameData.value = null;
+        this.question.value = null;
+        this.gameState.value = GameState.UNSET;
+        for (let key in this.players) {
+            delete this.players[key];
         }
     }
 
@@ -166,9 +167,9 @@ export class Client {
      * connection is open according to isOpen then it will be closed as well
      */
     disconnect() {
-        if (DEBUG) console.debug('Disconnected from game') // Print debug disconnected message
-        this.socket.send(StateChangePacket, {state: States.DISCONNECT})
-        this.resetState()
+        if (DEBUG) console.debug('Disconnected from game'); // Print debug disconnected message
+        this.socket.send(StateChangePacket, {state: States.DISCONNECT}); // Send a disconnecting packet
+        this.resetState(); // Reset the state
     }
 
     /**
@@ -177,19 +178,19 @@ export class Client {
      * @param id The id of the player to kick
      */
     kick(id: string) {
-        const player = this.players[id]
+        const player = this.players[id];
         if (player) { // If the player exists
             // Displayed a toast with the kicked message
-            toast(`Kicked player "${player.name}"`)
+            toast(`Kicked player "${player.name}"`);
         }
-        if (DEBUG) console.debug('Kicked player ' + id) // Print debug kicked message
-        delete this.players[id] // Remove the player for the map
-        this.socket.send(KickPacket, {id}) // Send a kick player packet
+        if (DEBUG) console.debug('Kicked player ' + id); // Print debug kicked message
+        delete this.players[id]; // Remove the player for the map
+        this.socket.send(KickPacket, {id}); // Send a kick player packet
     }
 }
 
 // The socket instance
-let client: Client
+let client: Client;
 
 /**
  * A function for using the socket connection. Will create a new
@@ -197,8 +198,8 @@ let client: Client
  */
 export function useClient(): Client {
     // If we don't have a socket instance create a new one
-    if (!client) client = new Client(HOST)
-    return client
+    if (!client) client = new Client(HOST);
+    return client;
 }
 
 /**
@@ -210,16 +211,16 @@ export function useClient(): Client {
  * @param socket The socket connection
  */
 export function useRequireGame(socket: Client) {
-    const router = useRouter()
-    const {gameState, gameData} = socket
+    const router = useRouter();
+    const {gameState, gameData} = socket;
     // Watch for changes in the current game state
     watch(gameState, (value: GameState) => {
         if (gameData.value === null
             || value === GameState.UNSET
             || value === GameState.DOES_NOT_EXIST) { // If we are no longer in a game
-            router.push({name: 'Home'}).then() // Return to the home screen
+            router.push({name: 'Home'}).then(); // Return to the home screen
         } else if (value === GameState.STOPPED) { // If the game has ended
-            router.push({name: 'GameOver'}).then() // Send to the game over screen
+            router.push({name: 'GameOver'}).then(); // Send to the game over screen
         }
     }, {immediate: true})
 }
@@ -234,11 +235,10 @@ export function useRequireGame(socket: Client) {
  * @param handle The listener function
  */
 export function useGameState(socket: Client, state: GameState, handle: Function) {
-    const {gameState} = socket
     // Watch for changes in the current game state
-    watch(gameState, (value: GameState) => {
+    watch(socket.gameState, (value: GameState) => {
         if (value === state) {
-            handle()
+            handle();
         }
     }, {immediate: true})
 }
@@ -253,10 +253,10 @@ export function useGameState(socket: Client, state: GameState, handle: Function)
  */
 export function usePacketHandler<D extends StructLayout>(client: Client, definition: PacketDefinition<D>, handler: (data: StructTyped<D>) => any) {
     // Set the packet handler to the provided handler
-    client.socket.addListener(definition, handler)
+    client.socket.addListener(definition, handler);
     // Reset the handler on unmount
     onUnmounted(() => {
-        client.socket.removeListener(definition, handler)
+        client.socket.removeListener(definition, handler);
     })
 }
 
@@ -270,10 +270,10 @@ export function usePacketHandler<D extends StructLayout>(client: Client, definit
  */
 export function useSyncedTimer(socket: Client, initialValue: number): Ref<number> {
     // The actual value itself that should be displayed
-    const value = ref<number>(initialValue)
+    const value = ref<number>(initialValue);
 
     // Stores the last time in milliseconds that the counter ran a countdown animation
-    let lastUpdateTime: number = -1
+    let lastUpdateTime: number = -1;
 
     /**
      * Run on browser animation frames used to update the time and count
@@ -285,26 +285,25 @@ export function useSyncedTimer(socket: Client, initialValue: number): Ref<number
     function update() {
         // The value should not be changed if It's going to be < 0
         if (value.value - 1 >= 0) {
-            const time = performance.now() // Retrieve the current time
-            const elapsed = time - lastUpdateTime // Calculate the time passed since last update
+            const time = performance.now(); // Retrieve the current time
+            const elapsed = time - lastUpdateTime; // Calculate the time passed since last update
             if (elapsed >= 1000) { // If 1 second has passed since the last update
-                lastUpdateTime = time // Set the last update time
-                value.value-- // Decrease the countdown value
+                lastUpdateTime = time; // Set the last update time
+                value.value--; // Decrease the countdown value
             }
             // Request the next animation frame
-            requestAnimationFrame(update)
+            requestAnimationFrame(update);
         }
     }
 
     // Listen for time sync packets with onTimeSync
     usePacketHandler(socket, TimeSyncPacket, ({remaining, total}) => {
-        console.log(remaining, total)
         // Convert the remaining time to seconds and ceil it
-        value.value = Math.ceil(remaining / 1000)
+        value.value = Math.ceil(remaining / 1000);
         // Set the last update time = now to prevent it updating again
         // and causing an accidental out of sync
-        lastUpdateTime = performance.now()
-        update()
+        lastUpdateTime = performance.now();
+        update();
     })
-    return value
+    return value;
 }

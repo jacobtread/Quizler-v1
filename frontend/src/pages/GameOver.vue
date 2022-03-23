@@ -5,30 +5,28 @@ import { ref } from "vue";
 import CrownIcon from "@asset/icons/crown.svg?inline"
 import Nav from "@component/Nav.vue";
 
-const router = useRouter()
-const client = useClient()
-const {gameState, gameData, players} = client
+const router = useRouter();
+const client = useClient();
+const {gameState, gameData, players} = client;
 
-const firstPlace = ref<PlayerData | null>(null) // The player data for first place
-const secondPlace = ref<PlayerData | null>(null) // The player data for second place
-const thirdPlace = ref<PlayerData | null>(null) // The player data for third place
+const firstPlace = ref<PlayerData | null>(null); // The player data for first place
+const secondPlace = ref<PlayerData | null>(null); // The player data for second place
+const thirdPlace = ref<PlayerData | null>(null); // The player data for third place
 
 if (gameData.value === null || gameState.value !== GameState.STOPPED) { // If we don't have a game
-    router.push({name: 'Home'}) // Return to the home screen
+    router.push({name: 'Home'}); // Return to the home screen
 } else {
-    const p = Object.values(players).sort((a, b) => b.score - a.score)
-    if (p.length > 0) firstPlace.value = p[0]
-    if (p.length > 1) secondPlace.value = p[1]
-    if (p.length > 2) thirdPlace.value = p[2]
+    const p = Object.values(players).sort((a, b) => b.score - a.score);
+    if (p.length > 0) firstPlace.value = p[0];
+    if (p.length > 1) secondPlace.value = p[1];
+    if (p.length > 2) thirdPlace.value = p[2];
 }
 
-/**
- * Disconnects from the current game
- */
+// Disconnects from the current game
 function disconnect() {
     if (gameState.value !== GameState.DOES_NOT_EXIST
         && gameState.value !== GameState.UNSET) { // Ensure the game actually exists
-        client.disconnect() // Disconnect from the game
+        client.disconnect(); // Disconnect from the game
     }
 }
 </script>
@@ -164,5 +162,4 @@ function disconnect() {
     padding: 1rem;
   }
 }
-
 </style>

@@ -7,11 +7,11 @@ import { QuestionDataWithValues } from "@/api";
 // Structure for representing the properties of this component
 interface Props {
     // The question this set of answers is for
-    question: QuestionDataWithValues
+    question: QuestionDataWithValues;
 }
 
 // Retrieving the property reference for the question
-const {question} = defineProps<Props>()
+const {question} = defineProps<Props>();
 
 /**
  * Adds a new empty question
@@ -19,7 +19,7 @@ const {question} = defineProps<Props>()
 function add() {
     if (question.answers.length < MAX_ANSWERS) { // Ensure we don't let the user add more than 9 answers
         // Push a new empty answer to the answers
-        question.answers.push('')
+        question.answers.push('');
     }
 }
 
@@ -31,11 +31,11 @@ function add() {
  */
 function removeAt(index: number) {
     // Sets the question answers to the answers excluding the answer at index
-    question.answers = question.answers.filter((_, i) => i != index)
+    question.answers = question.answers.filter((_, i) => i != index);
     // If the selected values contains the index
     if (question.values!.indexOf(index) != -1) {
         // Filter the values to remove the index
-        question.values = question.values!.filter(value => value != index)
+        question.values = question.values!.filter(value => value != index);
     }
 }
 </script>

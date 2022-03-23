@@ -2,7 +2,7 @@
 import Logo from "@asset/icons/logo.svg?inline"
 import { useLoaderData } from "@/tools/ui";
 
-const loaderData = useLoaderData() // Use the loader data
+const loaderData = useLoaderData(); // Use the loader data
 </script>
 <template>
     <div class="loader-wrapper" v-if="loaderData.visible">

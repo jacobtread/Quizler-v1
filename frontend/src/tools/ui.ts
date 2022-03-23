@@ -17,7 +17,7 @@ export interface Toast {
 export interface DialogData {
     title: string;
     content: string;
-    action?: (result: boolean) => any
+    action?: (result: boolean) => any;
 }
 
 // The structure of the loader state
@@ -27,17 +27,17 @@ export interface LoaderState {
 }
 
 // The data for the loader
-const loader = reactive<LoaderState>({visible: false, message: 'Loading...'})
-const dialogData = ref<DialogData | null>(null) // The data for the dialog
-const toastData = ref<Toast[]>([]) // The list of toasts
-let toastId = 0 // The current id for toasts
+const loader = reactive<LoaderState>({visible: false, message: 'Loading...'});
+const dialogData = ref<DialogData | null>(null); // The data for the dialog
+const toastData = ref<Toast[]>([]); // The list of toasts
+let toastId = 0; // The current id for toasts
 
 // Function for using the dialog data
-export const useDialogData = (): Ref<DialogData | null> => dialogData
+export const useDialogData = (): Ref<DialogData | null> => dialogData;
 // Function for using the toast data
-export const useToastData = (): Ref<Toast[]> => toastData
+export const useToastData = (): Ref<Toast[]> => toastData;
 // Function for using the loader data
-export const useLoaderData = (): UnwrapNestedRefs<LoaderState> => loader
+export const useLoaderData = (): UnwrapNestedRefs<LoaderState> => loader;
 
 /**
  * Creates a new "toast" which is a small information popup
@@ -49,19 +49,19 @@ export const useLoaderData = (): UnwrapNestedRefs<LoaderState> => loader
  */
 export function toast(content: string, mode: ToastMode = ToastMode.INFO) {
     // If it's the first toast reset the toast id
-    if (toastData.value.length < 1) toastId = 0
+    if (toastData.value.length < 1) toastId = 0;
     toastId++ // Increment the toast id
     // Create a new toast object
-    const toast: Toast = {id: toastId, content, mode}
+    const toast: Toast = {id: toastId, content, mode};
     // Add the toast to the toasts list
-    toastData.value.push(toast)
+    toastData.value.push(toast);
     // Set a function to run in 3 seconds
     setTimeout(() => {
         // Remove the current toast from the toasts list
-        toastData.value = toastData.value.filter(it => it.id !== toast.id)
+        toastData.value = toastData.value.filter(it => it.id !== toast.id);
         // If it's the last toast reset the toast id
-        if (toastData.value.length < 1) toastId = 0
-    }, 3000 /* 3 seconds time */)
+        if (toastData.value.length < 1) toastId = 0;
+    }, 3000 /* 3 seconds time */);
 }
 
 /**
@@ -71,7 +71,7 @@ export function toast(content: string, mode: ToastMode = ToastMode.INFO) {
  * @param content The message of the dialog
  */
 export function dialog(title: string, content: string) {
-    dialogData.value = {title, content}
+    dialogData.value = {title, content};
 }
 
 /**
@@ -83,8 +83,8 @@ export function dialog(title: string, content: string) {
  */
 export async function confirmDialog(title: string, content: string): Promise<boolean> {
     return new Promise(resolve => {
-        dialogData.value = {title, content, action: resolve}
-    })
+        dialogData.value = {title, content, action: resolve};
+    });
 }
 
 /**
@@ -94,6 +94,6 @@ export async function confirmDialog(title: string, content: string): Promise<boo
  * @param message The message to display in the loader
  */
 export function loading(value: boolean, message: string = 'Loading...') {
-    loader.visible = value
-    loader.message = message
+    loader.visible = value;
+    loader.message = message;
 }

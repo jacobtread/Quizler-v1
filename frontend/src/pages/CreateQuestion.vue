@@ -17,20 +17,20 @@ const question = reactive<QuestionDataWithValues>({
     question: '',
     values: [0],
     answers: ['Example Answer'],
-})
+});
 
 // Whether we are editing an existing question
-let isEdit = false
+let isEdit = false;
 // The edit url parameter if present should be a string (we will convert it to an int)
-let edit: any = route.params.edit
+let edit: any = route.params.edit;
 if (edit) { // If the edit id is present
-    isEdit = true
-    edit = parseInt(edit) // Convert the id to a number
+    isEdit = true;
+    edit = parseInt(edit); // Convert the id to a number
     if (!isNaN(edit) && edit >= store.questions.length) { // If the question doesn't exist
-        router.push({name: 'Create'}) // Return to the create page
+        router.push({name: 'Create'}); // Return to the create page
     } else {
         // Set from the old question
-        setFromIndex(edit)
+        setFromIndex(edit);
     }
 }
 
@@ -41,13 +41,13 @@ if (edit) { // If the edit id is present
  * @param index The index of the existing question
  */
 function setFromIndex(index: number) {
-    const other = store.questions[index]
-    question.question = other.question
-    question.values = other.values
-    question.answers = other.answers
-    question.image = other.image
-    question.imageBase64 = other.imageBase64
-    question.imageType = other.imageType
+    const other = store.questions[index];
+    question.question = other.question;
+    question.values = other.values;
+    question.answers = other.answers;
+    question.image = other.image;
+    question.imageBase64 = other.imageBase64;
+    question.imageType = other.imageType;
 }
 
 /**
@@ -69,15 +69,14 @@ function addQuestion() {
     // If we are in edit mode
     if (isEdit) {
         // Replace the existing question
-        store.questions[edit as number] = data
+        store.questions[edit as number] = data;
     } else {
         // Add the new question
-        store.questions.push(data)
+        store.questions.push(data);
     }
     // Return to the create page
-    router.push({name: 'Create'})
+    router.push({name: 'Create'});
 }
-
 </script>
 <template>
     <form @submit.prevent="addQuestion">
@@ -108,10 +107,8 @@ function addQuestion() {
         </div>
     </form>
 </template>
-
 <style scoped lang="scss">
 @import "../assets/variables";
-
 
 .input--area {
   .input__value {
@@ -179,5 +176,4 @@ function addQuestion() {
   margin: 0 0.25em;
   border-radius: 0.25rem;
 }
-
 </style>

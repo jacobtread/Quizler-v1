@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { GameState, QuestionData, useClient, useGameState, useRequireGame, useSyncedTimer } from "@/api";
+import { GameState, useClient, useGameState, useRequireGame, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
 import { StateChangePacket, States } from "@api/packets";
 import { computed, ref, watch } from "vue";
 import { confirmDialog } from "@/tools/ui";
 
-const router = useRouter() // Use the router to change the page route
-const client = useClient(), {players, gameData, gameState, self, question} = client // Use the socket connection
-const syncedTime = useSyncedTimer(client, 5) // Use a synced timer for the game countdown
+const router = useRouter(); // Use the router to change the page route
+const client = useClient(), {players, gameData, gameState, self, question} = client; // Use the socket connection
+const syncedTime = useSyncedTimer(client, 5); // Use a synced timer for the game countdown
 
-useRequireGame(client) // Require an active game
+useRequireGame(client); // Require an active game
 
 // Redirect to the Game page if the game state becomes started and the player isn't the host
 useGameState(client, GameState.STARTED, () => {
@@ -21,27 +21,23 @@ useGameState(client, GameState.STARTED, () => {
 })
 
 // Computed state for whether the start game button should be visible (Requires at least 1 player)
-const canPlay = computed(() => Object.keys(players).length > 0)
+const canPlay = computed(() => Object.keys(players).length > 0);
 
-/**
- * Disconnects from the current game
- */
+// Disconnects from the current game
 function disconnect() {
     if (gameState.value !== GameState.DOES_NOT_EXIST
         && gameState.value !== GameState.UNSET) { // Ensure the game actually exists
-        client.disconnect() // Disconnect from the game
+        client.disconnect(); // Disconnect from the game
     }
 }
 
-/**
- * Starts the current game (Host only)
- */
+// Starts the current game (Host only)
 function startGame() {
     // Send the start game packet
     client.socket.send(StateChangePacket, {state: States.START});
 }
 
-const skipEnabled = ref(false)
+const skipEnabled = ref(false);
 
 /**
  * Skips the current question (Host only)
@@ -49,27 +45,26 @@ const skipEnabled = ref(false)
 async function skipQuestion() {
     if (skipEnabled.value) {
         // Prompt the user whether to skip
-        const confirm = await confirmDialog('Confirm Skip', 'Are you sure you want to skip this question?')
-        if (!confirm) return // If the user pressed cancel
+        const confirm = await confirmDialog('Confirm Skip', 'Are you sure you want to skip this question?');
+        if (!confirm) return; // If the user pressed cancel
         client.socket.send(StateChangePacket, {state: States.SKIP});
-        syncedTime.value = 10 // Reset the synced time
-        skipEnabled.value = false // Disable the skip button
+        syncedTime.value = 10; // Reset the synced time
+        skipEnabled.value = false; // Disable the skip button
         setTimeout(() => { // Enable the skip button in 1.5s
-            skipEnabled.value = true
-        }, 1500)
+            skipEnabled.value = true;
+        }, 1500);
     }
 }
 
 // Watch for changes to the question
-watch(question, (data: QuestionData | null) => {
+watch(question, data => {
     if (data === null) {
         skipEnabled.value = false // Disable the skip button
         setTimeout(() => { // Enable the skip button in 1.5s
             skipEnabled.value = true
         }, 1500)
     }
-}, {immediate: true})
-
+}, {immediate: true});
 </script>
 <template>
     <div class="content">

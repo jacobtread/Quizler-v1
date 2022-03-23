@@ -5,10 +5,9 @@ import Create from "@asset/icons/create.svg?inline";
 import GitHub from "@asset/icons/github.svg?inline";
 import { useClient } from "@/api";
 
-const client = useClient() // Use the client
+const client = useClient(); // Use the client
 // Reset the state (state should always rest when home page is reached)
 client.resetState();
-
 </script>
 <template>
     <div>

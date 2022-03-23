@@ -2,14 +2,14 @@
 
 import { useDialogData } from "@/tools/ui";
 
-const dialog = useDialogData() // Use the dialog data
+const dialog = useDialogData(); // Use the dialog data
 
 /**
  * Simple close function for non confirm dialogs
  * just closes the dialog
  */
 function close() {
-    dialog.value = null // Clear the active dialog
+    dialog.value = null; // Clear the active dialog
 }
 
 /**
@@ -20,9 +20,9 @@ function close() {
  * @param value Whether the user chose true
  */
 function action(value: boolean) {
-    const action = dialog.value?.action // Retrieve the close action
-    if (action) action(value) // Trigger the close action
-    dialog.value = null // Clear the active dialog
+    const action = dialog.value?.action; // Retrieve the close action
+    if (action) action(value); // Trigger the close action
+    dialog.value = null; // Clear the active dialog
 }
 
 </script>

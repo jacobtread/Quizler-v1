@@ -10,8 +10,8 @@ import { watch } from "vue";
 const {open} = useClient(); // Use the socket for the open state
 
 watch(open, (value: boolean) => { // Watch for changes of the open state
-    loading(!value, 'Connecting...') // Show the loader if we aren't connected
-}, {immediate: true}/* Watch immediately (include the initial value) */)
+    loading(!value, 'Connecting...'); // Show the loader if we aren't connected
+}, {immediate: true}/* Watch immediately (include the initial value) */);
 </script>
 <template>
     <div class="content">

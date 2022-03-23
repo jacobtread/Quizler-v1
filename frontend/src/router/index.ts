@@ -8,7 +8,6 @@ import Overview from "@page/Overview.vue"
 import Game from "@page/Game.vue"
 import GameOver from "@page/GameOver.vue"
 
-
 export const router = createRouter({
     history: createWebHistory(), // Use the web history router instead of the hash router
     routes: [ // Assign all the routes
@@ -53,4 +52,4 @@ export const router = createRouter({
             component: GameOver
         }
     ]
-})
+});

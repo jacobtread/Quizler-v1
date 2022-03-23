@@ -5,6 +5,8 @@ import vueSvg from '@vuetter/vite-plugin-vue-svg';
 import { viteSingleFile } from "vite-plugin-singlefile"
 import path from "path"
 
+const src = path.resolve(__dirname, 'src')
+
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
@@ -14,12 +16,12 @@ export default defineConfig({
     ],
     resolve: {
         alias: { // Path aliases for quick easy access to certain file types
-            '@': path.resolve(__dirname, './src'),
-            '@page': path.resolve(__dirname, './src/pages'),
-            '@component': path.resolve(__dirname, './src/components'),
-            '@asset': path.resolve(__dirname, './src/assets'),
-            '@api': path.resolve(__dirname, './src/api'),
-            '@store': path.resolve(__dirname, './src/store'),
+            '@': src,
+            '@page': path.resolve(src, 'pages'),
+            '@component': path.resolve(src, 'components'),
+            '@asset': path.resolve(src, 'assets'),
+            '@api': path.resolve(src, 'api'),
+            '@store': path.resolve(src, 'store'),
         }
     },
     build: { // Build options required for single file build

@@ -6,32 +6,32 @@ import Logo from "@asset/icons/logo.svg?inline"
 import { loading } from "@/tools/ui";
 import { arrayToDataUrl } from "@/tools/binary";
 
-const client = useClient(), {gameData, question, players} = client // Use the socket
+const client = useClient(), {gameData, question, players} = client; // Use the socket
 // A sorted version of the player list which is sorted based on player score (only takes the first 5 players)
-const sortedPlayers = computed(() => Object.values(players).sort((a, b) => b.score - a.score).slice(0, 5))
+const sortedPlayers = computed(() => Object.values(players).sort((a, b) => b.score - a.score).slice(0, 5));
 // A reactive reference to whether the player has answered the question
 const answered = ref(false);
 // A reactive reference to whether the player answer was correct
-const result = ref<boolean | null>(null)
+const result = ref<boolean | null>(null);
 
 // Create a synced timer with the default time of 10 seconds
-const syncedTime = useSyncedTimer(client, 10)
+const syncedTime = useSyncedTimer(client, 10);
 
-useRequireGame(client) // Require an active game
+useRequireGame(client); // Require an active game
 
 // Watch for changes to the question
 watch(question, (data: QuestionData | null) => {
-    answered.value = false // Set the answered value to false
-    result.value = null // Clear the result
-    loading(data === null) // If the there's no question show the loader
-    syncedTime.value = 10
+    answered.value = false; // Set the answered value to false
+    result.value = null; // Clear the result
+    loading(data === null); // If the there's no question show the loader
+    syncedTime.value = 10;
     if (data !== null && !data.imageBase64) {
         question.value!!.imageBase64 = arrayToDataUrl(
             data.imageType,
             data.image
-        )
+        );
     }
-}, {immediate: true})
+}, {immediate: true});
 
 /**
  * Sets the player answer the answer at the provided index.
@@ -41,8 +41,8 @@ watch(question, (data: QuestionData | null) => {
  * @param index The index of the chosen answer
  */
 function setAnswer(index: number) {
-    answered.value = true
-    client.socket.send(AnswerPacket, {id: index})
+    answered.value = true;
+    client.socket.send(AnswerPacket, {id: index});
 }
 
 /**
@@ -50,8 +50,8 @@ function setAnswer(index: number) {
  * and update the result value accordingly
  */
 usePacketHandler(client, AnswerResultPacket, data => {
-    result.value = data.result
-})
+    result.value = data.result;
+});
 
 /**
  * Calculates an appropriate font size for the answer value based on how
@@ -60,11 +60,11 @@ usePacketHandler(client, AnswerResultPacket, data => {
  * @param text The text to get the length of
  */
 function getFontSize(text: string): string {
-    const fitLength = 100
-    if (text.length > fitLength) return '0.7rem'
-    const percent = (1 - (text.length / fitLength))
-    const size = (percent * 0.8) + 0.7
-    return `${size}rem`
+    const fitLength = 100;
+    if (text.length > fitLength) return '0.7rem';
+    const percent = (1 - (text.length / fitLength));
+    const size = (percent * 0.8) + 0.7;
+    return `${size}rem`;
 }
 
 /**
@@ -72,16 +72,16 @@ function getFontSize(text: string): string {
  * that the user got from answering the question
  */
 function getRandomText(): string {
-    let texts: string[]
+    let texts: string[];
     if (result.value === null) {
-        texts = ['Hmm I wonder if you got it right....', 'It definitely had to be that one!', 'Yeah it was probably that one...', '0_0 good luck i guess..']
+        texts = ['Hmm I wonder if you got it right....', 'It definitely had to be that one!', 'Yeah it was probably that one...', '0_0 good luck i guess..'];
     } else if (result.value) {
-        texts = ['You did it!', 'That one was right!', 'Good job!', 'Yup that was it!']
+        texts = ['You did it!', 'That one was right!', 'Good job!', 'Yup that was it!'];
     } else {
-        texts = ['Ooops..', 'Yeah not that one...', 'Better luck next time', 'Noooo your other left']
+        texts = ['Ooops..', 'Yeah not that one...', 'Better luck next time', 'Noooo your other left'];
     }
-    const index = Math.floor(Math.random() * texts.length)
-    return texts[index]
+    const index = Math.floor(Math.random() * texts.length);
+    return texts[index];
 }
 </script>
 <template>
@@ -305,5 +305,4 @@ function getRandomText(): string {
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
 </style>

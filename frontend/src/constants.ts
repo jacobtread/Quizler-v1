@@ -17,23 +17,23 @@ function getHost(value: string | undefined): string {
     if (!value || value === 'origin') {
         let host = window.location.origin
             .replace(/^https/, 'wss')
-            .replace(/^http/, 'ws')
-        if (!host.endsWith('/')) host += '/'
-        host += 'ws'
-        return host
+            .replace(/^http/, 'ws');
+        if (!host.endsWith('/')) host += '/';
+        host += 'ws';
+        return host;
     } else {
-        return value
+        return value;
     }
 }
 
 // The websocket host url
-export const HOST: string = getHost(import.meta.env.VITE_HOST)
+export const HOST: string = getHost(import.meta.env.VITE_HOST);
 // Whether to do debug logging
-export const DEBUG: boolean = import.meta.env.VITE_DEBUG == 'true'
+export const DEBUG: boolean = import.meta.env.VITE_DEBUG == 'true';
 // The maximum amount of questions a user can create
-export const MAX_QUESTIONS = 16
+export const MAX_QUESTIONS = 16;
 // The maximum amount of answers each question can have
-export const MAX_ANSWERS = 9
+export const MAX_ANSWERS = 9;
 
 // Debug log the current host
-console.debug(`Web socket host is ${HOST}`)
+console.debug(`Web socket host is ${HOST}`);

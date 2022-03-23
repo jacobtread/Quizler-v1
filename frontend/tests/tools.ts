@@ -12,14 +12,15 @@ import { PacketDefinition } from "gowsps-js";
 export async function expectPacket<T extends StructLayout>(client: Client, definition: PacketDefinition<T>, timeout: number = 1000): Promise<StructTyped<T>> {
     return new Promise((resolve, reject) => {
         function receiver(data: StructTyped<T>) {
-            clearTimeout(t)
-            client.socket.removeListener(definition, receiver)
-            resolve(data)
+            clearTimeout(t);
+            client.socket.removeListener(definition, receiver);
+            resolve(data);
         }
+
         const t = setTimeout(() => {
-            client.socket.removeListener(definition, receiver)
-            reject(`Didn't receive packet of id ${definition.id}`)
-        }, timeout)
-        client.socket.addListener(definition, receiver)
+            client.socket.removeListener(definition, receiver);
+            reject(`Didn't receive packet of id ${definition.id}`);
+        }, timeout);
+        client.socket.addListener(definition, receiver);
     })
 }
