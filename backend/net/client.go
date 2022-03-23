@@ -2,9 +2,7 @@ package net
 
 import (
 	"backend/tools"
-	"fmt"
 	"github.com/jacobtread/gowsps"
-	"reflect"
 )
 
 // Ids for client packets
@@ -70,16 +68,3 @@ type (
 		Id tools.AnswerIndex // The index of the answer
 	}
 )
-
-type CustomInt = uint8
-
-func T() {
-	x := CustomInt(21)
-	switch reflect.ValueOf(x).Interface().(type) {
-	case uint8:
-		fmt.Printf("INT8")
-	default:
-		fmt.Printf("Nope")
-	}
-
-}

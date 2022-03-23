@@ -48,8 +48,9 @@ export interface GameData {
 }
 
 export interface QuestionData {
-    imageBase64?: string
-    image: Uint8Array,
+    imageBase64?: string;
+    imageType: string;
+    image: Uint8Array;
     question: string;
     answers: string[];
 }
@@ -81,6 +82,9 @@ export class Client {
      */
     constructor(host: string) {
         const socket = new BinarySocket(host, {reconnectTimeout: 2000})
+        socket.setInterceptor((id,data) => {
+            console.table({id, data})
+        })
         socket.addEventListener('open', () => {
             if (DEBUG) console.debug('Connected to socket server') // Debug logging
             this.open.value = true // Update the open state

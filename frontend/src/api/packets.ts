@@ -1,4 +1,3 @@
-import { DEBUG } from "@/constants";
 import {
     ArrayType,
     Bool,
@@ -47,12 +46,13 @@ export const PlayerDataPacket = new PacketDefinition(0x04, {
     mode: UInt8
 }, ['id', 'name', 'mode'])
 
-export const TimeSyncPacket = new PacketDefinition(0x04, {
+export const TimeSyncPacket = new PacketDefinition(0x05, {
     total: VarInt,
     remaining: VarInt
 }, ['total', 'remaining'])
 
 export const QuestionPacket = new PacketDefinition(0x07, {
+    imageType: Str,
     image: ByteArray,
     question: Str,
     answers: ArrayType(Str),
@@ -67,11 +67,12 @@ export const ScoresPacket = new PacketDefinition(0x09, {scores: MapType(Str, UIn
 export const CreateGamePacket = new PacketDefinition(0x00, {
     title: Str,
     questions: StructArray({
+        imageType: Str,
         image: ByteArray,
         question: Str,
         answers: ArrayType(Str),
         values: ArrayType(UInt8)
-    }, ['image', 'question', 'answers', 'values'])
+    }, ['imageType', 'image', 'question', 'answers', 'values'])
 }, ['title', 'questions'])
 
 export const CheckNameTakenPacket = new PacketDefinition(0x01, {

@@ -21,10 +21,11 @@ type (
 
 	// QuestionData A structure representing a question for the quiz
 	QuestionData struct {
-		Image    []byte        // Optional - an image to display with the question
-		Question string        // The actual contents of the question
-		Answers  []string      // The possible answer values
-		Values   []AnswerIndex // The indexes of the correct answers
+		ImageType string
+		Image     []byte        // Optional - an image to display with the question
+		Question  string        // The actual contents of the question
+		Answers   []string      // The possible answer values
+		Values    []AnswerIndex // The indexes of the correct answers
 	}
 
 	// ScoreMap A map of player identifiers to score values

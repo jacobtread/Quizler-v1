@@ -3,11 +3,11 @@ import { ref } from "vue";
 import ImageIcon from "@asset/icons/image.svg?inline"
 import imageCompression from "browser-image-compression"
 import { dialog, loading, toast } from "@/tools/ui";
-import { btoa } from "Base64"
+import { arrayToDataUrl } from "@/tools/binary";
 
 // Defining properties and emits for model value so v-model can be used
-const {modelValue} = defineProps(['modelValue'])
-const emit = defineEmits(['update:modelValue'])
+const {image, base64, type} = defineProps(['image', 'base64', 'type'])
+const emit = defineEmits(['update:image', 'update:base64', 'update:type'])
 
 // A reference to the file input element used to access the files
 const fileInput = ref<HTMLInputElement>()
@@ -19,7 +19,9 @@ const fileInput = ref<HTMLInputElement>()
  */
 function removeImage() {
     // Emit the update event with undefined as its value
-    emit('update:modelValue', undefined)
+    emit('update:image', new Uint8Array(0))
+    emit('update:base64', undefined)
+    emit('update:type', undefined)
 }
 
 /**
@@ -35,8 +37,10 @@ async function onFileChange() {
         try {
             loading(true, 'Loading Image...') // Show a loader while we upload
             const imageBuffer = await loadImage(file) // Async load the image data
-            const imageData = btoa(String.fromCharCode.apply(null, imageBuffer as never));
-            emit('update:modelValue', imageData) // Emit the changes
+            const base64 = arrayToDataUrl(file.type, imageBuffer)
+            emit('update:type', file.type) // Emit the changes
+            emit('update:image', imageBuffer) // Emit the changes
+            emit('update:base64', base64) // Emit the changes
             loading(false) // Hide the loader
             toast('Image Uploaded') // Show a toast saying the image was uploaded
         } catch (e) {
@@ -74,10 +78,10 @@ function loadImage(file: File): Promise<Uint8Array> {
 
 </script>
 <template>
-    <div class="image-wrapper" v-if="modelValue"> <!-- If we already have an image present -->
+    <div class="image-wrapper" v-if="base64"> <!-- If we already have an image present -->
         <div class="image"
              @click="removeImage"
-             :style="{backgroundImage: `url(${modelValue})`}">
+             :style="{backgroundImage: `url(${base64})`}">
             <span class="image__text">Click to remove</span>
         </div>
     </div>

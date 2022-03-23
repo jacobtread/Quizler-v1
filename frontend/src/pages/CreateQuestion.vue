@@ -12,6 +12,7 @@ const route = useRoute();
 
 // A reactive object for the question data
 const question = reactive<QuestionDataWithValues>({
+    imageType: '',
     image: new Uint8Array(0),
     question: '',
     values: [0],
@@ -45,6 +46,8 @@ function setFromIndex(index: number) {
     question.values = other.values
     question.answers = other.answers
     question.image = other.image
+    question.imageBase64 = other.imageBase64
+    question.imageType = other.imageType
 }
 
 /**
@@ -59,7 +62,9 @@ function addQuestion() {
         question: question.question,
         values: [...(question.values as number[])],
         answers: [...question.answers],
-        image: question.image
+        imageType: question.imageType,
+        image: question.image,
+        imageBase64: question.imageBase64
     }
     // If we are in edit mode
     if (isEdit) {
@@ -81,7 +86,10 @@ function addQuestion() {
             <main class="main">
                 <div class="box">
                     <h2 class="box__title">Details</h2>
-                    <ImageSelector v-model="question.image"/>
+                    <ImageSelector v-model:image="question.image"
+                                   v-model:base64="question.imageBase64"
+                                   v-model:type="question.imageType"
+                    />
                     <label class="input input--area question-text">
                         <textarea rows="5" cols="10" class="input__value" placeholder="Question"
                                   v-model="question.question" required/>

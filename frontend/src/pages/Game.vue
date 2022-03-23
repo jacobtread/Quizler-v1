@@ -4,7 +4,7 @@ import { computed, ref, watch } from "vue";
 import { AnswerPacket, AnswerResultPacket } from "@api/packets";
 import Logo from "@asset/icons/logo.svg?inline"
 import { loading } from "@/tools/ui";
-import { btoa } from "Base64";
+import { arrayToDataUrl } from "@/tools/binary";
 
 const client = useClient(), {gameData, question, players} = client // Use the socket
 // A sorted version of the player list which is sorted based on player score (only takes the first 5 players)
@@ -26,8 +26,10 @@ watch(question, (data: QuestionData | null) => {
     loading(data === null) // If the there's no question show the loader
     syncedTime.value = 10
     if (data !== null && !data.imageBase64) {
-        const image = data.image;
-        question.value!!.imageBase64 = btoa(String.fromCharCode.apply(null, image as never))
+        question.value!!.imageBase64 = arrayToDataUrl(
+            data.imageType,
+            data.image
+        )
     }
 }, {immediate: true})
 
