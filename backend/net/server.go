@@ -1,7 +1,7 @@
 package net
 
 import (
-	"backend/tools"
+	. "backend/tools"
 	. "github.com/jacobtread/gowsps"
 	"time"
 )
@@ -54,8 +54,8 @@ func PlayerDataPacket(id string, name string, mode PlayerDataMode) Packet {
 // JoinGamePacket creates a new join game data packet with the provided values
 func JoinGamePacket(owner bool, id string, title string) Packet {
 	return Packet{Id: SJoinedGame, Data: struct {
-		Owner bool   // Whether the player is the host/owner of the quiz
 		Id    string // The id of the joined game
+		Owner bool   // Whether the player is the host/owner of the quiz
 		Title string // The title of the joined game
 	}{Id: id, Title: title, Owner: owner}}
 }
@@ -68,9 +68,9 @@ func NameTakenResultPacket(result bool) Packet {
 }
 
 // GameStatePacket creates a new game state packet with the provided state
-func GameStatePacket(state tools.State) Packet {
+func GameStatePacket(state State) Packet {
 	return Packet{Id: SGameState, Data: struct {
-		State tools.State
+		State State
 	}{State: state}}
 }
 
@@ -85,7 +85,7 @@ func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
 
 // QuestionPacket creates a new question packet which informs the client which
 // question they are currently answering
-func QuestionPacket(data tools.QuestionData) Packet {
+func QuestionPacket(data QuestionData) Packet {
 	return Packet{Id: SQuestion, Data: struct {
 		Image    []byte
 		Question string
@@ -103,8 +103,8 @@ func AnswerResultPacket(result bool) Packet {
 
 // ScoresPacket creates a new score packet which contains the scores of all the
 // players in the game. This is sent to everyone when scores change
-func ScoresPacket(data tools.ScoreMap) Packet {
+func ScoresPacket(data ScoreMap) Packet {
 	return Packet{Id: SScores, Data: struct {
-		Scores tools.ScoreMap
+		Scores ScoreMap
 	}{Scores: data}}
 }

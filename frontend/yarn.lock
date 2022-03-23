@@ -997,10 +997,10 @@ glob-parent@~5.1.2:
   dependencies:
     is-glob "^4.0.1"
 
-gowsps-js@1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/gowsps-js/-/gowsps-js-1.1.0.tgz#752df880eee5c835f03aa242444b69ac75975131"
-  integrity sha512-ynkNCLs5LQEX23GSpnD2sYh+1QcD1TpzFADI7GInpZA35On3QpCK3a7ufuo6RQrNmXwajllbNPwZcAyn9Cmycg==
+gowsps-js@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/gowsps-js/-/gowsps-js-1.1.1.tgz#8b3a22d7d47721816dbb7dd0c6f47a6efe791e6b"
+  integrity sha512-6hn0TRzfCvQkUjCdsXHsPKMlfZ+VYoUT1DC83lYKBzNXwpTMDFAwVu21jEDkAlid31u79C55WtJ1p0nx9tncvw==
 
 has-flag@^4.0.0:
   version "4.0.0"

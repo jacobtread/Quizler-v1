@@ -40,13 +40,13 @@ export const JoinGamePacket = new PacketDefinition(0x02, {
 export const NameTakenResultPacket = new PacketDefinition(0x03, {result: Bool}, ['result'])
 export const GameStatePacket = new PacketDefinition(0x04, {state: UInt8}, ['state'])
 
-export const PlayerDataPacket = new PacketDefinition(0x04, {
+export const PlayerDataPacket = new PacketDefinition(0x05, {
     id: Str,
     name: Str,
     mode: UInt8
 }, ['id', 'name', 'mode'])
 
-export const TimeSyncPacket = new PacketDefinition(0x05, {
+export const TimeSyncPacket = new PacketDefinition(0x06, {
     total: VarInt,
     remaining: VarInt
 }, ['total', 'remaining'])

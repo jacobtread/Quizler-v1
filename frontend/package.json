@@ -14,7 +14,7 @@
     "@vuetter/vite-plugin-vue-svg": "^0.1.2",
     "Base64": "^1.1.0",
     "browser-image-compression": "^1.0.17",
-    "gowsps-js": "1.1.0",
+    "gowsps-js": "1.1.1",
     "sass": "^1.49.7",
     "vue": "^3.2.25",
     "vue-router": "4",

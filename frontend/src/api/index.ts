@@ -297,7 +297,8 @@ export function useSyncedTimer(socket: Client, initialValue: number): Ref<number
     }
 
     // Listen for time sync packets with onTimeSync
-    usePacketHandler(socket, TimeSyncPacket, ({remaining}) => {
+    usePacketHandler(socket, TimeSyncPacket, ({remaining, total}) => {
+        console.log(remaining, total)
         // Convert the remaining time to seconds and ceil it
         value.value = Math.ceil(remaining / 1000)
         // Set the last update time = now to prevent it updating again

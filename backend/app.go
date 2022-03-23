@@ -11,6 +11,8 @@ import (
 	"net/http"
 )
 
+// Build with go build -o Quizler.exe -ldflags "-w"
+
 const (
 	Version = "1.0.5"
 	Intro   = `
