@@ -1,13 +1,19 @@
 import { afterAll, describe, expect, test } from "vitest";
-import { GameState, SocketApi } from "@/api";
-import packets, { GameData, NameTakenResultData, QuestionData, SPID } from "@/api/packets";
+import { Client, GameData, GameState, QuestionDataWithValues } from "@/api";
+import {
+    CheckNameTakenPacket,
+    CreateGamePacket,
+    JoinGamePacket,
+    NameTakenResultPacket,
+    RequestJoinPacket,
+} from "@/api/packets";
 import { watch } from "vue";
 import { expectPacket } from "./tools";
 
 const HOST = 'wss://quizler.jacobtread.com/ws'
 let id: string
 
-async function checkConnection(socket: SocketApi) {
+async function checkConnection(socket: Client) {
     const isOpen = await (new Promise(resolve => {
         const timeout = setTimeout(() => resolve(false), 2000) // Automatically fail if open state doesn't change in 2s
         watch(socket.open, open => {
@@ -18,10 +24,10 @@ async function checkConnection(socket: SocketApi) {
     expect(isOpen).toBeTruthy() // Expect open
 }
 
-let host: SocketApi
+let host: Client
 
 describe('Create game', () => {
-    host = new SocketApi(HOST)
+    host = new Client(HOST)
 
     // Test checks if the connection to the socket is alive
     test('Connection Open', async () => await checkConnection(host))
@@ -29,14 +35,15 @@ describe('Create game', () => {
     test('Try Create', async () => {
 
         const TITLE = 'Example Game'
-        const QUESTIONS: QuestionData[] = [{
+        const QUESTIONS: QuestionDataWithValues[] = [{
+            image: new Uint8Array(),
             question: 'Example Question',
             answers: ['Example 1', 'Example 2', 'Example 3'],
             values: [0, 2]
         }]
 
-        host.send(packets.createGame(TITLE, QUESTIONS)) // Send game create packet
-        const gameData: GameData = await expectPacket<GameData>(host, SPID.JOIN_GAME)
+        host.socket.send(CreateGamePacket, {title: TITLE, questions: QUESTIONS}) // Send game create packet
+        const gameData: GameData = await expectPacket(host, JoinGamePacket)
         expect(gameData.owner, 'Expected to be game owner').toBeTruthy() // Ensure we are the owner of this game
         expect(gameData.title, 'Expected game title to match').equals(TITLE) // Ensure the titles match
         id = gameData.id
@@ -44,23 +51,23 @@ describe('Create game', () => {
 })
 
 describe('Join Game', () => {
-    const socket = new SocketApi(HOST)
+    const client = new Client(HOST)
 
     // Test checks if the connection to the socket is alive
-    test('Connection Open', async () => await checkConnection(socket))
+    test('Connection Open', async () => await checkConnection(client))
 
     test('Try Join', async () => {
         const NAME = 'Player'
 
-        socket.send(packets.checkNameTaken(id, NAME)) // Send game create packet
-        const nameTakenResult: NameTakenResultData = await expectPacket<NameTakenResultData>(socket, SPID.NAME_TAKEN_RESULT)
-        expect(nameTakenResult.result, 'Expect name to not be taken').toBeFalsy() // Name shouldn't be already taken
+        client.socket.send(CheckNameTakenPacket, {id, name: NAME}) // Send game create packet
+        const {result} = await expectPacket(client, NameTakenResultPacket)
+        expect(result, 'Expect name to not be taken').toBeFalsy() // Name shouldn't be already taken
 
-        socket.send(packets.requestJoin(id, NAME))
+        client.socket.send(RequestJoinPacket, {id, name: NAME})
 
         const isWaiting = await (new Promise(resolve => {
             const timeout = setTimeout(() => resolve(false), 2000) // Automatically fail if open state doesn't change in 2s
-            watch(socket.gameState, state => {
+            watch(client.gameState, state => {
                 clearTimeout(timeout) // Clear the autofill timeout
                 resolve(state === GameState.WAITING) // Resolve with the open state
             })
@@ -70,6 +77,6 @@ describe('Join Game', () => {
 
     afterAll(() => {
         host.disconnect()
-        socket.disconnect()
+        client.disconnect()
     })
 })

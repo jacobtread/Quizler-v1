@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { usePacketHandler, useRequireGame, useSocket, useSyncedTimer } from "@/api";
+import { QuestionData, useClient, usePacketHandler, useRequireGame, useSyncedTimer } from "@/api";
 import { computed, ref, watch } from "vue";
-import packets, { AnswerResultData, QuestionData, SPID } from "@api/packets";
+import { AnswerPacket, AnswerResultPacket } from "@api/packets";
 import Logo from "@asset/icons/logo.svg?inline"
 import { loading } from "@/tools/ui";
+import { btoa } from "Base64";
 
-const socket = useSocket(), {gameData, question, players} = socket // Use the socket
+const client = useClient(), {gameData, question, players} = client // Use the socket
 // A sorted version of the player list which is sorted based on player score (only takes the first 5 players)
 const sortedPlayers = computed(() => Object.values(players).sort((a, b) => b.score - a.score).slice(0, 5))
 // A reactive reference to whether the player has answered the question
@@ -14,9 +15,9 @@ const answered = ref(false);
 const result = ref<boolean | null>(null)
 
 // Create a synced timer with the default time of 10 seconds
-const syncedTime = useSyncedTimer(socket, 10)
+const syncedTime = useSyncedTimer(client, 10)
 
-useRequireGame(socket) // Require an active game
+useRequireGame(client) // Require an active game
 
 // Watch for changes to the question
 watch(question, (data: QuestionData | null) => {
@@ -24,6 +25,10 @@ watch(question, (data: QuestionData | null) => {
     result.value = null // Clear the result
     loading(data === null) // If the there's no question show the loader
     syncedTime.value = 10
+    if (data !== null && !data.imageBase64) {
+        const image = data.image;
+        question.value!!.imageBase64 = btoa(String.fromCharCode.apply(null, image as never))
+    }
 }, {immediate: true})
 
 /**
@@ -35,14 +40,14 @@ watch(question, (data: QuestionData | null) => {
  */
 function setAnswer(index: number) {
     answered.value = true
-    socket.send(packets.answer(index))
+    client.socket.send(AnswerPacket, {id: index})
 }
 
 /**
  * Creates a new packet handler to handle the Answer Result packets
  * and update the result value accordingly
  */
-usePacketHandler(socket, SPID.ANSWER_RESULT, (data: AnswerResultData) => {
+usePacketHandler(client, AnswerResultPacket, data => {
     result.value = data.result
 })
 
@@ -103,9 +108,9 @@ function getRandomText(): string {
                 </header>
                 <div class="image-wrapper">
                     <div
-                            v-if="question.image"
+                            v-if="question.imageBase64"
                             class="image"
-                            :style="{backgroundImage: `url(${question.image})`}"
+                            :style="{backgroundImage: `url(${question.imageBase64})`}"
                     ></div>
                     <div v-else>
                         <Logo class="logo"/>

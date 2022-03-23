@@ -10,16 +10,16 @@ import Edit from "@asset/icons/edit.svg?inline"
 import ExportIcon from "@asset/icons/export.svg?inline"
 import ImportIcon from "@asset/icons/import.svg?inline"
 import { store } from "@store/create";
-import { useSocket } from "@/api";
+import { GameData, QuestionDataWithValues, useClient } from "@/api";
 import { useRouter } from "vue-router";
-import packets, { GameData, QuestionData } from "@api/packets";
 import Nav from "@component/Nav.vue";
 import { computed, ref, watch } from "vue";
 import { dialog, loading, toast } from "@/tools/ui";
 import { MAX_QUESTIONS } from "@/constants";
+import { CreateGamePacket } from "@api/packets";
 
 const router = useRouter()
-const socket = useSocket()
+const client = useClient()
 
 // Simple computed function to ensure there is at least 1 question
 const hasQuestions = computed(() => store.questions.length > 0)
@@ -42,11 +42,11 @@ function deleteQuestion(index: number) {
  */
 function createQuiz() {
     // Send the creation game packet
-    socket.send(packets.createGame(store.title, store.questions))
+    client.socket.send(CreateGamePacket, {title: store.title, questions: store.questions})
 }
 
 // Watch the game data for changes
-watch(socket.gameData, (data: GameData | null) => {
+watch(client.gameData, (data: GameData | null) => {
     if (data != null) { // If we have game data
         // Redirect to the overview page
         router.push({name: 'Overview'})
@@ -85,7 +85,7 @@ async function importFile() {
 // The structure of quiz config files
 interface Config {
     title: string;
-    questions: QuestionData[]
+    questions: QuestionDataWithValues[]
 }
 
 /**
@@ -201,7 +201,8 @@ function exportFile() {
                             </div>
                         </div>
                     </transition-group>
-                    <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block" v-if="store.questions.length < MAX_QUESTIONS">
+                    <router-link :to="{name: 'CreateQuestion'}" class="button button--icon button--block"
+                                 v-if="store.questions.length < MAX_QUESTIONS">
                         <Add class="button__icon"/>
                     </router-link>
                 </div>

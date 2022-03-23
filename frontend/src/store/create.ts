@@ -1,9 +1,9 @@
-import { QuestionData } from "@api/packets";
 import { reactive } from "vue";
+import { QuestionDataWithValues } from "@/api";
 
 // The structure of this store
 interface State {
-    questions: QuestionData[];
+    questions: QuestionDataWithValues[];
     title: string
 }
 

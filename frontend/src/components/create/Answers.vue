@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { QuestionData } from "@/api/packets";
 import CrossIcon from "@asset/icons/cross.svg?inline"
 import AddIcon from "@asset/icons/add.svg?inline"
 import { MAX_ANSWERS } from "@/constants";
+import { QuestionDataWithValues } from "@/api";
 
 // Structure for representing the properties of this component
 interface Props {
     // The question this set of answers is for
-    question: QuestionData
+    question: QuestionDataWithValues
 }
 
 // Retrieving the property reference for the question
@@ -54,7 +54,8 @@ function removeAt(index: number) {
                 <CrossIcon class="answer__button" v-if="index !== 0" @click="removeAt(index)"/>
             </li>
         </ul>
-        <button class="button button--icon button--block" @click="add" type="button" v-if="question.answers.length < MAX_ANSWERS">
+        <button class="button button--icon button--block" @click="add" type="button"
+                v-if="question.answers.length < MAX_ANSWERS">
             <AddIcon class="button__icon"/>
         </button>
     </div>

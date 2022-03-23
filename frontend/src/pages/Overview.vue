@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import { GameState, useGameState, useRequireGame, useSocket, useSyncedTimer } from "@/api";
+import { GameState, QuestionData, useClient, useGameState, useRequireGame, useSyncedTimer } from "@/api";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue"
-import packets, { QuestionData, States } from "@api/packets";
+import { StateChangePacket, States } from "@api/packets";
 import { computed, ref, watch } from "vue";
 import { confirmDialog } from "@/tools/ui";
 
 const router = useRouter() // Use the router to change the page route
-const socket = useSocket(), {players, gameData, gameState, self, question} = socket // Use the socket connection
-const syncedTime = useSyncedTimer(socket, 5) // Use a synced timer for the game countdown
+const client = useClient(), {players, gameData, gameState, self, question} = client // Use the socket connection
+const syncedTime = useSyncedTimer(client, 5) // Use a synced timer for the game countdown
 
-useRequireGame(socket) // Require an active game
+useRequireGame(client) // Require an active game
 
 // Redirect to the Game page if the game state becomes started and the player isn't the host
-useGameState(socket, GameState.STARTED, () => {
+useGameState(client, GameState.STARTED, () => {
     if (gameData.value != null && !gameData.value.owner) {
         router.push({name: 'Game'})
     }
@@ -29,7 +29,7 @@ const canPlay = computed(() => Object.keys(players).length > 0)
 function disconnect() {
     if (gameState.value !== GameState.DOES_NOT_EXIST
         && gameState.value !== GameState.UNSET) { // Ensure the game actually exists
-        socket.disconnect() // Disconnect from the game
+        client.disconnect() // Disconnect from the game
     }
 }
 
@@ -38,7 +38,7 @@ function disconnect() {
  */
 function startGame() {
     // Send the start game packet
-    socket.send(packets.stateChange(States.START))
+    client.socket.send(StateChangePacket, {state: States.START});
 }
 
 const skipEnabled = ref(false)
@@ -51,7 +51,7 @@ async function skipQuestion() {
         // Prompt the user whether to skip
         const confirm = await confirmDialog('Confirm Skip', 'Are you sure you want to skip this question?')
         if (!confirm) return // If the user pressed cancel
-        socket.send(packets.stateChange(States.SKIP)) // Send a skip packet
+        client.socket.send(StateChangePacket, {state: States.SKIP});
         syncedTime.value = 10 // Reset the synced time
         skipEnabled.value = false // Disable the skip button
         setTimeout(() => { // Enable the skip button in 1.5s
@@ -86,7 +86,7 @@ watch(question, (data: QuestionData | null) => {
                     <ul class="players">
                         <li v-for="(player, index) of players" :key="index" class="player">
                             <span class="player__name">{{ player.name }}</span>
-                            <button @click="socket.kick(player.id)" class="button player__button">
+                            <button @click="client.kick(player.id)" class="button player__button">
                                 Kick
                             </button>
                         </li>

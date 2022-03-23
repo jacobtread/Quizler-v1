@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { store } from "@store/create";
 import { reactive } from "vue";
-import { QuestionData } from "@api/packets";
 import { useRoute, useRouter } from "vue-router"
 import Nav from "@component/Nav.vue";
 import ImageSelector from "@component/create/ImageSelector.vue";
 import Answers from "@component/create/Answers.vue";
+import { QuestionDataWithValues } from "@/api";
 
-const router = useRouter()
+const router = useRouter();
 const route = useRoute();
 
 // A reactive object for the question data
-const question = reactive<QuestionData>({
+const question = reactive<QuestionDataWithValues>({
+    image: new Uint8Array(0),
     question: '',
     values: [0],
     answers: ['Example Answer'],
@@ -54,7 +55,7 @@ function setFromIndex(index: number) {
  */
 function addQuestion() {
     // Copy the question data so that it's not reactive anymore
-    const data: QuestionData = {
+    const data: QuestionDataWithValues = {
         question: question.question,
         values: [...(question.values as number[])],
         answers: [...question.answers],

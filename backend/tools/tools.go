@@ -14,7 +14,7 @@ type (
 	State = uint8
 
 	// AnswerIndex represents the index for an answer as an integer
-	AnswerIndex = int
+	AnswerIndex = uint32
 
 	// QuestionIndex represents the index for a question as an integer
 	QuestionIndex = int

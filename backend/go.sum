@@ -1,6 +1,6 @@
 github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWmnc=
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
-github.com/jacobtread/gowsps v0.0.0-20220307042916-78f2facec237 h1:Tpen12Z9R8yj6kx6k33eyS1YjhYDww7zVEvL/mALxSs=
-github.com/jacobtread/gowsps v0.0.0-20220307042916-78f2facec237/go.mod h1:c5mgiL42WSK+yA2ywY9hxcrk2frxh0nnhSuwncIjs2Q=
-github.com/mitchellh/mapstructure v1.4.3 h1:OVowDSCllw/YjdLkam3/sm7wEtOy59d8ndGgCcyj8cs=
-github.com/mitchellh/mapstructure v1.4.3/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
+github.com/jacobtread/gowsps v0.0.0-20220322082724-ebf8aa5585d6 h1:k0EVp3QwYVOzBt2mr0n0EhVUYFRXPTBmbdSlu5bg4SM=
+github.com/jacobtread/gowsps v0.0.0-20220322082724-ebf8aa5585d6/go.mod h1:sXOcWH2tKai+TL9z6ML7bKa2UR4SjJgU90MwvRJXhEg=
+github.com/jacobtread/gowsps v0.0.0-20220322105054-8fe2c8fc6eb3 h1:GczSBmLd4G4hIGcsAzoAkQ2ZyVEXkwI09XdSSLdbUwA=
+github.com/jacobtread/gowsps v0.0.0-20220322105054-8fe2c8fc6eb3/go.mod h1:ds+faxp865JdFiKAa4IzfYGwEzhSAj12/+a0aYrQBu4=

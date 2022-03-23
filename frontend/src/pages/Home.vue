@@ -3,11 +3,11 @@ import Play from "@asset/icons/play.svg?inline";
 import Logo from "@asset/icons/logo.svg?inline";
 import Create from "@asset/icons/create.svg?inline";
 import GitHub from "@asset/icons/github.svg?inline";
-import { useSocket } from "@/api";
+import { useClient } from "@/api";
 
-const socket = useSocket() // Use the socket
+const client = useClient() // Use the client
 // Reset the state (state should always rest when home page is reached)
-socket.resetState();
+client.resetState();
 
 </script>
 <template>

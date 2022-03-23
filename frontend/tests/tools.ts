@@ -1,6 +1,3 @@
-import { SPID } from "src/api/packets";
-import { SocketApi } from "src/api";
-
 /**
  * Expect a packet from the server returns null if no packet within timeout
  *
@@ -8,17 +5,21 @@ import { SocketApi } from "src/api";
  * @param id The id of the packet to expect
  * @param timeout The timeout to wait before failing
  */
-export async function expectPacket<T extends any>(socket: SocketApi, id: SPID, timeout: number = 1000): Promise<T> {
-    const oldHandler = socket.handlers[id]
+import { StructLayout, StructTyped } from "gowsps-js/dist/data";
+import { Client } from "src/api";
+import { PacketDefinition } from "gowsps-js";
+
+export async function expectPacket<T extends StructLayout>(client: Client, definition: PacketDefinition<T>, timeout: number = 1000): Promise<StructTyped<T>> {
     return new Promise((resolve, reject) => {
-        const t = setTimeout(() => {
-            socket.handlers[id] = oldHandler
-            reject(`Didn't receive packet of id ${id}`)
-        }, timeout)
-        socket.handlers[id] = function (data: T) {
+        function receiver(data: StructTyped<T>) {
             clearTimeout(t)
-            socket.handlers[id] = oldHandler
+            client.socket.removeListener(definition, receiver)
             resolve(data)
         }
+        const t = setTimeout(() => {
+            client.socket.removeListener(definition, receiver)
+            reject(`Didn't receive packet of id ${definition.id}`)
+        }, timeout)
+        client.socket.addListener(definition, receiver)
     })
 }

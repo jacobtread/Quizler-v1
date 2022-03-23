@@ -8,22 +8,22 @@ import (
 
 // Ids for server packets
 const (
-	SDisconnect      int = 0x00
-	SError               = 0x01
-	SJoinedGame          = 0x02
-	SNameTakenResult     = 0x03
-	SGameState           = 0x04
-	SPlayerData          = 0x05
-	STimeSync            = 0x06
-	SQuestion            = 0x07
-	SAnswerResult        = 0x08
-	SScores              = 0x09
+	SDisconnect      VarInt = 0x00
+	SError                  = 0x01
+	SJoinedGame             = 0x02
+	SNameTakenResult        = 0x03
+	SGameState              = 0x04
+	SPlayerData             = 0x05
+	STimeSync               = 0x06
+	SQuestion               = 0x07
+	SAnswerResult           = 0x08
+	SScores                 = 0x09
 )
 
 // DisconnectPacket creates a new disconnect packet with the provided reason
 func DisconnectPacket(reason string) Packet {
 	return Packet{Id: SDisconnect, Data: struct {
-		Reason string `json:"reason"` // The reason for disconnecting
+		Reason string
 	}{Reason: reason}}
 }
 

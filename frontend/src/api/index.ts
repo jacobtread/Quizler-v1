@@ -1,25 +1,26 @@
-import packets, {
-    debugLogPacket,
-    Direction,
-    DisconnectData,
-    ErrorData,
-    GameData,
-    GameStateData,
-    Packet,
-    PlayerData,
+import {
+    AnswerResultPacket,
+    DisconnectPacket,
+    ErrorPacket,
+    GameStatePacket,
+    JoinGamePacket,
+    KickPacket,
+    NameTakenResultPacket,
     PlayerDataMode,
-    PlayerDataWithMode,
-    QuestionData,
-    ScoresData,
-    SPID,
+    PlayerDataPacket,
+    QuestionPacket,
+    ScoresPacket,
+    StateChangePacket,
     States,
-    TimeSyncData
+    TimeSyncPacket
 } from "./packets";
 import { onUnmounted, reactive, ref, Ref, watch } from "vue";
 import { dialog, toast } from "@/tools/ui";
 import { DEBUG, HOST } from "@/constants";
 import { router } from "@/router";
 import { useRouter } from "vue-router";
+import { BinarySocket, PacketDefinition } from "gowsps-js";
+import { StructLayout, StructTyped } from "gowsps-js/dist/data";
 
 // An enum for all the different possible game states
 export enum GameState {
@@ -34,23 +35,37 @@ export enum GameState {
 // Defines a map of id -> player data
 type PlayerMap = Record<string, PlayerData>
 
-// An empty function for handlers without a function
-const EMPTY_HANDLER = () => null
+export interface PlayerData {
+    id: string;
+    name: string;
+    score: number;
+}
 
-// Defines the type of packet handler function
-type PacketHandlerFunction = (data: any) => void
-// Defines the packet handlers map which is id -> handler
-type PacketHandlers = Record<SPID, PacketHandlerFunction>
+export interface GameData {
+    owner: boolean;
+    id: string;
+    title: string;
+}
+
+export interface QuestionData {
+    imageBase64?: string
+    image: Uint8Array,
+    question: string;
+    answers: string[];
+}
+
+export type QuestionDataWithValues = {
+    values: number[]
+} & QuestionData
 
 /**
  * Stores all logic for communicating between the client and server over the
  * websocket connection.
  */
-export class SocketApi {
+export class Client {
 
     // The websocket connection instance
-    private ws: WebSocket
-    private readonly host: string
+    socket: BinarySocket
 
     open = ref(false) // The open state of the web socket connection
     gameData = ref<GameData | null>(null) // The current game data
@@ -60,153 +75,72 @@ export class SocketApi {
     self = ref<PlayerData | null>(null) // The player we are playing as
 
     /**
-     * A mapping to convert the packet ids into handler functions so that
-     * they can be handled separately instead of a large switch statement
-     */
-    handlers: PacketHandlers = {
-        [SPID.DISCONNECT]: this.onDisconnect.bind(this),
-        [SPID.ERROR]: this.onError.bind(this),
-        [SPID.JOIN_GAME]: this.onJoinGame.bind(this),
-        [SPID.NAME_TAKEN_RESULT]: EMPTY_HANDLER,
-        [SPID.GAME_STATE]: this.onGameState.bind(this),
-        [SPID.PLAYER_DATA]: this.onPlayerData.bind(this),
-        [SPID.TIME_SYNC]: EMPTY_HANDLER,
-        [SPID.QUESTION]: this.onQuestion.bind(this),
-        [SPID.ANSWER_RESULT]: EMPTY_HANDLER,
-        [SPID.SCORES]: this.onScores.bind(this),
-    }
-
-    /**
      * Creates a new socket instance
      *
      * @param host The websocket server host address
      */
     constructor(host: string) {
-        this.host = host
-        this.ws = this.connect(host)
-    }
-
-    /**
-     * Creates a connection to the websocket at APP_HOST and returns the websocket
-     * all the listeners are added to the websocket and the update interval is set
-     */
-    connect(host: string): WebSocket {
-        const ws = new WebSocket(host) // Create a new web socket instance
-        // Set the handler for the websocket open event
-        ws.onopen = () => {
+        const socket = new BinarySocket(host, {reconnectTimeout: 2000})
+        socket.addEventListener('open', () => {
             if (DEBUG) console.debug('Connected to socket server') // Debug logging
-            if (this.ws.readyState != WebSocket.OPEN) return // Ensure we are actually on the open ready state
             this.open.value = true // Update the open state
-        }
-        // Set the handler for the websocket message event
-        ws.onmessage = (event: MessageEvent) => {
-            try {
-                const packet = JSON.parse(event.data) as Packet // Parse the packet
-                debugLogPacket(Direction.IN, packet) // Debug print the packet info
-                const id: SPID = packet.id // Get the packet id
-                const data: any = packet.data
-                if (id in this.handlers) {  // Check to make sure we have a handler for this packet id
-                    const handler = this.handlers[id] // Retrieve the packet handler
-                    handler(data) // Invoke the packet handler
-                } else {
-                    // Send a warning to the console saying that there's no handler
-                    console.warn(`Don't know how to handle packet with id (${id.toString(16)})`)
+        })
+        socket.addEventListener('close', () => {
+            this.open.value = false
+        })
+        socket.definePackets(
+            DisconnectPacket,
+            ErrorPacket,
+            JoinGamePacket,
+            NameTakenResultPacket,
+            GameStatePacket,
+            PlayerDataPacket,
+            TimeSyncPacket,
+            QuestionPacket,
+            AnswerResultPacket,
+            ScoresPacket,
+        )
+        socket.addListener(DisconnectPacket, async ({reason}) => {
+            if (this.gameState.value !== GameState.STOPPED) {
+                dialog('Disconnected', reason) // Display a disconnected dialog with the reason
+            }
+            this.resetState()
+            await router.push({name: 'Home'})
+        })
+        socket.addListener(ErrorPacket, ({cause}) => {
+            console.error(`An error occurred ${cause}`) // Print the error to the console
+            dialog('Error occurred', cause) // Display an error dialog
+        })
+        socket.addListener(JoinGamePacket, (data: GameData) => {
+            this.gameData.value = data
+            this.gameState.value = GameState.WAITING
+        })
+        socket.addListener(GameStatePacket, ({state}) => {
+            this.gameState.value = state
+        })
+        socket.addListener(PlayerDataPacket, ({name, id, mode}) => {
+            const elm: PlayerData = {id, name, score: 0}
+            if (mode === PlayerDataMode.ADD || mode === PlayerDataMode.SELF) { // If the mode is ADD or SELF
+                this.players[id] = elm // Assign the ID in the player map
+                if (mode === PlayerDataMode.SELF) { // If the mode is SELF
+                    this.self.value = elm // Set the self player to the player data
                 }
-            } catch (e) {
-                console.error(e)
+            } else if (mode === PlayerDataMode.REMOVE) { // if the mode is REMOVE
+                delete this.players[id] // Remove the ID from the player map
             }
-        }
-        // Set the handler for the websocket close event
-        ws.onclose = () => {
-            this.open.value = false // Update the open state
-            this.retryConnect() // Try and reconnect to the server
-        }
-        ws.onerror = console.error // Directly print all errors to the console
-        return ws
-    }
-
-    /**
-     * Retries connecting to the websocket server in 2 seconds and resets the
-     * game state
-     */
-    retryConnect() {
-        if (this.open.value) { // If the connection is open
-            this.ws.close() // Close the connection
-            this.open.value = false // Set the open state
-        }
-        // Print a debug message saying the connection was lost
-        console.debug('Lost connection. Attempting reconnect in 2 seconds')
-        // Set a timeout to try and connect again in 2s
-        setTimeout(() => this.ws = this.connect(this.host), 2000)
-    }
-
-    /**
-     * Packet handler for PlayerData packet (0x07) handles data about other
-     * players in the game such as username and id's
-     *
-     * @param data The player data of the other player
-     */
-    onPlayerData(data: PlayerDataWithMode) {
-        // Create a copy of the player data without the mode and a score of 0
-        const elm: PlayerData = {id: data.id, name: data.name, score: 0}
-        if (data.mode === PlayerDataMode.ADD || data.mode === PlayerDataMode.SELF) { // If the mode is ADD or SELF
-            this.players[data.id] = elm // Assign the ID in the player map
-            if (data.mode === PlayerDataMode.SELF) { // If the mode is SELF
-                this.self.value = elm // Set the self player to the player data
+        })
+        socket.addListener(QuestionPacket, (data: QuestionData) => {
+            this.question.value = data
+        })
+        socket.addListener(ScoresPacket, ({scores}) => {
+            for (let dataKey in scores) {
+                const player = this.players[dataKey]
+                if (player) {
+                    player.score = scores[dataKey]
+                }
             }
-        } else if (data.mode === PlayerDataMode.REMOVE) { // if the mode is REMOVE
-            delete this.players[data.id] // Remove the ID from the player map
-        }
-    }
-
-    /**
-     * Packet handler for Scores packet (0x0A) handles the data about
-     * the scores of each player in the game.
-     * *
-     * @param data The score data
-     */
-    onScores(data: ScoresData) {
-        for (let dataKey in data.scores) {
-            const player = this.players[dataKey]
-            if (player) {
-                player.score = data.scores[dataKey]
-            }
-        }
-    }
-
-
-    /**
-     * Packet handler for GameState packet (0x05) handles keeping track
-     * of the games state
-     *
-     * @param data The current game state
-     */
-    onGameState(data: GameStateData) {
-        this.gameState.value = data.state // Set the game state
-    }
-
-    /**
-     * Packet handler for Question packet (0x08) which provides each
-     * client with the current question to answer
-     *
-     * @param question The current question
-     */
-    onQuestion(question: QuestionData) {
-        this.question.value = question // Set the question value
-    }
-
-    /**
-     * Packet handler for the Disconnect packet (0x02) handles the player
-     * being disconnected from the game
-     *
-     * @param data The disconnect data contains the reason for disconnect
-     */
-    onDisconnect(data: DisconnectData) {
-        if (this.gameState.value !== GameState.STOPPED) {
-            dialog('Disconnected', data.reason) // Display a disconnected dialog with the reason
-        }
-        this.resetState()
-        router.push({name: 'Home'}).then().catch()
+        })
+        this.socket = socket
     }
 
     /**
@@ -223,47 +157,13 @@ export class SocketApi {
     }
 
     /**
-     * Packet handler for the Error packet (0x03) handles errors that should
-     * be displayed to the client.
-     *
-     * @param data The data for the error packet contains the error cause
-     */
-    onError(data: ErrorData) {
-        console.error(`An error occurred ${data.cause}`) // Print the error to the console
-        dialog('Error occurred', data.cause) // Display an error dialog
-    }
-
-    /**
-     * Packet handler for the Join Game packet (0x06) handles the player
-     * joining the game. Sets the game code and emits relevant events
-     *
-     * @param data The data for the game contains the id and title
-     */
-    onJoinGame(data: GameData) {
-        // Set the game data to the provided value
-        this.gameData.value = data
-        this.gameState.value = GameState.WAITING
-    }
-
-    /**
-     * Serializes the packet to json and sends it to the ws server.
-     * Logs the packet to debug if isDebug is enabled
-     *
-     * @param packet The packet to send
-     */
-    send(packet: Packet) {
-        debugLogPacket(Direction.OUT, packet) // Debug log the packet
-        this.ws.send(JSON.stringify(packet)) // Send json encoded packet data
-    }
-
-    /**
      * Called when the client should disconnect from the server. Clears the
      * update interval along with stopping the running loop and if the ws
      * connection is open according to isOpen then it will be closed as well
      */
     disconnect() {
         if (DEBUG) console.debug('Disconnected from game') // Print debug disconnected message
-        this.send(packets.stateChange(States.DISCONNECT)) // Send a disconnect packet
+        this.socket.send(StateChangePacket, {state: States.DISCONNECT})
         this.resetState()
     }
 
@@ -280,21 +180,21 @@ export class SocketApi {
         }
         if (DEBUG) console.debug('Kicked player ' + id) // Print debug kicked message
         delete this.players[id] // Remove the player for the map
-        this.send(packets.kick(id)) // Send a kick player packet
+        this.socket.send(KickPacket, {id}) // Send a kick player packet
     }
 }
 
 // The socket instance
-let socket: SocketApi
+let client: Client
 
 /**
  * A function for using the socket connection. Will create a new
  * socket connection if there isn't already one
  */
-export function useSocket(): SocketApi {
+export function useClient(): Client {
     // If we don't have a socket instance create a new one
-    if (!socket) socket = new SocketApi(HOST)
-    return socket
+    if (!client) client = new Client(HOST)
+    return client
 }
 
 /**
@@ -305,7 +205,7 @@ export function useSocket(): SocketApi {
  *
  * @param socket The socket connection
  */
-export function useRequireGame(socket: SocketApi) {
+export function useRequireGame(socket: Client) {
     const router = useRouter()
     const {gameState, gameData} = socket
     // Watch for changes in the current game state
@@ -329,7 +229,7 @@ export function useRequireGame(socket: SocketApi) {
  * @param state The desired game state
  * @param handle The listener function
  */
-export function useGameState(socket: SocketApi, state: GameState, handle: Function) {
+export function useGameState(socket: Client, state: GameState, handle: Function) {
     const {gameState} = socket
     // Watch for changes in the current game state
     watch(gameState, (value: GameState) => {
@@ -343,19 +243,16 @@ export function useGameState(socket: SocketApi, state: GameState, handle: Functi
  * "Composable" function for adding a new packet listening handler to listen
  * for packets and invoked the provided handler function
  *
- * @param socket The socket instance to listen on
- * @param id The id of the packets to listen for
+ * @param client The client instance to listen on
+ * @param definition The packet definition to listen for
  * @param handler The listener packet handling function
  */
-export function usePacketHandler<D>(socket: SocketApi, id: SPID, handler: (data: D) => any) {
+export function usePacketHandler<D extends StructLayout>(client: Client, definition: PacketDefinition<D>, handler: (data: StructTyped<D>) => any) {
     // Set the packet handler to the provided handler
-    socket.handlers[id] = handler
+    client.socket.addListener(definition, handler)
     // Reset the handler on unmount
     onUnmounted(() => {
-        const current = socket.handlers[id];
-        if (current === handler) {
-            socket.handlers[id] = EMPTY_HANDLER
-        }
+        client.socket.removeListener(definition, handler)
     })
 }
 
@@ -367,27 +264,12 @@ export function usePacketHandler<D>(socket: SocketApi, id: SPID, handler: (data:
  * @param socket The socket instance to use synced time from
  * @param initialValue The initial time value to count from until time is synced
  */
-export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<number> {
+export function useSyncedTimer(socket: Client, initialValue: number): Ref<number> {
     // The actual value itself that should be displayed
     const value = ref<number>(initialValue)
 
     // Stores the last time in milliseconds that the counter ran a countdown animation
     let lastUpdateTime: number = -1
-
-    /**
-     * Handles time sync packets (0x07) and updates
-     * the current time based on that
-     *
-     * @param data The time sync packet data
-     */
-    function onTimeSync(data: TimeSyncData) {
-        // Convert the remaining time to seconds and ceil it
-        value.value = Math.ceil(data.remaining / 1000)
-        // Set the last update time = now to prevent it updating again
-        // and causing an accidental out of sync
-        lastUpdateTime = performance.now()
-        update()
-    }
 
     /**
      * Run on browser animation frames used to update the time and count
@@ -411,6 +293,13 @@ export function useSyncedTimer(socket: SocketApi, initialValue: number): Ref<num
     }
 
     // Listen for time sync packets with onTimeSync
-    usePacketHandler(socket, SPID.TIME_SYNC, onTimeSync)
+    usePacketHandler(socket, TimeSyncPacket, ({remaining}) => {
+        // Convert the remaining time to seconds and ceil it
+        value.value = Math.ceil(remaining / 1000)
+        // Set the last update time = now to prevent it updating again
+        // and causing an accidental out of sync
+        lastUpdateTime = performance.now()
+        update()
+    })
     return value
 }

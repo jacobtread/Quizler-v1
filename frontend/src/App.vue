@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import "@/assets/global.scss"
-import { useSocket } from "@/api";
+import { useClient } from "@/api";
 import ToastSystem from "@component/Toasts.vue";
 import Dialog from "@component/Dialog.vue";
 import Loader from "@component/Loader.vue";
 import { loading } from "@/tools/ui";
 import { watch } from "vue";
 
-const {open} = useSocket(); // Use the socket for the open state
+const {open} = useClient(); // Use the socket for the open state
 
 watch(open, (value: boolean) => { // Watch for changes of the open state
     loading(!value, 'Connecting...') // Show the loader if we aren't connected

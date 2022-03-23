@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { GameState, useSocket } from "@/api";
+import { GameState, PlayerData, useClient } from "@/api";
 import { useRouter } from "vue-router";
 import { ref } from "vue";
-import { PlayerData } from "@api/packets";
 import CrownIcon from "@asset/icons/crown.svg?inline"
 import Nav from "@component/Nav.vue";
 
 const router = useRouter()
-const socket = useSocket()
-const {gameState, gameData, players} = socket
+const client = useClient()
+const {gameState, gameData, players} = client
 
 const firstPlace = ref<PlayerData | null>(null) // The player data for first place
 const secondPlace = ref<PlayerData | null>(null) // The player data for second place
@@ -29,7 +28,7 @@ if (gameData.value === null || gameState.value !== GameState.STOPPED) { // If we
 function disconnect() {
     if (gameState.value !== GameState.DOES_NOT_EXIST
         && gameState.value !== GameState.UNSET) { // Ensure the game actually exists
-        socket.disconnect() // Disconnect from the game
+        client.disconnect() // Disconnect from the game
     }
 }
 </script>

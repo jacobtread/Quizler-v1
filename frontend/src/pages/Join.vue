@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import Play from "@asset/icons/play.svg?inline";
-import { GameState, usePacketHandler, useSocket } from "@/api";
-import packets, { GameData, NameTakenResultData, SPID } from "@api/packets";
+import { GameData, GameState, useClient, usePacketHandler } from "@/api";
+import {
+    CheckNameTakenPacket, NameTakenResultPacket,
+    RequestGameStatePacket,
+    RequestJoinPacket,
+} from "@api/packets";
 import { useRouter } from "vue-router";
 import Nav from "@component/Nav.vue";
 import { dialog, loading } from "@/tools/ui";
 
 const router = useRouter() // Use the router so we can change the page
-const socket = useSocket(), {gameData, gameState} = socket // Use the game state and data from the socket
+const client = useClient(), {gameData, gameState} = client // Use the game state and data from the socket
 
 let gameCode = ref('') // The current game code
 let disabled = ref(true) // Whether the join button should be enabled
@@ -48,23 +52,7 @@ watch(gameState, (data: GameState) => { // When the game state changed
 function checkGameExists() {
     loading(true, 'Checking Game') // Display a checking loader
     hasGame.value = false // Reset the has game state
-    socket.send(packets.requestGameState(gameCode.value)) // Send q requestion join packet
-}
-
-/**
- * Listener for the name taken result packet to display
- * and error message to the player if the name is already
- * taken or continue the joining process if it isnt
- *
- * @param data The name take result
- */
-function onNameTakenResult(data: NameTakenResultData) {
-    if (data.result) { // If the name is already taken
-        dialog('Name taken', 'That name is already in use. Please choose another')
-    } else {
-        // Send a join request
-        socket.send(packets.requestJoin(gameCode.value, name.value))
-    }
+    client.socket.send(RequestGameStatePacket, {id: gameCode.value}) // Send request join packet
 }
 
 /**
@@ -73,11 +61,18 @@ function onNameTakenResult(data: NameTakenResultData) {
  */
 function checkName() {
     // Sends a check name taken packet for the game
-    socket.send(packets.checkNameTaken(gameCode.value, name.value))
+    client.socket.send(CheckNameTakenPacket, {id: gameCode.value, name: name.value})
 }
 
 // Listen for name taken result packets
-usePacketHandler(socket, SPID.NAME_TAKEN_RESULT, onNameTakenResult)
+usePacketHandler(client, NameTakenResultPacket, ({result}) => {
+    if (result) { // If the name is already taken
+        dialog('Name taken', 'That name is already in use. Please choose another')
+    } else {
+        // Send a join request
+        client.socket.send(RequestJoinPacket, {id: gameCode.value, name: name.value})
+    }
+})
 </script>
 
 <template>

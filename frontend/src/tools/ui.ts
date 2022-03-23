@@ -3,8 +3,7 @@ import { reactive, Ref, ref, UnwrapNestedRefs } from "vue";
 // Enum for choosing what type of toast message should be displayed
 export enum ToastMode {
     INFO,
-    ERROR,
-    WARNING
+    ERROR
 }
 
 // Structure for a toast contains the mode, content and a unique id
