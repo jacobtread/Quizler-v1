@@ -21,7 +21,7 @@ type (
 
 	// QuestionData A structure representing a question for the quiz
 	QuestionData struct {
-		Image    string        // Optional - an image to display with the question
+		Image    []byte        // Optional - an image to display with the question
 		Question string        // The actual contents of the question
 		Answers  []string      // The possible answer values
 		Values   []AnswerIndex // The indexes of the correct answers
@@ -42,10 +42,10 @@ func EnvOrDefault(key string, d string) string {
 }
 
 // FreeMemory Used to free up memory from questions that have already been
-// served to the user. (This is done by setting the image to a blank string)
+// served to the user. (This is done by setting the image to an empty byte array)
 // as most images will take up a few MB or so while in use
 func (question *QuestionData) FreeMemory() {
-	question.Image = ""
+	question.Image = make([]byte, 0)
 }
 
 // CreateRandomId Creates a random identifier of the specified length using

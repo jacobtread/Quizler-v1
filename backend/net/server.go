@@ -38,39 +38,39 @@ const (
 // ErrorPacket creates a new error packet with the provided cause
 func ErrorPacket(cause string) Packet {
 	return Packet{Id: SError, Data: struct {
-		Cause string `json:"cause"`
+		Cause string
 	}{Cause: cause}}
 }
 
 // PlayerDataPacket creates a new player data packet with the provided id and name
 func PlayerDataPacket(id string, name string, mode PlayerDataMode) Packet {
 	return Packet{Id: SPlayerData, Data: struct {
-		Id   string         `json:"id"`   // The id of the player
-		Name string         `json:"name"` // The name of the player
-		Mode PlayerDataMode `json:"mode"` // The type of mode to use when dealing with this
+		Id   string         // The id of the player
+		Name string         // The name of the player
+		Mode PlayerDataMode // The type of mode to use when dealing with this
 	}{Id: id, Name: name, Mode: mode}}
 }
 
 // JoinGamePacket creates a new join game data packet with the provided values
 func JoinGamePacket(owner bool, id string, title string) Packet {
 	return Packet{Id: SJoinedGame, Data: struct {
-		Owner bool   `json:"owner"` // Whether the player is the host/owner of the quiz
-		Id    string `json:"id"`    // The id of the joined game
-		Title string `json:"title"` // The title of the joined game
+		Owner bool   // Whether the player is the host/owner of the quiz
+		Id    string // The id of the joined game
+		Title string // The title of the joined game
 	}{Id: id, Title: title, Owner: owner}}
 }
 
 // NameTakenResultPacket creates a new name taken result packet with the provided result
 func NameTakenResultPacket(result bool) Packet {
 	return Packet{Id: SNameTakenResult, Data: struct {
-		Result bool `json:"result"` // The result of the name taken check
+		Result bool // The result of the name taken check
 	}{Result: result}}
 }
 
 // GameStatePacket creates a new game state packet with the provided state
 func GameStatePacket(state tools.State) Packet {
 	return Packet{Id: SGameState, Data: struct {
-		State tools.State `json:"state"`
+		State tools.State
 	}{State: state}}
 }
 
@@ -78,18 +78,18 @@ func GameStatePacket(state tools.State) Packet {
 // of the server countdowns in sync with the clients
 func TimeSyncPacket(total time.Duration, remaining time.Duration) Packet {
 	return Packet{Id: STimeSync, Data: struct {
-		Total     int64 `json:"total"`
-		Remaining int64 `json:"remaining"`
-	}{Total: total.Milliseconds(), Remaining: remaining.Milliseconds()}}
+		Total     VarInt
+		Remaining VarInt
+	}{Total: VarInt(total.Milliseconds()), Remaining: VarInt(remaining.Milliseconds())}}
 }
 
 // QuestionPacket creates a new question packet which informs the client which
 // question they are currently answering
 func QuestionPacket(data tools.QuestionData) Packet {
 	return Packet{Id: SQuestion, Data: struct {
-		Image    string   `json:"image,omitempty"`
-		Question string   `json:"question"`
-		Answers  []string `json:"answers"`
+		Image    []byte
+		Question string
+		Answers  []string
 	}{Image: data.Image, Question: data.Question, Answers: data.Answers}}
 }
 
@@ -97,7 +97,7 @@ func QuestionPacket(data tools.QuestionData) Packet {
 // whether the answer they chose was correct after marking
 func AnswerResultPacket(result bool) Packet {
 	return Packet{Id: SAnswerResult, Data: struct {
-		Result bool `json:"result"`
+		Result bool
 	}{Result: result}}
 }
 
@@ -105,6 +105,6 @@ func AnswerResultPacket(result bool) Packet {
 // players in the game. This is sent to everyone when scores change
 func ScoresPacket(data tools.ScoreMap) Packet {
 	return Packet{Id: SScores, Data: struct {
-		Scores tools.ScoreMap `json:"scores"`
+		Scores tools.ScoreMap
 	}{Scores: data}}
 }
