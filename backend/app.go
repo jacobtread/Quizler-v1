@@ -93,11 +93,14 @@ func (state *SocketState) Cleanup() {
 		state.Hosted.Stop()
 		state.Hosted = nil
 	}
-	if state.Game != nil && state.Player != nil {
-		state.Game.RemovePlayer(state.Player)
+	if state.Game != nil {
+		if state.Player != nil {
+			state.Game.RemovePlayer(state.Player)
+			state.Player = nil
+		}
 		state.Game = nil
-		state.Player = nil
 	}
+
 }
 
 // onCreateGame Packet handler function for the net.CCreateGame packet. Handles

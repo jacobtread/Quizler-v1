@@ -116,7 +116,7 @@ func (game *Game) IsNameTaken(name string) bool {
 }
 
 // Broadcast sends the provided packet to all the players in the game
-func (game *Game) Broadcast(packet Packet, host bool) {
+func (game *Game) Broadcast(packet *Packet, host bool) {
 	// Iterate over all the players
 	game.Players.ForEach(func(id Identifier, player *Player) {
 		player.Net.Send(packet) // Send the packet to the player
@@ -130,7 +130,7 @@ func (game *Game) Broadcast(packet Packet, host bool) {
 // BroadcastExcluding sends the provided packet to all the players in the game
 // excluding any players that match the excluded id. The host parameter determines
 // whether this packet will also be sent to the host of the game
-func (game *Game) BroadcastExcluding(exclude Identifier, packet Packet, host bool) {
+func (game *Game) BroadcastExcluding(exclude Identifier, packet *Packet, host bool) {
 	// Iterate over all the players
 	game.Players.ForEach(func(id Identifier, player *Player) {
 		if id != exclude { // If the player id != the excluded id

@@ -2,3 +2,7 @@ github.com/gorilla/websocket v1.5.0 h1:PPwGk2jz7EePpoHN/+ClbZu8SPxiqlu12wZP/3sWm
 github.com/gorilla/websocket v1.5.0/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/jacobtread/gowsps v1.0.1 h1:8bXRKfkZ4yLZE+e1+/BhfmzRK7ZX0+Ho0roaCK8BImU=
 github.com/jacobtread/gowsps v1.0.1/go.mod h1:ds+faxp865JdFiKAa4IzfYGwEzhSAj12/+a0aYrQBu4=
+github.com/jacobtread/gowsps v1.0.2 h1:v6ItGmBX4jexp76hI5YrQnVXFmTuEfRVd9fduMq8kK0=
+github.com/jacobtread/gowsps v1.0.2/go.mod h1:ds+faxp865JdFiKAa4IzfYGwEzhSAj12/+a0aYrQBu4=
+github.com/jacobtread/gowsps v1.0.3 h1:dqDcgN5o1+V3SwUiIQ3BtvzY8MjvQMEXorkTU6YJK4I=
+github.com/jacobtread/gowsps v1.0.3/go.mod h1:ds+faxp865JdFiKAa4IzfYGwEzhSAj12/+a0aYrQBu4=
