@@ -293,10 +293,11 @@ func (game *Game) MarkQuestion(question *ActiveQuestion) {
 		// Send the player their marking result
 		player.Net.Send(net.AnswerResultPacket(correct))
 		if correct {
-			// Set the player score
-			player.Score = GetScore(player, question)
+			score := GetScore(player, question)
+			// Increase the player score
+			player.Score += score
 			if player.Score > 0 {
-				log.Printf("Player '%s' scored %d points", player.Name, player.Score)
+				log.Printf("Player '%s' scored %d points", player.Name, score)
 			}
 		}
 	})
