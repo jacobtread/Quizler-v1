@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	Version = "1.0.5"
+	Version = "1.0.7"
 	Intro   = `
    __         __       ___  __  
   /  \ |  | |  / |    |__  |__) 
@@ -28,6 +28,7 @@ const (
 // Embed the web page index into the application as an array of bytes
 // this allows me to serve the HTML file straight from memory. And
 // due to the size of the file this works very well.
+//
 //go:embed public/index.html
 var appIndex []byte
 
@@ -63,7 +64,7 @@ type SocketState struct {
 	*gowsps.Connection // The websocket connection
 }
 
-//SocketConnect Creates a socket connection and upgrades the HTTP request to WS
+// SocketConnect Creates a socket connection and upgrades the HTTP request to WS
 func SocketConnect(w http.ResponseWriter, r *http.Request) {
 	s := gowsps.NewPacketSystem()
 	var state = SocketState{} // Create a new state with the connection
