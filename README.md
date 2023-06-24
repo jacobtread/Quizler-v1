@@ -16,6 +16,10 @@ The packet system packet descriptions are available [Here](backend/packets.md)
 This repository is a mono-repo it contains the code for both the front-end and back-end of
 this application they are stored in sub folders of this repository
 
+## New and improved 
+
+This app has been revised and greatly improved upon, you can find this new version at https://github.com/jacobtread/Quizler
+
 ## Docker Image
 
 Quizler is fully dockerized, and you can easily deploy it to docker using this GitHub repository. There is an included
